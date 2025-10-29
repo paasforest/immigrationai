@@ -1,10 +1,21 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
 import { analyzeInterviewAnswer } from '../services/aiService';
 import { logger } from '../utils/logger';
+import { openai } from '../config/openai';
+import { authenticateJWT } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Configure multer for audio upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB max for audio files
+  },
+});
 
 // Start interview session
 router.post('/start-session', async (req, res) => {
@@ -84,8 +95,8 @@ router.post('/analyze-answer', async (req, res) => {
         visaType: visaType,
         questionCategory: question.category || undefined,
         questionDifficulty: question.difficulty || undefined,
-        redFlags: question.red_flags || [],
-        idealElements: question.ideal_elements || [],
+        redFlags: Array.isArray(question.redFlags) ? question.redFlags as string[] : [],
+        idealElements: Array.isArray(question.idealElements) ? question.idealElements as string[] : [],
       });
 
       aiFeedback = {
@@ -255,5 +266,52 @@ async function updateUserProgress(userId: string, visaType: string) {
     console.error('Error updating user progress:', error);
   }
 }
+
+// Transcribe audio using OpenAI Whisper API
+router.post('/transcribe-audio', authenticateJWT, upload.single('audio'), async (req, res) => {
+  try {
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    // Check file type
+    const allowedTypes = ['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/m4a', 'audio/x-m4a', 'audio/mp4'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return res.status(400).json({ error: 'Invalid audio format. Supported: webm, mp3, wav, m4a, mp4' });
+    }
+
+    // Create a File-like object for OpenAI API
+    const audioFile = new File([file.buffer], file.originalname || 'audio.webm', { type: file.mimetype });
+
+    // Transcribe using OpenAI Whisper
+    const transcription = await openai.audio.transcriptions.create({
+      file: audioFile,
+      model: 'whisper-1',
+      language: 'en', // Can be made configurable
+    });
+
+    // Estimate duration (rough calculation based on file size)
+    const estimatedDuration = Math.max(10, Math.floor(file.size / 1024 / 50)); // Rough estimate
+
+    logger.info('Audio transcribed successfully', { 
+      fileSize: file.size,
+      duration: estimatedDuration
+    });
+
+    res.json({
+      transcription: transcription.text,
+      text: transcription.text, // Alias for compatibility
+      duration: estimatedDuration,
+    });
+  } catch (error: any) {
+    logger.error('Audio transcription error', { error: error.message });
+    res.status(500).json({ 
+      error: error.message || 'Failed to transcribe audio',
+      message: 'Audio transcription service unavailable. Please try again.'
+    });
+  }
+});
 
 export default router;

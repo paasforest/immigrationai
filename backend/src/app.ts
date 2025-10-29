@@ -17,6 +17,8 @@ import paymentRoutes from './routes/payments.routes';
 import adminRoutes from './routes/admin.routes';
 import interviewCoachRoutes from './routes/interview-coach.routes';
 import uploadRoutes from './routes/upload.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import teamRoutes from './routes/team.routes';
 
 // Load environment variables
 dotenv.config();
@@ -69,6 +71,8 @@ app.use('/api', aiRoutes); // AI-powered features
 app.use('/api', feedbackRoutes); // Feedback & Learning system
 app.use('/api/interview-coach', interviewCoachRoutes); // Interview Coach system
 app.use('/api/upload', uploadRoutes); // File upload to Supabase Storage
+app.use('/api', analyticsRoutes); // Analytics dashboard
+app.use('/api', teamRoutes); // Team management
 
 // ============================================================================
 // ERROR HANDLING
