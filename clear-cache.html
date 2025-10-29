@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache - Immigration AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .button { background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 10px 5px; }
+        .button:hover { background: #2563eb; }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .info { background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Clear Cache & Fix Authentication</h1>
+        <p>If you're seeing "Invalid token" errors, this will clear your browser cache and stored authentication data.</p>
+        
+        <div class="info">
+            <strong>What this does:</strong>
+            <ul>
+                <li>Clears localStorage (removes old tokens)</li>
+                <li>Clears sessionStorage</li>
+                <li>Reloads the page</li>
+            </ul>
+        </div>
+        
+        <button class="button" onclick="clearCache()">Clear Cache & Reload</button>
+        <button class="button" onclick="checkToken()">Check Current Token</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function clearCache() {
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                // Clear any cached data
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                
+                document.getElementById('result').innerHTML = 
+                    '<div class="success">✅ Cache cleared successfully! Reloading page...</div>';
+                
+                // Reload the page
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:3000';
+                }, 1000);
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="error">❌ Error clearing cache: ' + error.message + '</div>';
+            }
+        }
+        
+        function checkToken() {
+            const token = localStorage.getItem('auth_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            
+            let result = '<div class="info"><strong>Current Tokens:</strong><br>';
+            result += 'Auth Token: ' + (token ? 'Present (length: ' + token.length + ')' : 'Not found') + '<br>';
+            result += 'Refresh Token: ' + (refreshToken ? 'Present (length: ' + refreshToken.length + ')' : 'Not found') + '</div>';
+            
+            document.getElementById('result').innerHTML = result;
+        }
+        
+        // Auto-check on load
+        window.onload = checkToken;
+    </script>
+</body>
+</html>
+

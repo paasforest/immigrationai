@@ -1,0 +1,129 @@
+# Nginx Configuration Template for Immigration AI Backend
+# Copy this to /etc/nginx/sites-available/immigration-api
+# Then: sudo ln -s /etc/nginx/sites-available/immigration-api /etc/nginx/sites-enabled/
+
+server {
+    listen 80;
+    server_name api.yourdomain.com;  # CHANGE THIS to your actual domain
+
+    # Increase upload limits for file uploads
+    client_max_body_size 10M;
+    client_body_buffer_size 128k;
+
+    # Increase timeouts for long-running requests (OpenAI API calls)
+    proxy_connect_timeout 300;
+    proxy_send_timeout 300;
+    proxy_read_timeout 300;
+    send_timeout 300;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Health check endpoint (no proxy needed)
+    location /health {
+        proxy_pass http://localhost:4000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # API endpoints
+    location /api {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        
+        # WebSocket support (if needed in future)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Prevent caching
+        proxy_cache_bypass $http_upgrade;
+        
+        # Timeouts
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+        proxy_read_timeout 300;
+    }
+
+    # Root redirect to health check
+    location / {
+        proxy_pass http://localhost:4000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # Logging
+    access_log /var/log/nginx/immigration-api-access.log;
+    error_log /var/log/nginx/immigration-api-error.log;
+}
+
+# HTTPS configuration (after running certbot)
+# Uncomment and configure after getting SSL certificate
+# server {
+#     listen 443 ssl http2;
+#     server_name api.yourdomain.com;
+# 
+#     ssl_certificate /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/api.yourdomain.com/privkey.pem;
+# 
+#     # SSL optimization
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers HIGH:!aNULL:!MD5;
+#     ssl_prefer_server_ciphers on;
+#     ssl_session_cache shared:SSL:10m;
+#     ssl_session_timeout 10m;
+# 
+#     # Include all the location blocks from above
+#     client_max_body_size 10M;
+#     proxy_connect_timeout 300;
+#     proxy_send_timeout 300;
+#     proxy_read_timeout 300;
+#     send_timeout 300;
+# 
+#     location /health {
+#         proxy_pass http://localhost:4000/health;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#     }
+# 
+#     location /api {
+#         proxy_pass http://localhost:4000;
+#         proxy_http_version 1.1;
+#         proxy_set_header Upgrade $http_upgrade;
+#         proxy_set_header Connection 'upgrade';
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#         proxy_cache_bypass $http_upgrade;
+#         proxy_connect_timeout 300;
+#         proxy_send_timeout 300;
+#         proxy_read_timeout 300;
+#     }
+# 
+#     location / {
+#         proxy_pass http://localhost:4000/health;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#     }
+# 
+#     access_log /var/log/nginx/immigration-api-access.log;
+#     error_log /var/log/nginx/immigration-api-error.log;
+# }
+
+# Redirect HTTP to HTTPS
+# server {
+#     listen 80;
+#     server_name api.yourdomain.com;
+#     return 301 https://$server_name$request_uri;
+# }
+
+
