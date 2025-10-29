@@ -16,6 +16,31 @@ import { type InterviewQuestion } from '@/lib/interview-coach/questions-database
 // Removed direct OpenAI import - will use backend API instead
 import { audioProcessor, type AudioProcessingResult } from '@/lib/interview-coach/audio-processing';
 
+// Define DetailedFeedback type based on AI feedback structure
+interface DetailedFeedback {
+  overall_score: number;
+  category_scores: {
+    clarity: number;
+    completeness: number;
+    confidence: number;
+    consistency: number;
+    relevance: number;
+  };
+  strengths: string[];
+  improvements: string[];
+  suggestions: string[];
+  red_flags_detected: string[];
+  positive_elements: string[];
+  lawyer_notes: string[];
+  recommended_practice_areas: string[];
+  next_questions_to_practice: string[];
+  consistency_with_sop: boolean;
+  key_phrases_used: string[];
+  confidence_level: 'low' | 'medium' | 'high';
+  clarity_score: number;
+  completeness_score: number;
+}
+
 interface InterviewSession {
   id: string;
   visaType: string;
@@ -308,6 +333,70 @@ export default function MockInterviewPage() {
     if (score >= 6) return 'Good';
     if (score >= 4) return 'Fair';
     return 'Needs Improvement';
+  };
+
+  const generateClientReport = (clientName: string, feedbacks: DetailedFeedback[], visaType: string): string => {
+    const overallScore = feedbacks.reduce((sum, f) => sum + f.overall_score, 0) / feedbacks.length;
+    const totalRedFlags = feedbacks.reduce((sum, f) => sum + f.red_flags_detected.length, 0);
+    const totalStrengths = feedbacks.reduce((sum, f) => sum + f.strengths.length, 0);
+    
+    let report = `IMMIGRATION INTERVIEW PRACTICE REPORT\n`;
+    report += `=====================================\n\n`;
+    report += `Client Name: ${clientName}\n`;
+    report += `Visa Type: ${visaType.toUpperCase()}\n`;
+    report += `Date: ${new Date().toLocaleDateString()}\n`;
+    report += `Overall Score: ${overallScore.toFixed(1)}/10\n`;
+    report += `Total Red Flags: ${totalRedFlags}\n`;
+    report += `Total Strengths: ${totalStrengths}\n\n`;
+    
+    report += `DETAILED ANALYSIS:\n`;
+    report += `================\n\n`;
+    
+    feedbacks.forEach((feedback, index) => {
+      report += `Question ${index + 1}:\n`;
+      report += `Score: ${feedback.overall_score}/10\n`;
+      report += `Strengths: ${feedback.strengths.join(', ')}\n`;
+      report += `Improvements: ${feedback.improvements.join(', ')}\n`;
+      if (feedback.red_flags_detected.length > 0) {
+        report += `Red Flags: ${feedback.red_flags_detected.join(', ')}\n`;
+      }
+      report += `Suggestions: ${feedback.suggestions.join(', ')}\n\n`;
+    });
+    
+    return report;
+  };
+
+  const generatePracticeRecommendations = (feedbacks: DetailedFeedback[], visaType: string) => {
+    const allImprovements = feedbacks.flatMap(f => f.improvements);
+    const allRedFlags = feedbacks.flatMap(f => f.red_flags_detected);
+    const allStrengths = feedbacks.flatMap(f => f.strengths);
+    
+    // Count frequency of issues
+    const improvementCounts: { [key: string]: number } = {};
+    allImprovements.forEach(imp => {
+      improvementCounts[imp] = (improvementCounts[imp] || 0) + 1;
+    });
+    
+    const priorityAreas = Object.entries(improvementCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([area]) => area);
+    
+    return {
+      priority_areas: priorityAreas.length > 0 ? priorityAreas : ['General communication', 'Specificity', 'Confidence'],
+      practice_schedule: [
+        'Practice 15-20 minutes daily',
+        'Focus on one priority area per session',
+        'Record yourself answering common questions',
+        'Review and improve based on feedback'
+      ],
+      lawyer_action_items: [
+        'Review client responses for consistency',
+        'Address any red flags before submission',
+        'Provide specific examples for common questions',
+        'Schedule follow-up practice sessions'
+      ]
+    };
   };
 
   const downloadClientReport = () => {
