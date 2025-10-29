@@ -71,6 +71,8 @@ export default function MockInterviewPage() {
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [transcript, setTranscript] = useState('');
   const [clientName, setClientName] = useState('');
   const [lawyerNotes, setLawyerNotes] = useState('');
   const [activeTab, setActiveTab] = useState('practice');
@@ -82,6 +84,53 @@ export default function MockInterviewPage() {
 
   const isProfessional = user?.subscriptionPlan === 'professional';
   const isEnterprise = user?.subscriptionPlan === 'enterprise';
+
+  // Simulate transcription function
+  const simulateTranscription = async (audioBlob: Blob): Promise<{ transcription: string; duration: number }> => {
+    // In a real app, this would call the backend API
+    // For now, we'll use the audioProcessor which handles real transcription
+    const result = await audioProcessor.transcribeAudio(audioBlob);
+    
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    
+    return {
+      transcription: result.transcription,
+      duration: result.duration || 0
+    };
+  };
+
+  // Define getFeedback early to ensure it's available to all functions
+  const getFeedback = async (transcription: string, duration: number) => {
+    // Simulate AI feedback based on the response
+    const wordCount = transcription.split(' ').length;
+    const hasStructure = transcription.toLowerCase().includes('first') || 
+                        transcription.toLowerCase().includes('second') ||
+                        transcription.toLowerCase().includes('finally');
+    
+    let feedbackText = '';
+    
+    if (duration < 30) {
+      feedbackText += '⏱️ Your response was quite brief. ';
+    } else if (duration > 180) {
+      feedbackText += '⏱️ Consider being more concise. ';
+    }
+    
+    if (wordCount < 50) {
+      feedbackText += '📝 Try to elaborate more on your points. ';
+    }
+    
+    if (hasStructure) {
+      feedbackText += '✅ Good use of structure! ';
+    } else {
+      feedbackText += '💡 Consider using a structured approach (e.g., STAR method). ';
+    }
+    
+    feedbackText += '👍 Keep practicing!';
+    
+    setFeedback(feedbackText);
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -197,59 +246,55 @@ export default function MockInterviewPage() {
     }
   };
 
-  const getFeedback = async (transcription: string, duration: number) => {
-    // Simulate AI feedback based on the response
-    const wordCount = transcription.split(' ').length;
-    const hasStructure = transcription.toLowerCase().includes('first') || 
-                        transcription.toLowerCase().includes('second') ||
-                        transcription.toLowerCase().includes('finally');
-    
-    let feedbackText = '';
-    
-    if (duration < 30) {
-      feedbackText += '⏱️ Your response was quite brief. ';
-    } else if (duration > 180) {
-      feedbackText += '⏱️ Consider being more concise. ';
-    }
-    
-    if (wordCount < 50) {
-      feedbackText += '📝 Try to elaborate more on your points. ';
-    }
-    
-    if (hasStructure) {
-      feedbackText += '✅ Good use of structure! ';
-    } else {
-      feedbackText += '💡 Consider using a structured approach (e.g., STAR method). ';
-    }
-    
-    feedbackText += '👍 Keep practicing!';
-    
-    // For now, we'll just log the feedback since we don't have a feedback state
-    console.log('AI Feedback:', feedbackText);
-  };
-
   const processAudio = async (audioBlob: Blob) => {
-    setIsAnalyzing(true);
-    
     try {
-      // Transcribe the audio
-      const result: AudioProcessingResult = await audioProcessor.transcribeAudio(audioBlob);
+      setIsAnalyzing(true);
       
-      if (result.error) {
-        console.error('Transcription error:', result.error);
-        alert('Failed to transcribe audio. Please try again.');
-        return;
-      }
-
-      // Update current answer with transcription
+      // Simulate transcription (in a real app, you'd call an API)
+      const result = await simulateTranscription(audioBlob);
+      
+      setTranscript(result.transcription);
       setCurrentAnswer(result.transcription);
       
+      // Update responses if we have a current session
+      if (currentSession && currentSession.questions[currentSession.currentQuestionIndex]) {
+        const currentQuestion = currentSession.questions[currentSession.currentQuestionIndex];
+        setCurrentSession(prev => prev ? {
+          ...prev,
+          responses: [
+            ...prev.responses,
+            {
+              questionId: currentQuestion.id,
+              userAnswer: result.transcription,
+              timestamp: new Date().toISOString(),
+              feedback: {
+                overall_score: 0,
+                category_scores: { clarity: 0, completeness: 0, confidence: 0, consistency: 0, relevance: 0 },
+                strengths: [],
+                improvements: [],
+                suggestions: [],
+                red_flags_detected: [],
+                positive_elements: [],
+                lawyer_notes: [],
+                recommended_practice_areas: [],
+                next_questions_to_practice: [],
+                consistency_with_sop: false,
+                key_phrases_used: [],
+                confidence_level: 'medium' as const,
+                clarity_score: 0,
+                completeness_score: 0
+              }
+            }
+          ]
+        } : null);
+      }
+
       // Get AI feedback
       await getFeedback(result.transcription, result.duration);
-      
+
     } catch (error) {
       console.error('Error processing audio:', error);
-      alert('Failed to process audio. Please try again.');
+      setFeedback('Error processing your response. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
