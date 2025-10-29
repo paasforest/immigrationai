@@ -41,8 +41,8 @@ export default function PricingPage() {
           plan,
           billingCycle,
           paymentMethod,
-          firstName: user.full_name?.split(' ')[0] || 'User',
-          lastName: user.full_name?.split(' ').slice(1).join(' ') || 'Name',
+          firstName: user.fullName?.split(' ')[0] || 'User',
+          lastName: user.fullName?.split(' ').slice(1).join(' ') || 'Name',
         }),
       });
 

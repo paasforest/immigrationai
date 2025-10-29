@@ -53,7 +53,6 @@ export default function PaymentProofUpload({ onUploadSuccess }: PaymentProofUplo
       const formData = new FormData();
       formData.append('proof', file);
       formData.append('userId', user.id);
-      formData.append('accountNumber', user.accountNumber || '');
 
       // For now, simulate successful upload since the backend endpoint is temporarily disabled
       // TODO: Re-enable when payment proof routes are fixed

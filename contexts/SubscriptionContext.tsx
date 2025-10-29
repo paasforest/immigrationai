@@ -29,7 +29,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [plan, setPlan] = useState<SubscriptionPlan>('free');
+  const [plan, setPlan] = useState<SubscriptionPlan>('starter');
   const [status, setStatus] = useState<SubscriptionStatus>('active');
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);

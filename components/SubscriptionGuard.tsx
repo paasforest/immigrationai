@@ -62,7 +62,7 @@ export function SubscriptionGuard({
         {hasLimit ? (
           <div className="space-y-2">
             <p className="text-amber-700">
-              You've used all {plan === 'free' ? '3' : 'your'} monthly document generations.
+              You've used all {plan === 'starter' ? '3' : 'your'} monthly document generations.
             </p>
             <p className="text-sm text-amber-600">
               Upgrade to Pro for unlimited generations or wait until next month.
@@ -75,7 +75,7 @@ export function SubscriptionGuard({
             </p>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-amber-600 border-amber-300">
-                {plan === 'free' ? 'Free Plan' : plan === 'pro' ? 'Pro Plan' : 'Enterprise Plan'}
+                {plan === 'starter' ? 'Starter Plan' : plan === 'professional' ? 'Professional Plan' : 'Enterprise Plan'}
               </Badge>
               <span className="text-sm text-amber-600">→</span>
               <Badge className="bg-blue-600 text-white">

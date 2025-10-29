@@ -47,7 +47,7 @@ export default function TeamManagement() {
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'manager' | 'agent' | 'viewer'>('agent');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'agent' | 'viewer'>('agent');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

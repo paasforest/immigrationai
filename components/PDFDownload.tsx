@@ -85,9 +85,12 @@ export default function PDFDownload({
           // Regular text - wrap if too long
           const wrappedLines = doc.splitTextToSize(line, maxWidth);
           doc.text(wrappedLines, margin, yPosition);
+          yPosition += wrappedLines.length * 5;
         }
         
-        yPosition += wrappedLines ? wrappedLines.length * 5 : 5;
+        if (line.startsWith('##') || line.startsWith('###')) {
+          yPosition += 5;
+        }
       }
       
       // Add footer

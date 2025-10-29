@@ -19,7 +19,7 @@ export default function PaymentSuccessPage() {
 
     if (paymentId || orderId) {
       // Fetch payment details
-      fetchPaymentDetails(paymentId || orderId);
+      fetchPaymentDetails(paymentId || orderId || '');
     } else {
       setLoading(false);
     }
