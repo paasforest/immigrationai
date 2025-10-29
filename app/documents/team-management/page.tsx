@@ -145,11 +145,17 @@ export default function TeamManagement() {
       };
 
       setTeamMembers([...teamMembers, newMember]);
-      setTeamStats(prev => ({
+      setTeamStats(prev => prev ? {
         ...prev,
         totalMembers: prev.totalMembers + 1,
         pendingInvites: prev.pendingInvites + 1
-      }));
+      } : {
+        totalMembers: 1,
+        activeMembers: 0,
+        pendingInvites: 1,
+        documentsThisMonth: 0,
+        avgDocumentsPerUser: 0
+      });
       
       alert('Invitation sent successfully!');
     } catch (error: any) {
@@ -183,13 +189,19 @@ export default function TeamManagement() {
       }
 
       setTeamMembers(teamMembers.filter(member => member.id !== memberId));
-      setTeamStats(prev => ({
+      setTeamStats(prev => prev ? {
         ...prev,
         totalMembers: prev.totalMembers - 1,
         activeMembers: teamMembers.find(m => m.id === memberId)?.status === 'active' 
           ? prev.activeMembers - 1 
           : prev.activeMembers
-      }));
+      } : {
+        totalMembers: 0,
+        activeMembers: 0,
+        pendingInvites: 0,
+        documentsThisMonth: 0,
+        avgDocumentsPerUser: 0
+      });
     } catch (error: any) {
       console.error('Error removing team member:', error);
       alert('Failed to remove team member. Please try again.');

@@ -287,7 +287,8 @@ export default function MockInterviewPage() {
             {
               questionId: currentQuestion.id,
               userAnswer: result.transcription,
-              timestamp: new Date().toISOString(),
+              durationSeconds: result.duration || 0,
+              timestamp: Date.now(),
               feedback: {
                 overall_score: 0,
                 category_scores: { clarity: 0, completeness: 0, confidence: 0, consistency: 0, relevance: 0 },
