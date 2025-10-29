@@ -37,11 +37,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   // Load subscription data when user changes
   useEffect(() => {
     if (user) {
-      setPlan(user.subscription_plan as SubscriptionPlan);
-      setStatus(user.subscription_status as SubscriptionStatus);
+      setPlan(user.subscriptionPlan as SubscriptionPlan);
+      setStatus(user.subscriptionStatus as SubscriptionStatus);
       loadUsage();
     } else {
-      setPlan('free');
+      setPlan('starter');
       setStatus('active');
       setUsage(null);
       setLoading(false);

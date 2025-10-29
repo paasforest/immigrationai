@@ -184,7 +184,7 @@ export class FallbackService {
       ]
     };
 
-    return mockQuestions[visaType] || mockQuestions['us_f1'];
+    return (mockQuestions as any)[visaType] || mockQuestions['us_f1'];
   }
 }
 

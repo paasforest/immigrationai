@@ -40,9 +40,9 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
@@ -68,7 +68,7 @@ class ApiClient {
             const refreshResponse = await this.refreshToken(refreshToken);
             if (refreshResponse.success && refreshResponse.data) {
               // Retry the original request with new token
-              headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
+              (headers as Record<string, string>)['Authorization'] = `Bearer ${refreshResponse.data.token}`;
               const retryResponse = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...options,
                 headers,

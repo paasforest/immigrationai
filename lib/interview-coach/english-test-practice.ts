@@ -396,7 +396,7 @@ export const COUNTRY_ENGLISH_REQUIREMENTS = {
 
 // Export helper functions
 export function getTestRequirements(country: string, visaType: string) {
-  return COUNTRY_ENGLISH_REQUIREMENTS[country]?.[visaType] || null;
+  return (COUNTRY_ENGLISH_REQUIREMENTS as any)[country]?.[visaType] || null;
 }
 
 export function getTestForCountry(country: string, visaType: string) {
@@ -406,21 +406,21 @@ export function getTestForCountry(country: string, visaType: string) {
   const availableTests = Object.keys(requirements);
   return availableTests.map(test => ({
     test,
-    ...ENGLISH_TESTS[test],
+    ...(ENGLISH_TESTS as any)[test],
     requirements: requirements[test]
   }));
 }
 
 export function getIELTSQuestions(part: number) {
-  return IELTS_SPEAKING_QUESTIONS[`part${part}`];
+  return (IELTS_SPEAKING_QUESTIONS as any)[`part${part}`];
 }
 
 export function getTOEFLQuestions(task: number) {
-  return TOEFL_SPEAKING_SECTIONS[`task${task}`];
+  return (TOEFL_SPEAKING_SECTIONS as any)[`task${task}`];
 }
 
 export function getCELPIPQuestions(task: number) {
-  return CELPIP_SPEAKING_SECTIONS[`task${task}`];
+  return (CELPIP_SPEAKING_SECTIONS as any)[`task${task}`];
 }
 
 

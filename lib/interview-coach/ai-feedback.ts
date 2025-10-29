@@ -150,7 +150,12 @@ RESPOND ONLY WITH VALID JSON (no markdown):
       response_format: { type: 'json_object' }
     });
 
-    const feedback = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+    
+    const feedback = JSON.parse(content);
     
     // Ensure all required fields are present with defaults
     return {

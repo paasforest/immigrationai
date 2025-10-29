@@ -366,33 +366,6 @@ export default function MockInterviewPage() {
     return 'Needs Improvement';
   };
 
-  const getFeedback = async (transcription: string, duration: number) => {
-    // Simulate AI feedback based on the response
-    const wordCount = transcription.split(' ').length;
-    const hasStructure = transcription.toLowerCase().includes('first') || 
-                        transcription.toLowerCase().includes('second') ||
-                        transcription.toLowerCase().includes('finally');
-    
-    let feedbackText = '';
-    
-    if (duration < 30) {
-      feedbackText += '⏱️ Your response was quite brief. ';
-    } else if (duration > 180) {
-      feedbackText += '⏱️ Consider being more concise. ';
-    }
-    
-    if (wordCount < 50) {
-      feedbackText += '📝 Try to elaborate more on your points. ';
-    }
-    
-    if (hasStructure) {
-      feedbackText += '✅ Good use of structure! ';
-    } else {
-      feedbackText += '💡 Consider using a structured approach (e.g., STAR method). ';
-    }
-    
-    feedbackText += '👍 Keep practicing!';
-    
   const generateClientReport = (clientName: string, feedbacks: DetailedFeedback[], visaType: string): string => {
     const overallScore = feedbacks.reduce((sum, f) => sum + f.overall_score, 0) / feedbacks.length;
     const totalRedFlags = feedbacks.reduce((sum, f) => sum + f.red_flags_detected.length, 0);
