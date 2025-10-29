@@ -85,25 +85,46 @@ export default function MockInterviewPage() {
   const isProfessional = user?.subscriptionPlan === 'professional';
   const isEnterprise = user?.subscriptionPlan === 'enterprise';
 
-  // Simulate transcription function
-  const simulateTranscription = async (audioBlob: Blob): Promise<{ transcription: string; duration: number }> => {
-    // In a real app, this would call the backend API
-    // For now, we'll use the audioProcessor which handles real transcription
-    const result = await audioProcessor.transcribeAudio(audioBlob);
-    
-    if (result.error) {
-      throw new Error(result.error);
+  // Transcribe audio using backend API
+  const transcribeAudio = async (audioBlob: Blob): Promise<{ transcription: string; duration: number }> => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Please login to use transcription');
     }
-    
-    return {
-      transcription: result.transcription,
-      duration: result.duration || 0
-    };
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.webm');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/interview-coach/transcribe-audio`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Transcription failed');
+      }
+
+      const result = await response.json();
+      
+      return {
+        transcription: result.transcription || result.text || '',
+        duration: result.duration || 0
+      };
+    } catch (error: any) {
+      console.error('Transcription error:', error);
+      throw new Error(error.message || 'Failed to transcribe audio. Please try again.');
+    }
   };
 
   // Define getFeedback early to ensure it's available to all functions
   const getFeedback = async (transcription: string, duration: number) => {
-    // Simulate AI feedback based on the response
+    // Note: Real AI feedback is handled by the backend API when submitting answers
+    // This function provides basic client-side feedback
     const wordCount = transcription.split(' ').length;
     const hasStructure = transcription.toLowerCase().includes('first') || 
                         transcription.toLowerCase().includes('second') ||
@@ -250,8 +271,8 @@ export default function MockInterviewPage() {
     try {
       setIsAnalyzing(true);
       
-      // Simulate transcription (in a real app, you'd call an API)
-      const result = await simulateTranscription(audioBlob);
+      // Transcribe audio using backend API
+      const result = await transcribeAudio(audioBlob);
       
       setTranscript(result.transcription);
       setCurrentAnswer(result.transcription);

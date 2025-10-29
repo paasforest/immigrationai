@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { analyzeInterviewAnswer } from '../services/aiService';
+import { logger } from '../utils/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -73,7 +75,77 @@ router.post('/analyze-answer', async (req, res) => {
     // Calculate duration (rough estimate based on answer length)
     const durationSeconds = Math.max(30, Math.floor(userAnswer.length / 10));
 
-    // Create mock interview record
+    // Get AI feedback using real AI service
+    let aiFeedback;
+    try {
+      const feedbackResult = await analyzeInterviewAnswer({
+        question: question.question,
+        userAnswer: userAnswer,
+        visaType: visaType,
+        questionCategory: question.category || undefined,
+        questionDifficulty: question.difficulty || undefined,
+        redFlags: question.red_flags || [],
+        idealElements: question.ideal_elements || [],
+      });
+
+      aiFeedback = {
+        overall_score: feedbackResult.overall_score,
+        score_reasoning: feedbackResult.score_reasoning,
+        strengths: feedbackResult.strengths,
+        improvements: feedbackResult.improvements,
+        suggestions: feedbackResult.suggestions,
+        red_flags_detected: feedbackResult.red_flags_detected,
+        positive_elements: feedbackResult.positive_elements,
+        lawyer_notes: feedbackResult.lawyer_notes,
+        recommended_practice_areas: feedbackResult.recommended_practice_areas,
+        next_questions_to_practice: feedbackResult.next_questions_to_practice,
+        consistency_with_sop: feedbackResult.consistency_with_sop,
+        key_phrases_used: feedbackResult.key_phrases_used,
+        confidence_level: feedbackResult.confidence_level,
+        clarity_score: feedbackResult.clarity_score,
+        completeness_score: feedbackResult.completeness_score,
+        confidence_assessment: feedbackResult.confidence_assessment,
+        overall_assessment: feedbackResult.overall_assessment,
+        category_scores: feedbackResult.category_scores,
+      };
+
+      logger.info('AI feedback generated', { 
+        interviewId: questionId,
+        overall_score: feedbackResult.overall_score,
+        tokensUsed: feedbackResult.tokensUsed
+      });
+    } catch (aiError: any) {
+      logger.error('AI feedback generation failed', { error: aiError.message });
+      // Fallback to basic feedback if AI service fails
+      aiFeedback = {
+        overall_score: 6,
+        score_reasoning: "AI analysis temporarily unavailable. Please try again.",
+        strengths: ["Answer provided"],
+        improvements: ["Please retry for detailed feedback"],
+        suggestions: ["Try again for AI-powered analysis"],
+        red_flags_detected: [],
+        positive_elements: [],
+        lawyer_notes: ["AI service unavailable"],
+        recommended_practice_areas: [],
+        next_questions_to_practice: [],
+        consistency_with_sop: true,
+        key_phrases_used: [],
+        confidence_level: "medium" as const,
+        clarity_score: 6,
+        completeness_score: 6,
+        confidence_assessment: "unable to assess",
+        overall_assessment: "AI analysis service temporarily unavailable.",
+        category_scores: {
+          clarity: 6,
+          completeness: 6,
+          confidence: 6,
+          consistency: 7,
+          relevance: 6
+        }
+      };
+    }
+
+    // Create interview record with real AI feedback
     const mockInterview = await prisma.mockInterview.create({
       data: {
         userId: userId,
@@ -81,26 +153,8 @@ router.post('/analyze-answer', async (req, res) => {
         questionId: questionId,
         userAnswer: userAnswer,
         durationSeconds: durationSeconds,
-        aiFeedback: {
-          overall_score: Math.floor(Math.random() * 3) + 6, // 6-8 range
-          score_reasoning: "Mock feedback - AI service integration pending",
-          strengths: ["Good attempt at answering the question"],
-          improvements: ["Try to be more specific"],
-          suggestions: ["Practice speaking more clearly"],
-          red_flags_detected: [],
-          consistency_with_sop: true,
-          clarity_score: 7,
-          confidence_assessment: "moderate",
-          overall_assessment: "This is a reasonable answer.",
-          category_scores: {
-            clarity: 7,
-            completeness: 6,
-            confidence: 7,
-            consistency: 8,
-            relevance: 7
-          }
-        },
-        score: Math.floor(Math.random() * 3) + 6,
+        aiFeedback: aiFeedback as any,
+        score: aiFeedback.overall_score,
       }
     });
 

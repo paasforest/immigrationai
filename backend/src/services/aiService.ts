@@ -228,6 +228,165 @@ Provide your analysis in this JSON format:
   }
 };
 
+// Analyze Interview Answer with AI
+export const analyzeInterviewAnswer = async (params: {
+  question: string;
+  userAnswer: string;
+  visaType: string;
+  questionCategory?: string;
+  questionDifficulty?: string;
+  redFlags?: string[];
+  idealElements?: string[];
+}): Promise<{
+  overall_score: number;
+  category_scores: {
+    clarity: number;
+    completeness: number;
+    confidence: number;
+    consistency: number;
+    relevance: number;
+  };
+  strengths: string[];
+  improvements: string[];
+  suggestions: string[];
+  red_flags_detected: string[];
+  positive_elements: string[];
+  lawyer_notes: string[];
+  recommended_practice_areas: string[];
+  next_questions_to_practice: string[];
+  consistency_with_sop: boolean;
+  key_phrases_used: string[];
+  confidence_level: 'low' | 'medium' | 'high';
+  clarity_score: number;
+  completeness_score: number;
+  score_reasoning: string;
+  overall_assessment: string;
+  confidence_assessment: string;
+  tokensUsed: number;
+}> => {
+  try {
+    logger.info('Interview answer analysis request', { 
+      visaType: params.visaType,
+      answerLength: params.userAnswer.length 
+    });
+
+    const systemPrompt = `You are an expert immigration consultant and visa interview coach with 15+ years of experience. You evaluate visa interview answers with the same scrutiny as actual consulate officers.
+
+Your role is to:
+1. Provide honest, constructive feedback
+2. Identify red flags that could lead to visa rejection
+3. Score answers on clarity, completeness, confidence, consistency, and relevance
+4. Suggest specific improvements
+5. Note positive elements that strengthen the application
+6. Assess consistency with the applicant's Statement of Purpose (if applicable)
+
+Be specific and actionable in your feedback.`;
+
+    const prompt = `Analyze this visa interview answer:
+
+QUESTION: ${params.question}
+${params.questionCategory ? `CATEGORY: ${params.questionCategory}` : ''}
+${params.questionDifficulty ? `DIFFICULTY: ${params.questionDifficulty}` : ''}
+
+USER'S ANSWER: ${params.userAnswer}
+
+${params.redFlags && params.redFlags.length > 0 ? `WATCH FOR THESE RED FLAGS: ${params.redFlags.join(', ')}` : ''}
+${params.idealElements && params.idealElements.length > 0 ? `IDEAL ELEMENTS TO INCLUDE: ${params.idealElements.join(', ')}` : ''}
+
+VISA TYPE: ${params.visaType}
+
+Provide a comprehensive analysis in this EXACT JSON format:
+{
+  "overall_score": 8,
+  "category_scores": {
+    "clarity": 8,
+    "completeness": 7,
+    "confidence": 9,
+    "consistency": 8,
+    "relevance": 8
+  },
+  "strengths": ["Specific mention of university name", "Clear career goals"],
+  "improvements": ["Add more detail about research interests", "Explain financial preparation"],
+  "suggestions": ["Practice speaking more clearly", "Prepare specific examples"],
+  "red_flags_detected": [],
+  "positive_elements": ["Demonstrates genuine interest", "Shows financial planning"],
+  "lawyer_notes": ["Good foundation, needs more specificity"],
+  "recommended_practice_areas": ["Articulating research interests", "Explaining long-term plans"],
+  "next_questions_to_practice": ["Why this university?", "What are your career goals?"],
+  "consistency_with_sop": true,
+  "key_phrases_used": ["world-class research", "academic excellence"],
+  "confidence_level": "high",
+  "clarity_score": 8,
+  "completeness_score": 7,
+  "score_reasoning": "Strong answer with specific details and clear goals. Minor improvements needed in elaborating on research interests.",
+  "overall_assessment": "This is a strong answer that demonstrates genuine intent and preparation.",
+  "confidence_assessment": "The applicant shows confidence and clarity in their response."
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 1200,
+    });
+
+    const analysisText = response.choices[0]?.message?.content || '{}';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    // Parse AI response
+    let analysis;
+    try {
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch (parseError) {
+      logger.error('Failed to parse interview analysis', { parseError, analysisText });
+      throw new Error('Failed to parse AI analysis. Please try again.');
+    }
+
+    // Validate and set defaults
+    const result = {
+      overall_score: analysis.overall_score || 7,
+      category_scores: {
+        clarity: analysis.category_scores?.clarity || 7,
+        completeness: analysis.category_scores?.completeness || 7,
+        confidence: analysis.category_scores?.confidence || 7,
+        consistency: analysis.category_scores?.consistency || 7,
+        relevance: analysis.category_scores?.relevance || 7,
+      },
+      strengths: analysis.strengths || [],
+      improvements: analysis.improvements || [],
+      suggestions: analysis.suggestions || [],
+      red_flags_detected: analysis.red_flags_detected || [],
+      positive_elements: analysis.positive_elements || [],
+      lawyer_notes: analysis.lawyer_notes || [],
+      recommended_practice_areas: analysis.recommended_practice_areas || [],
+      next_questions_to_practice: analysis.next_questions_to_practice || [],
+      consistency_with_sop: analysis.consistency_with_sop ?? true,
+      key_phrases_used: analysis.key_phrases_used || [],
+      confidence_level: (analysis.confidence_level || 'medium') as 'low' | 'medium' | 'high',
+      clarity_score: analysis.clarity_score || analysis.category_scores?.clarity || 7,
+      completeness_score: analysis.completeness_score || analysis.category_scores?.completeness || 7,
+      score_reasoning: analysis.score_reasoning || 'Analysis completed successfully.',
+      overall_assessment: analysis.overall_assessment || 'Analysis completed successfully.',
+      confidence_assessment: analysis.confidence_assessment || 'moderate',
+      tokensUsed,
+    };
+
+    logger.info('Interview answer analysis completed', { 
+      overall_score: result.overall_score,
+      tokensUsed 
+    });
+
+    return result;
+  } catch (error: any) {
+    logger.error('Interview answer analysis error', { error: error.message });
+    throw new Error('Failed to analyze interview answer. Please try again.');
+  }
+};
+
 // Special handler for Ireland Stamp 4 (Family Reunion)
 const checkIrelandStamp4Eligibility = async (profile: any): Promise<{
   eligible: boolean;

@@ -51,82 +51,50 @@ export default function TeamManagement() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to fetch team data
     const fetchTeamData = async () => {
       setLoading(true);
-      
-      // Mock data
-      const mockMembers: TeamMember[] = [
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john@company.com',
-          role: 'admin',
-          status: 'active',
-          lastActive: '2 hours ago',
-          documentsProcessed: 234,
-          joinDate: '2024-01-15',
-          permissions: ['All permissions', 'Manage team', 'View analytics']
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          email: 'sarah@company.com',
-          role: 'manager',
-          status: 'active',
-          lastActive: '1 hour ago',
-          documentsProcessed: 189,
-          joinDate: '2024-02-20',
-          permissions: ['Manage documents', 'View analytics', 'Invite users']
-        },
-        {
-          id: '3',
-          name: 'Mike Wilson',
-          email: 'mike@company.com',
-          role: 'agent',
-          status: 'active',
-          lastActive: '30 minutes ago',
-          documentsProcessed: 156,
-          joinDate: '2024-03-10',
-          permissions: ['Process documents', 'View reports']
-        },
-        {
-          id: '4',
-          name: 'Lisa Brown',
-          email: 'lisa@company.com',
-          role: 'agent',
-          status: 'pending',
-          lastActive: 'Never',
-          documentsProcessed: 0,
-          joinDate: '2024-10-15',
-          permissions: ['Process documents', 'View reports']
-        },
-        {
-          id: '5',
-          name: 'David Lee',
-          email: 'david@company.com',
-          role: 'viewer',
-          status: 'active',
-          lastActive: '3 hours ago',
-          documentsProcessed: 45,
-          joinDate: '2024-04-05',
-          permissions: ['View documents', 'View reports']
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          setLoading(false);
+          return;
         }
-      ];
 
-      const mockStats: TeamStats = {
-        totalMembers: 5,
-        activeMembers: 4,
-        pendingInvites: 1,
-        documentsThisMonth: 624,
-        avgDocumentsPerUser: 124.8
-      };
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/team/members`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      setTimeout(() => {
-        setTeamMembers(mockMembers);
-        setTeamStats(mockStats);
+        if (!response.ok) {
+          throw new Error('Failed to fetch team data');
+        }
+
+        const data = await response.json();
+        setTeamMembers(data.members || []);
+        setTeamStats(data.stats || {
+          totalMembers: 0,
+          activeMembers: 0,
+          pendingInvites: 0,
+          documentsThisMonth: 0,
+          avgDocumentsPerUser: 0
+        });
+      } catch (error) {
+        console.error('Error fetching team data:', error);
+        // Set empty data on error instead of mock data
+        setTeamMembers([]);
+        setTeamStats({
+          totalMembers: 0,
+          activeMembers: 0,
+          pendingInvites: 0,
+          documentsThisMonth: 0,
+          avgDocumentsPerUser: 0
+        });
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchTeamData();
@@ -135,39 +103,129 @@ export default function TeamManagement() {
   const handleInviteUser = async () => {
     if (!inviteEmail || !inviteRole) return;
 
-    // Simulate API call
-    const newMember: TeamMember = {
-      id: Date.now().toString(),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: inviteRole,
-      status: 'pending',
-      lastActive: 'Never',
-      documentsProcessed: 0,
-      joinDate: new Date().toISOString().split('T')[0],
-      permissions: inviteRole === 'manager' 
-        ? ['Manage documents', 'View analytics', 'Invite users']
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('Please login to invite team members');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/team/invite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to invite user');
+      }
+
+      const data = await response.json();
+      const newMember: TeamMember = {
+        id: data.userId || Date.now().toString(),
+        name: inviteEmail.split('@')[0],
+        email: inviteEmail,
+        role: inviteRole,
+        status: 'pending',
+        lastActive: 'Never',
+        documentsProcessed: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        permissions: inviteRole === 'manager' 
+          ? ['Manage documents', 'View analytics', 'Invite users']
         : inviteRole === 'agent'
         ? ['Process documents', 'View reports']
         : ['View documents', 'View reports']
-    };
+      };
 
-    setTeamMembers([...teamMembers, newMember]);
-    setInviteEmail('');
-    setInviteRole('agent');
-    setShowInviteModal(false);
+      setTeamMembers([...teamMembers, newMember]);
+      setTeamStats(prev => ({
+        ...prev,
+        totalMembers: prev.totalMembers + 1,
+        pendingInvites: prev.pendingInvites + 1
+      }));
+      
+      alert('Invitation sent successfully!');
+    } catch (error: any) {
+      console.error('Error inviting user:', error);
+      alert(error.message || 'Failed to invite user. Please try again.');
+    } finally {
+      setInviteEmail('');
+      setInviteRole('agent');
+      setShowInviteModal(false);
+    }
   };
 
-  const handleRemoveMember = (memberId: string) => {
-    setTeamMembers(teamMembers.filter(member => member.id !== memberId));
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('Please login to remove team members');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/team/members/${memberId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove team member');
+      }
+
+      setTeamMembers(teamMembers.filter(member => member.id !== memberId));
+      setTeamStats(prev => ({
+        ...prev,
+        totalMembers: prev.totalMembers - 1,
+        activeMembers: teamMembers.find(m => m.id === memberId)?.status === 'active' 
+          ? prev.activeMembers - 1 
+          : prev.activeMembers
+      }));
+    } catch (error: any) {
+      console.error('Error removing team member:', error);
+      alert('Failed to remove team member. Please try again.');
+    }
   };
 
-  const handleChangeRole = (memberId: string, newRole: TeamMember['role']) => {
-    setTeamMembers(teamMembers.map(member => 
-      member.id === memberId 
-        ? { ...member, role: newRole, permissions: getPermissionsForRole(newRole) }
-        : member
-    ));
+  const handleChangeRole = async (memberId: string, newRole: TeamMember['role']) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('Please login to change roles');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/team/members/${memberId}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to change role');
+      }
+
+      setTeamMembers(teamMembers.map(member => 
+        member.id === memberId 
+          ? { ...member, role: newRole, permissions: getPermissionsForRole(newRole) }
+          : member
+      ));
+    } catch (error: any) {
+      console.error('Error changing role:', error);
+      alert('Failed to change role. Please try again.');
+    }
   };
 
   const getPermissionsForRole = (role: TeamMember['role']): string[] => {

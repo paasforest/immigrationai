@@ -54,28 +54,25 @@ export default function PaymentProofUpload({ onUploadSuccess }: PaymentProofUplo
       formData.append('proof', file);
       formData.append('userId', user.id);
 
-      // For now, simulate successful upload since the backend endpoint is temporarily disabled
-      // TODO: Re-enable when payment proof routes are fixed
-      setUploadStatus('success');
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setUploadStatus('error');
+        setErrorMessage('Please login to upload payment proof');
+        setUploading(false);
+        return;
       }
-      onUploadSuccess?.();
-      
-      // Simulate API call (commented out until backend is fixed)
-      /*
-      const response = await fetch(`${API_BASE_URL}/api/payments/upload-proof`, {
+
+      const response = await fetch(`${API_BASE_URL}/api/upload/payment-proof`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success !== false) {
         setUploadStatus('success');
         setFile(null);
         if (fileInputRef.current) {
@@ -84,10 +81,10 @@ export default function PaymentProofUpload({ onUploadSuccess }: PaymentProofUplo
         onUploadSuccess?.();
       } else {
         setUploadStatus('error');
-        setErrorMessage(data.message || 'Upload failed');
+        setErrorMessage(data.message || data.error || 'Upload failed');
       }
-      */
     } catch (error) {
+      console.error('Upload error:', error);
       setUploadStatus('error');
       setErrorMessage('Network error. Please try again.');
     } finally {

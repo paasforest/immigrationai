@@ -110,83 +110,9 @@ export class ErrorHandler {
   }
 }
 
-// Fallback functions for when services fail
-export class FallbackService {
-  static getMockTranscription(): string {
-    return "This is a mock transcription. The audio recording feature is currently unavailable, but you can still practice by typing your answer below.";
-  }
-
-  static getMockFeedback(answer: string): any {
-    return {
-      overall_score: Math.floor(Math.random() * 3) + 6, // 6-8 range
-      score_reasoning: "This is mock feedback. The AI analysis service is currently unavailable.",
-      strengths: [
-        "Good attempt at answering the question",
-        "Shows understanding of the topic"
-      ],
-      improvements: [
-        "Try to be more specific in your examples",
-        "Consider adding more personal details"
-      ],
-      suggestions: [
-        "Practice speaking more clearly",
-        "Prepare specific examples beforehand"
-      ],
-      red_flags_detected: [],
-      consistency_with_sop: true,
-      clarity_score: 7,
-      confidence_assessment: "moderate",
-      overall_assessment: "This is a reasonable answer that shows understanding of the question.",
-      category_scores: {
-        clarity: 7,
-        completeness: 6,
-        confidence: 7,
-        consistency: 8,
-        relevance: 7
-      },
-      positive_elements: ["Attempted to answer the question"],
-      lawyer_notes: ["Mock feedback - AI service unavailable"],
-      recommended_practice_areas: ["General speaking practice"],
-      next_questions_to_practice: [],
-      key_phrases_used: [],
-      confidence_level: "medium",
-      completeness_score: 6
-    };
-  }
-
-  static getMockQuestions(visaType: string): any[] {
-    const mockQuestions = {
-      'us_f1': [
-        {
-          id: 'mock_1',
-          question: 'Why do you want to study in the United States?',
-          category: 'education',
-          difficulty: 'medium',
-          context_tips: ['Be specific about your chosen university', 'Mention academic goals'],
-          red_flags: ['Generic answers', 'Mentioning work opportunities'],
-          ideal_elements: ['Specific university details', 'Academic interests', 'Career goals'],
-          example_good_answer: 'I want to study Computer Science at Stanford because of their strong AI research program...',
-          example_bad_answer: 'The US has good universities.'
-        }
-      ],
-      'canada_study': [
-        {
-          id: 'mock_2',
-          question: 'Why did you choose Canada for your studies?',
-          category: 'education',
-          difficulty: 'medium',
-          context_tips: ['Mention specific Canadian universities', 'Show knowledge of Canada'],
-          red_flags: ['Generic answers', 'Only mentioning work opportunities'],
-          ideal_elements: ['University specifics', 'Research opportunities', 'Cultural interest'],
-          example_good_answer: 'I chose Canada because the University of Toronto has excellent AI research...',
-          example_bad_answer: 'Canada is a good country.'
-        }
-      ]
-    };
-
-    return (mockQuestions as any)[visaType] || mockQuestions['us_f1'];
-  }
-}
+// Note: Mock fallback functions removed for production.
+// All services should use real API calls. If services fail, proper error handling
+// should be used instead of returning mock data.
 
 // Utility function to show user-friendly error messages
 export function showErrorToUser(error: InterviewCoachError): void {

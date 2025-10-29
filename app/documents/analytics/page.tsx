@@ -60,77 +60,64 @@ export default function AnalyticsDashboard() {
   const [selectedMetric, setSelectedMetric] = useState('documents');
 
   useEffect(() => {
-    // Simulate API call to fetch analytics data
     const fetchAnalytics = async () => {
       setLoading(true);
-      // Mock data - replace with real API call
-      const mockData: AnalyticsData = {
-        overview: {
-          totalUsers: 1247,
-          totalDocuments: 8934,
-          successRate: 94.2,
-          avgProcessingTime: 2.3,
-          monthlyRevenue: 45600,
-          activeSubscriptions: 89
-        },
-        usageStats: {
-          documentsByType: [
-            { type: 'Visa Eligibility', count: 3420, percentage: 38.3 },
-            { type: 'SOP Generator', count: 2156, percentage: 24.1 },
-            { type: 'Support Letters', count: 1890, percentage: 21.2 },
-            { type: 'Mock Interviews', count: 987, percentage: 11.0 },
-            { type: 'English Tests', count: 481, percentage: 5.4 }
-          ],
-          countriesByUsage: [
-            { country: 'Canada', count: 2340, percentage: 26.2 },
-            { country: 'USA', count: 1987, percentage: 22.2 },
-            { country: 'UK', count: 1654, percentage: 18.5 },
-            { country: 'Australia', count: 1234, percentage: 13.8 },
-            { country: 'Ireland', count: 987, percentage: 11.0 },
-            { country: 'Germany', count: 732, percentage: 8.2 }
-          ],
-          peakHours: [
-            { hour: '09:00', requests: 45 },
-            { hour: '10:00', requests: 67 },
-            { hour: '11:00', requests: 89 },
-            { hour: '14:00', requests: 78 },
-            { hour: '15:00', requests: 92 },
-            { hour: '16:00', requests: 85 }
-          ],
-          monthlyTrend: [
-            { month: 'Jan', documents: 2340, revenue: 18200 },
-            { month: 'Feb', documents: 2670, revenue: 20800 },
-            { month: 'Mar', documents: 2890, revenue: 22500 },
-            { month: 'Apr', documents: 3120, revenue: 24300 },
-            { month: 'May', documents: 3450, revenue: 26900 },
-            { month: 'Jun', documents: 3780, revenue: 29400 }
-          ]
-        },
-        userInsights: {
-          newUsers: 156,
-          returningUsers: 1091,
-          churnRate: 3.2,
-          avgSessionDuration: 12.4,
-          topFeatures: [
-            { feature: 'Visa Eligibility Checker', usage: 89.2 },
-            { feature: 'Document Generator', usage: 76.8 },
-            { feature: 'Mock Interview Coach', usage: 65.4 },
-            { feature: 'English Test Practice', usage: 58.9 },
-            { feature: 'Interview Questions DB', usage: 52.1 }
-          ]
-        },
-        performance: {
-          systemUptime: 99.8,
-          avgResponseTime: 1.2,
-          errorRate: 0.3,
-          apiCalls: 45678
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          setLoading(false);
+          return;
         }
-      };
-      
-      setTimeout(() => {
-        setAnalyticsData(mockData);
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/analytics?timeRange=${timeRange}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+
+        const data = await response.json();
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        // Set empty/default data on error instead of mock data
+        setAnalyticsData({
+          overview: {
+            totalUsers: 0,
+            totalDocuments: 0,
+            successRate: 0,
+            avgProcessingTime: 0,
+            monthlyRevenue: 0,
+            activeSubscriptions: 0
+          },
+          usageStats: {
+            documentsByType: [],
+            countriesByUsage: [],
+            peakHours: [],
+            monthlyTrend: []
+          },
+          userInsights: {
+            newUsers: 0,
+            returningUsers: 0,
+            churnRate: 0,
+            avgSessionDuration: 0,
+            topFeatures: []
+          },
+          performance: {
+            systemUptime: 0,
+            avgResponseTime: 0,
+            errorRate: 0,
+            apiCalls: 0
+          }
+        });
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     };
 
     fetchAnalytics();
