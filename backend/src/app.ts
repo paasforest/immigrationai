@@ -49,8 +49,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ROUTES
 // ============================================================================
 
-// Health check endpoint
+// Health check endpoints
 app.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
