@@ -1,8 +1,14 @@
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('OPENAI_API_KEY is not set');
+}
+
+const CHAT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-mock',
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Immigration Expert System Prompt
@@ -41,7 +47,7 @@ export const chatWithAI = async (
     ];
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages,
       temperature: 0.7,
       max_tokens: 800,
@@ -106,7 +112,7 @@ Write a well-structured, persuasive SOP (approximately 800-1000 words) that:
 Make it personal, authentic, and compelling. Avoid clichés. Use specific examples from the provided information.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: 'You are an expert Statement of Purpose writer who has helped thousands of successful visa applicants. Write compelling, personalized SOPs that showcase the applicant\'s unique story.' },
         { role: 'user', content: prompt }
@@ -179,7 +185,7 @@ Provide your analysis in this JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: 'You are an expert SOP reviewer who evaluates statements with constructive feedback. Provide honest, specific scores and actionable suggestions.' },
         { role: 'user', content: prompt }
@@ -324,7 +330,7 @@ Provide a comprehensive analysis in this EXACT JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
@@ -783,7 +789,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
@@ -1204,7 +1210,7 @@ Write a compelling explanation that:
 Length: 250-350 words. Sincere, specific, credible.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
