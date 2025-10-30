@@ -8,7 +8,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get analytics data
-router.get('/analytics', authenticateJWT, async (req: AuthRequest, res: Response) => {
+router.get('/analytics', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { timeRange = '30d' } = req.query;

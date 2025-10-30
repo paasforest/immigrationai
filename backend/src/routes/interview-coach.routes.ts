@@ -18,7 +18,7 @@ const upload = multer({
 });
 
 // Start interview session
-router.post('/start-session', async (req, res) => {
+router.post('/start-session', async (req, res): Promise<void> => {
   try {
     const { visaType } = req.body;
     const userId = req.headers['x-user-id'] as string || '6d4faab5-d1c6-46da-ab34-c080509d64ac'; // Use our test user ID
@@ -65,7 +65,7 @@ router.post('/start-session', async (req, res) => {
 });
 
 // Analyze answer and provide feedback
-router.post('/analyze-answer', async (req, res) => {
+router.post('/analyze-answer', async (req, res): Promise<void> => {
   try {
     const { questionId, userAnswer, visaType, sessionId } = req.body;
     const userId = req.headers['x-user-id'] as string || '6d4faab5-d1c6-46da-ab34-c080509d64ac'; // Use our test user ID
@@ -184,7 +184,7 @@ router.post('/analyze-answer', async (req, res) => {
 });
 
 // Get user progress
-router.get('/progress', async (req, res) => {
+router.get('/progress', async (req, res): Promise<void> => {
   try {
     const userId = req.headers['x-user-id'] as string || '6d4faab5-d1c6-46da-ab34-c080509d64ac'; // Use our test user ID
 
@@ -201,7 +201,7 @@ router.get('/progress', async (req, res) => {
 });
 
 // Get user's past interviews
-router.get('/interviews', async (req, res) => {
+router.get('/interviews', async (req, res): Promise<void> => {
   try {
     const userId = req.headers['x-user-id'] as string || '6d4faab5-d1c6-46da-ab34-c080509d64ac'; // Use our test user ID
 
@@ -268,7 +268,7 @@ async function updateUserProgress(userId: string, visaType: string) {
 }
 
 // Transcribe audio using OpenAI Whisper API
-router.post('/transcribe-audio', authenticateJWT, upload.single('audio'), async (req, res) => {
+router.post('/transcribe-audio', authenticateJWT, upload.single('audio'), async (req, res): Promise<void> => {
   try {
     const file = req.file;
     

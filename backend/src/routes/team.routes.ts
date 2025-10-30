@@ -8,7 +8,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get team members
-router.get('/team/members', authenticateJWT, async (req: AuthRequest, res: Response) => {
+router.get('/team/members', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     
@@ -62,7 +62,7 @@ router.get('/team/members', authenticateJWT, async (req: AuthRequest, res: Respo
 });
 
 // Invite team member
-router.post('/team/invite', authenticateJWT, async (req: AuthRequest, res: Response) => {
+router.post('/team/invite', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { email, role } = req.body;
@@ -113,7 +113,7 @@ router.post('/team/invite', authenticateJWT, async (req: AuthRequest, res: Respo
 });
 
 // Remove team member
-router.delete('/team/members/:memberId', authenticateJWT, async (req: AuthRequest, res: Response) => {
+router.delete('/team/members/:memberId', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { memberId } = req.params;
@@ -146,7 +146,7 @@ router.delete('/team/members/:memberId', authenticateJWT, async (req: AuthReques
 });
 
 // Change team member role
-router.patch('/team/members/:memberId/role', authenticateJWT, async (req: AuthRequest, res: Response) => {
+router.patch('/team/members/:memberId/role', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { memberId } = req.params;
