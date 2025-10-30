@@ -80,7 +80,7 @@ export default function InterviewResponseBuilder() {
 
     try {
       // Generate a personalized response using backend API
-      const apiResponse = await fetch('http://localhost:4000/api/interview-coach/analyze-answer', {
+      const apiResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/interview-coach/analyze-answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

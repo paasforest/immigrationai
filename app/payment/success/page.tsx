@@ -27,7 +27,7 @@ export default function PaymentSuccessPage() {
 
   const fetchPaymentDetails = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/payments/status/${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/payments/status/${id}`);
       const data = await response.json();
       
       if (data.success) {

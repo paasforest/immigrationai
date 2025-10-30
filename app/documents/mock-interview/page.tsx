@@ -181,7 +181,7 @@ export default function MockInterviewPage() {
 
     try {
       // Get questions from backend
-      const response = await fetch('http://localhost:4000/api/interview-coach/start-session', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/interview-coach/start-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -338,7 +338,7 @@ export default function MockInterviewPage() {
       const currentQuestion = currentSession.questions[currentSession.currentQuestionIndex];
       
       // Get real AI feedback from backend
-      const feedbackResponse = await fetch('http://localhost:4000/api/interview-coach/analyze-answer', {
+      const feedbackResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/interview-coach/analyze-answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
