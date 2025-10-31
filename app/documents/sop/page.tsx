@@ -291,7 +291,9 @@ export default function SOPGeneratorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Background</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.purpose === 'work' ? 'Professional Background' : formData.purpose === 'immigration' ? 'Personal & Professional Background' : 'Academic Background'}
+                </label>
                 <Textarea
                   name="background"
                   value={formData.background}
@@ -300,15 +302,17 @@ export default function SOPGeneratorPage() {
                     formData.purpose === 'work' 
                       ? 'Describe your education, work experience, technical skills, achievements...'
                       : formData.purpose === 'immigration'
-                      ? 'Describe your education, work experience, qualifications, achievements...'
-                      : 'Describe your education, work experience, achievements...'
+                      ? 'Describe your personal journey, education, work experience, skills, and achievements...'
+                      : 'Describe your education, academic achievements, research experience...'
                   }
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Motivation</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.purpose === 'work' ? 'Why This Role' : formData.purpose === 'immigration' ? 'Immigration Motivation' : 'Why This Program'}
+                </label>
                 <Textarea
                   name="motivation"
                   value={formData.motivation}
@@ -317,7 +321,7 @@ export default function SOPGeneratorPage() {
                     formData.purpose === 'work' 
                       ? 'Why this company? What attracts you to this role?'
                       : formData.purpose === 'immigration'
-                      ? 'Why this opportunity? What motivates you?'
+                      ? 'Why are you immigrating? What motivates this move?'
                       : 'Why this program? What attracts you?'
                   }
                   rows={3}
@@ -325,7 +329,9 @@ export default function SOPGeneratorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Career Goals</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.purpose === 'work' ? 'Future Plans' : formData.purpose === 'immigration' ? 'Future Goals' : 'Career Goals'}
+                </label>
                 <Textarea
                   name="careerGoals"
                   value={formData.careerGoals}
@@ -333,6 +339,8 @@ export default function SOPGeneratorPage() {
                   placeholder={
                     formData.purpose === 'work' 
                       ? 'How this role aligns with your career aspirations and future plans'
+                      : formData.purpose === 'immigration'
+                      ? 'What are your goals after immigration? How will this move help you achieve them?'
                       : 'Short-term and long-term objectives'
                   }
                   rows={3}
