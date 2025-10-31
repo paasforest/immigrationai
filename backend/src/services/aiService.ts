@@ -12,22 +12,67 @@ const openai = new OpenAI({
 });
 
 // Immigration Expert System Prompt
-const IMMIGRATION_EXPERT_PROMPT = `You are an expert immigration consultant with deep knowledge of visa requirements for 150+ countries including USA, Canada, UK, Australia, Germany, and more.
+const IMMIGRATION_EXPERT_PROMPT = `You are an expert immigration consultant working for Immigration AI - an AI-powered platform that helps people prepare immigration documents and navigate visa applications for 150+ countries including USA, Canada, UK, Australia, Germany, Ireland, and more.
+
+ABOUT YOUR PLATFORM:
+- Platform: Immigration AI (immigrationai.co.za)
+- Purpose: Help users prepare professional immigration documents and visa applications
+- Services: SOP generation, cover letters, visa eligibility checks, document reviews, interview coaching, English test practice
+- Trust: Used by thousands of successful applicants worldwide
+- Your role: AI Immigration Expert Assistant providing personalized guidance
+
+SUBSCRIPTION PLANS OFFERED:
+1. **STARTER PLAN - R149/month**
+   - 3 Visa Eligibility Checks per month
+   - 2 Document Types (SOP, Cover Letter)
+   - PDF Downloads
+   - Basic email support
+
+2. **ENTRY PLAN - R299/month** (Most Popular)
+   - 10 Visa Eligibility Checks per month
+   - 5 Document Types
+   - Basic Interview Practice (5 sessions/month)
+   - English Test Practice (IELTS only)
+   - Priority email support
+   - PDF Downloads
+
+3. **PROFESSIONAL PLAN - R699/month**
+   - Unlimited Visa Eligibility Checks
+   - All Document Types (8+ types)
+   - Relationship Proof Kit
+   - AI Photo Analysis
+   - Unlimited Interview Practice
+   - Full English Test Practice (IELTS, TOEFL, CELPIP)
+   - Interview Questions Database
+   - Agent Dashboard
+
+4. **ENTERPRISE PLAN - R1,499/month**
+   - Everything in Professional
+   - Unlimited Team Members
+   - Advanced Analytics Dashboard
+   - Bulk Document Processing
+   - Priority Phone Support
+   - Dedicated Account Manager
+   - SLA Guarantee (99.9% uptime)
 
 You specialize in:
-- Work visas (H-1B, L-1, O-1, Skilled Worker, etc.)
-- Student visas (F-1, J-1, Tier 4, Study Permit)
-- Family visas (K-1, CR-1, Partner visas)
-- Permanent residency (Green Card, Express Entry, ILR)
+- Work visas (H-1B, L-1, O-1, Skilled Worker, Stamp 1, etc.)
+- Student visas (F-1, J-1, Tier 4, Study Permit, Stamp 2)
+- Family visas (K-1, CR-1, Partner visas, Stamp 4)
+- Permanent residency (Green Card, Express Entry, ILR, Stamp 5)
 - Citizenship applications
+- Visitor visas and short-stay visas
 
 Provide accurate, helpful, and specific advice. Always:
 1. Be specific about document requirements
 2. Mention processing times when relevant
 3. Explain eligibility criteria clearly
 4. Suggest next steps
+5. Reference that you're part of the Immigration AI platform helping them succeed
+6. When appropriate, mention our subscription plans and their features to help users understand what's available
+7. Be encouraging and supportive of their immigration journey
 
-Answer the user's question professionally and helpfully.`;
+Answer the user's question professionally and helpfully. Remember, you're helping them achieve their immigration goals through Immigration AI's comprehensive platform.`;
 
 // AI Chat with Immigration Expert
 export const chatWithAI = async (
@@ -114,7 +159,7 @@ Make it personal, authentic, and compelling. Avoid clichés. Use specific exampl
     const response = await openai.chat.completions.create({
       model: CHAT_MODEL,
       messages: [
-        { role: 'system', content: 'You are an expert Statement of Purpose writer who has helped thousands of successful visa applicants. Write compelling, personalized SOPs that showcase the applicant\'s unique story.' },
+        { role: 'system', content: 'You are an expert Statement of Purpose writer working for Immigration AI - a trusted platform helping thousands of successful visa applicants worldwide. Write compelling, personalized SOPs that showcase the applicant\'s unique story. Your writing helps people achieve their immigration dreams through professional, authentic documents.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
@@ -124,12 +169,12 @@ Make it personal, authentic, and compelling. Avoid clichés. Use specific exampl
     const sop = response.choices[0]?.message?.content || '';
     const tokensUsed = response.usage?.total_tokens || 0;
 
-    // Track usage if userId provided
+    // Track usage if userId provided - CRITICAL for tier enforcement!
     if (userId) {
       try {
         const { query } = await import('../config/database');
         await query(
-          'INSERT INTO api_usage (user_id, feature, tokens_used, cost_usd, success) VALUES ($1, $2, $3, $4, $5)',
+          'INSERT INTO api_usage (user_id, feature, tokens_used, cost_usd, success, timestamp) VALUES ($1, $2, $3, $4, $5, NOW())',
           [userId, 'sop_generation', tokensUsed, 0, true] // Cost calculation can be added later
         );
       } catch (error) {
@@ -147,7 +192,7 @@ Make it personal, authentic, and compelling. Avoid clichés. Use specific exampl
 };
 
 // Analyze SOP Quality with AI
-export const analyzeSOP = async (text: string): Promise<{
+export const analyzeSOP = async (text: string, userId?: string): Promise<{
   score: {
     overall: number;
     clarity: number;
@@ -187,7 +232,7 @@ Provide your analysis in this JSON format:
     const response = await openai.chat.completions.create({
       model: CHAT_MODEL,
       messages: [
-        { role: 'system', content: 'You are an expert SOP reviewer who evaluates statements with constructive feedback. Provide honest, specific scores and actionable suggestions.' },
+        { role: 'system', content: 'You are an expert SOP reviewer working for Immigration AI platform. You evaluate statements with constructive feedback to help applicants improve their documents. Provide honest, specific scores and actionable suggestions to help them succeed in their visa applications.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.3,
@@ -215,6 +260,19 @@ Provide your analysis in this JSON format:
     const overall = Math.round(
       (analysis.clarity + analysis.structure + analysis.persuasiveness) / 3
     );
+
+    // Track usage if userId provided
+    if (userId) {
+      try {
+        const { query } = await import('../config/database');
+        await query(
+          'INSERT INTO api_usage (user_id, feature, tokens_used, cost_usd, success, timestamp) VALUES ($1, $2, $3, $4, $5, NOW())',
+          [userId, 'review_sop', tokensUsed, 0, true]
+        );
+      } catch (error) {
+        logger.error('Failed to track SOP review usage:', error);
+      }
+    }
 
     logger.info('SOP Analysis completed', { overall, tokensUsed });
 
@@ -276,7 +334,7 @@ export const analyzeInterviewAnswer = async (params: {
       answerLength: params.userAnswer.length 
     });
 
-    const systemPrompt = `You are an expert immigration consultant and visa interview coach with 15+ years of experience. You evaluate visa interview answers with the same scrutiny as actual consulate officers.
+    const systemPrompt = `You are an expert immigration consultant and visa interview coach working for Immigration AI - a trusted platform helping thousands of successful visa applicants. With 15+ years of experience, you evaluate visa interview answers with the same scrutiny as actual consulate officers.
 
 Your role is to:
 1. Provide honest, constructive feedback
@@ -285,6 +343,7 @@ Your role is to:
 4. Suggest specific improvements
 5. Note positive elements that strengthen the application
 6. Assess consistency with the applicant's Statement of Purpose (if applicable)
+7. Help applicants succeed in their immigration journey through Immigration AI's coaching platform
 
 Be specific and actionable in your feedback.`;
 
@@ -486,7 +545,7 @@ export const checkEligibility = async (profile: {
   nationality?: string;
   maritalStatus?: string;
   dependents?: string;
-}): Promise<{
+}, userId?: string): Promise<{
   eligible: boolean;
   score: number;
   analysis: string;
@@ -510,7 +569,7 @@ export const checkEligibility = async (profile: {
     }
 
     // Realistic system prompt with ACTUAL country requirements
-    const systemPrompt = `You are a certified immigration consultant with 15+ years of experience. You have deep knowledge of ACTUAL visa requirements for all major countries.
+    const systemPrompt = `You are a certified immigration consultant working for Immigration AI - a trusted platform (immigrationai.co.za) helping applicants worldwide succeed in their visa journeys. With 15+ years of experience, you have deep knowledge of ACTUAL visa requirements for all major countries. You provide accurate, realistic assessments to help applicants prepare properly.
 
 REAL COUNTRY REQUIREMENTS (Use these in your assessment):
 
@@ -813,6 +872,19 @@ Format as JSON:
         analysis: 'Unable to parse detailed analysis. Please provide more information for accurate assessment.',
         recommendations: ['Provide complete profile information including language scores and financial proof']
       };
+    }
+
+    // Track usage if userId provided
+    if (userId) {
+      try {
+        const { query } = await import('../config/database');
+        await query(
+          'INSERT INTO api_usage (user_id, feature, tokens_used, cost_usd, success, timestamp) VALUES ($1, $2, $3, $4, $5, NOW())',
+          [userId, 'visa_eligibility_check', tokensUsed, 0, true]
+        );
+      } catch (error) {
+        logger.error('Failed to track visa eligibility usage:', error);
+      }
     }
 
     logger.info('Eligibility check completed', { score: result.score, tokensUsed });

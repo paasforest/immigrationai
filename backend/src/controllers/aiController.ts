@@ -13,6 +13,7 @@ import {
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
 import { AuthRequest } from '../types/request';
+import { canAccessFeature } from '../services/limitEnforcement';
 
 // AI Chat Endpoint
 export const chat = async (req: Request, res: Response) => {
@@ -53,6 +54,15 @@ export const createSOP = async (req: AuthRequest, res: Response) => {
     }
 
     const userId = req.user?.userId;
+    
+    // CRITICAL: Check user limits if authenticated
+    if (userId) {
+      const accessCheck = await canAccessFeature(userId, 'sop_generation', 'sop');
+      if (!accessCheck.allowed) {
+        return sendError(res, 'LIMIT_EXCEEDED', accessCheck.reason || 'Monthly limit exceeded', 403);
+      }
+    }
+
     const result = await generateSOP({
       fullName,
       currentCountry: currentCountry || '',
@@ -90,8 +100,16 @@ export const createSOP = async (req: AuthRequest, res: Response) => {
 };
 
 // Analyze SOP Endpoint
-export const reviewSOP = async (req: Request, res: Response) => {
+export const reviewSOP = async (req: AuthRequest, res: Response) => {
   try {
+    // CRITICAL: Check user limits if authenticated
+    if (req.user?.userId) {
+      const accessCheck = await canAccessFeature(req.user.userId, 'sop_reviewer');
+      if (!accessCheck.allowed) {
+        return sendError(res, 'LIMIT_EXCEEDED', accessCheck.reason || 'Feature not available in your plan', 403);
+      }
+    }
+
     const { text } = req.body;
 
     if (!text || typeof text !== 'string') {
@@ -102,7 +120,8 @@ export const reviewSOP = async (req: Request, res: Response) => {
       return sendError(res, 'validation_error', 'SOP text too short. Minimum 100 characters required', 400);
     }
 
-    const analysis = await analyzeSOP(text);
+    const userId = req.user?.userId;
+    const analysis = await analyzeSOP(text, userId);
 
     return sendSuccess(res, {
       analysis: {
@@ -118,8 +137,16 @@ export const reviewSOP = async (req: Request, res: Response) => {
 };
 
 // Check Visa Eligibility Endpoint
-export const checkVisaEligibility = async (req: Request, res: Response) => {
+export const checkVisaEligibility = async (req: AuthRequest, res: Response) => {
   try {
+    // CRITICAL: Check user limits if authenticated
+    if (req.user?.userId) {
+      const accessCheck = await canAccessFeature(req.user.userId, 'visa_eligibility_check');
+      if (!accessCheck.allowed) {
+        return sendError(res, 'LIMIT_EXCEEDED', accessCheck.reason || 'Monthly limit exceeded', 403);
+      }
+    }
+
     const {
       targetCountry,
       visaType,
@@ -151,6 +178,7 @@ export const checkVisaEligibility = async (req: Request, res: Response) => {
       return sendError(res, 'validation_error', 'Required fields: targetCountry, visaType', 400);
     }
 
+    const userId = req.user?.userId;
     const result = await checkEligibility({
       targetCountry,
       visaType,
@@ -176,7 +204,7 @@ export const checkVisaEligibility = async (req: Request, res: Response) => {
       nationality,
       maritalStatus,
       dependents,
-    });
+    }, userId);
 
     return sendSuccess(res, {
       eligible: result.eligible,

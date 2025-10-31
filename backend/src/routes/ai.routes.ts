@@ -14,17 +14,17 @@ import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 
 const router = Router();
 
-// AI Chat - Immigration Expert (Available to all plans)
+// AI Chat - Immigration Expert (Available to all plans, but limits enforced)
 router.post('/ai/chat', optionalAuth, chat);
 
-// Document Generation - SOP (Available to all plans)
-router.post('/ai/generate-sop', optionalAuth, createSOP);
+// Document Generation - SOP (Limits enforced per tier)
+router.post('/ai/generate-sop', authenticateJWT, createSOP);
 
-// Document Analysis - SOP Review (Available to all plans)
-router.post('/ai/analyze-sop', optionalAuth, reviewSOP);
+// Document Analysis - SOP Review (Limits enforced per tier)
+router.post('/ai/analyze-sop', authenticateJWT, reviewSOP);
 
-// Visa Eligibility Check (Available to all plans)
-router.post('/ai/check-eligibility', optionalAuth, checkVisaEligibility);
+// Visa Eligibility Check (Limits enforced per tier)
+router.post('/ai/check-eligibility', authenticateJWT, checkVisaEligibility);
 
 // NEW DOCUMENT GENERATORS - Premium features
 // Email Template Generator (Professional+ required)
