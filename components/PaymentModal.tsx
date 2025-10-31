@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Building, CreditCard, X } from 'lucide-react';
+import { Copy, Building, CreditCard, X, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentProofUpload from './PaymentProofUpload';
 
@@ -138,6 +138,20 @@ export default function PaymentModal({ isOpen, onClose, accountNumber: propAccou
               <li>• Your account will be activated immediately</li>
               <li>• Keep proof of payment for your records</li>
             </ul>
+          </div>
+
+          {/* Money-Back Guarantee */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-green-900 mb-1">100% Money-Back Guarantee</h4>
+                <p className="text-sm text-green-800">
+                  Not satisfied with our service? Get a full refund within 7 days, no questions asked. 
+                  We're confident you'll love our platform, or your money back.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Payment Proof Upload */}

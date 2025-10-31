@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Zap, ArrowRight, Star, Calendar, DollarSign, Building, CreditCard } from 'lucide-react';
+import { Check, Crown, Zap, ArrowRight, Star, Calendar, DollarSign, Building, CreditCard, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -206,6 +206,15 @@ export default function PricingPage() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Select the perfect plan for your immigration journey. Save up to 17% with annual billing.
           </p>
+          
+          {/* Money-Back Guarantee Badge */}
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-6 py-2 flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-green-600" />
+              <span className="text-green-800 font-semibold">100% Money-Back Guarantee</span>
+              <span className="text-green-600 text-sm">• Not satisfied? Full refund within 7 days</span>
+            </div>
+          </div>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center space-x-4 mb-8">
@@ -394,7 +403,8 @@ export default function PricingPage() {
                   Do you offer refunds?
                 </h3>
                 <p className="text-gray-600">
-                  We offer a 30-day money-back guarantee for all new subscriptions. Contact support for assistance.
+                  Yes! We offer a <strong>100% money-back guarantee within 7 days</strong> if you're not completely satisfied. 
+                  No questions asked. Simply contact support for a full refund.
                 </p>
               </div>
             </div>

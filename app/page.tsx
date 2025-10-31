@@ -211,9 +211,19 @@ export default function ImmigrationAILanding() {
               </button>
             </div>
 
-            <p className="text-sm text-gray-500 mt-6">
-              No credit card required • 3 starter documents • Cancel anytime
-            </p>
+            <div className="flex flex-col items-center space-y-3 mt-6">
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <span>No credit card required</span>
+                <span>•</span>
+                <span>3 starter documents</span>
+                <span>•</span>
+                <span>Cancel anytime</span>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-4 py-2 flex items-center space-x-2">
+                <Shield className="w-4 h-4 text-green-600" />
+                <span className="text-green-800 font-semibold text-sm">100% Money-Back Guarantee - 7 Days</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -309,6 +319,15 @@ export default function ImmigrationAILanding() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
               Choose the plan that fits your needs. Upgrade or downgrade anytime.
             </p>
+            
+            {/* Money-Back Guarantee */}
+            <div className="flex items-center justify-center space-x-2 mb-6">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-6 py-2 flex items-center space-x-2">
+                <Shield className="w-5 h-5 text-green-600" />
+                <span className="text-green-800 font-semibold">100% Money-Back Guarantee</span>
+                <span className="text-green-600 text-sm">• Full refund within 7 days</span>
+              </div>
+            </div>
             
             {/* Billing Toggle */}
             <div className="flex items-center justify-center space-x-4 mb-8">

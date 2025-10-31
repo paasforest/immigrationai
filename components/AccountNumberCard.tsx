@@ -108,7 +108,15 @@ export default function AccountNumberCard() {
               </Button>
 
               {/* Support */}
-              <div className="text-center">
+              <div className="text-center space-y-3">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-xs text-green-800 font-semibold flex items-center justify-center">
+                    <span>🛡️ 100% Money-Back Guarantee</span>
+                  </p>
+                  <p className="text-xs text-green-700 mt-1">
+                    Not satisfied? Full refund within 7 days
+                  </p>
+                </div>
                 <p className="text-xs text-gray-500">
                   Need help? Contact support with your Account Number: <strong>{accountNumber}</strong>
                 </p>
