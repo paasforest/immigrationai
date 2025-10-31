@@ -255,22 +255,38 @@ export default function SOPGeneratorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Institution/Company *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.purpose === 'work' ? 'Company Name *' : formData.purpose === 'immigration' ? 'Company/Institution *' : 'Institution/University *'}
+                </label>
                 <Input
                   name="institution"
                   value={formData.institution}
                   onChange={handleInputChange}
-                  placeholder="Massachusetts Institute of Technology"
+                  placeholder={
+                    formData.purpose === 'work' 
+                      ? 'Google Inc.' 
+                      : formData.purpose === 'immigration'
+                      ? 'ABC Corporation or University Name'
+                      : 'Massachusetts Institute of Technology'
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Program/Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.purpose === 'work' ? 'Job Title/Position' : formData.purpose === 'immigration' ? 'Position/Role' : 'Program/Degree'}
+                </label>
                 <Input
                   name="program"
                   value={formData.program}
                   onChange={handleInputChange}
-                  placeholder="Master's in Computer Science"
+                  placeholder={
+                    formData.purpose === 'work' 
+                      ? 'Software Engineer'
+                      : formData.purpose === 'immigration'
+                      ? 'Product Manager'
+                      : 'Masters Degree in Computer Science'
+                  }
                 />
               </div>
 
@@ -280,7 +296,13 @@ export default function SOPGeneratorPage() {
                   name="background"
                   value={formData.background}
                   onChange={handleInputChange}
-                  placeholder="Describe your education, work experience, achievements..."
+                  placeholder={
+                    formData.purpose === 'work' 
+                      ? 'Describe your education, work experience, technical skills, achievements...'
+                      : formData.purpose === 'immigration'
+                      ? 'Describe your education, work experience, qualifications, achievements...'
+                      : 'Describe your education, work experience, achievements...'
+                  }
                   rows={3}
                 />
               </div>
@@ -291,7 +313,13 @@ export default function SOPGeneratorPage() {
                   name="motivation"
                   value={formData.motivation}
                   onChange={handleInputChange}
-                  placeholder="Why this program? What attracts you?"
+                  placeholder={
+                    formData.purpose === 'work' 
+                      ? 'Why this company? What attracts you to this role?'
+                      : formData.purpose === 'immigration'
+                      ? 'Why this opportunity? What motivates you?'
+                      : 'Why this program? What attracts you?'
+                  }
                   rows={3}
                 />
               </div>
@@ -302,7 +330,11 @@ export default function SOPGeneratorPage() {
                   name="careerGoals"
                   value={formData.careerGoals}
                   onChange={handleInputChange}
-                  placeholder="Short-term and long-term objectives"
+                  placeholder={
+                    formData.purpose === 'work' 
+                      ? 'How this role aligns with your career aspirations and future plans'
+                      : 'Short-term and long-term objectives'
+                  }
                   rows={3}
                 />
               </div>
