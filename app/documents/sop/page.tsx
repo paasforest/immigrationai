@@ -76,7 +76,7 @@ export default function SOPGeneratorPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     currentCountry: '',
-    targetCountry: '',
+    targetCountry: 'select_country',
     purpose: 'study',
     institution: '',
     program: '',
@@ -90,7 +90,7 @@ export default function SOPGeneratorPage() {
   };
 
   const handleGenerateSOP = async () => {
-    if (!formData.fullName || !formData.targetCountry || !formData.institution) {
+    if (!formData.fullName || !formData.targetCountry || formData.targetCountry === 'select_country' || !formData.institution) {
       alert('Please fill in required fields: Full Name, Target Country, and Institution');
       return;
     }
