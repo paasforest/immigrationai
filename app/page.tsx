@@ -397,13 +397,16 @@ export default function ImmigrationAILanding() {
                   ))}
                 </ul>
 
-                <button className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                  tier.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}>
+                <Link 
+                  href={tier.name === 'Enterprise Plan' ? '#contact' : '/auth/signup'}
+                  className={`w-full py-3 rounded-lg font-semibold transition-all inline-block text-center ${
+                    tier.popular
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
                   {tier.cta}
-                </button>
+                </Link>
               </div>
             ))}
           </div>
