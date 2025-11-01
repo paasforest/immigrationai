@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/adminController';
 import { requireAuth } from '../middleware/auth';
+import { requireAdmin } from '../middleware/requireAdmin';
 
 const router = Router();
 
-// All admin routes require authentication
+// All admin routes require authentication AND admin role
 router.use(requireAuth);
+router.use(requireAdmin);
 
 // Payment management
 router.get('/payments/pending', adminController.getPendingPayments);

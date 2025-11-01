@@ -11,13 +11,19 @@ export class PaymentVerificationService {
         p.plan,
         p.billing_cycle,
         p.amount,
+        p.status,
         p.created_at,
         u.email,
         u.full_name,
-        u.account_number
+        u.account_number,
+        pp.id as proof_id,
+        pp.file_path as proof_file_path,
+        pp.file_name as proof_file_name,
+        pp.created_at as proof_uploaded_at
        FROM payments p
        JOIN users u ON p.user_id = u.id
-       WHERE p.status = 'pending'
+       LEFT JOIN payment_proofs pp ON pp.user_id = u.id AND pp.status = 'pending'
+       WHERE p.status IN ('pending', 'verifying')
        ORDER BY p.created_at DESC`
     );
 

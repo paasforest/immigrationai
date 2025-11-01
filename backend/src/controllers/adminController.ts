@@ -11,11 +11,7 @@ export class AdminController {
       return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
     }
 
-    // TODO: Add admin role check
-    // if (req.user.role !== 'admin') {
-    //   return sendError(res, 'FORBIDDEN', 'Admin access required', 403);
-    // }
-
+    // Admin role check is handled by requireAdmin middleware in routes
     const payments = await paymentVerificationService.getPendingPayments();
     return sendSuccess(res, payments, 'Pending payments retrieved successfully');
   });

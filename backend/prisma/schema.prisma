@@ -16,6 +16,7 @@ model User {
   passwordHash        String         @map("password_hash") @db.VarChar(255)
   fullName            String?        @map("full_name") @db.VarChar(255)
   companyName         String?        @map("company_name") @db.VarChar(255)
+  role                String?        @default("user") @db.VarChar(50)
   subscriptionPlan    String         @default("free") @map("subscription_plan") @db.VarChar(50)
   subscriptionStatus  String         @default("active") @map("subscription_status") @db.VarChar(50)
   createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamp(6)

@@ -86,13 +86,22 @@ export class PaymentProofController {
         ]
       );
 
-      // Immediately activate the user's account
-      await this.activateUserAccount(userId, proofId);
+      // Update payment status to 'verifying' (not activated yet)
+      await query(
+        `UPDATE payments 
+         SET status = 'verifying', 
+             updated_at = NOW()
+         WHERE user_id = $1 AND status = 'pending'`,
+        [userId]
+      );
+
+      // Send notification to admin (TODO: implement email notification)
 
       return sendSuccess(res, {
         proofId,
-        message: 'Payment proof uploaded and account activated successfully'
-      }, 'Account activated successfully');
+        status: 'pending',
+        message: 'Payment proof uploaded successfully. Your account will be activated within 24 hours after verification.'
+      }, 'Payment proof uploaded. Awaiting admin verification.');
 
     } catch (error) {
       // Clean up uploaded file if database operation fails
