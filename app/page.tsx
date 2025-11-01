@@ -206,9 +206,9 @@ export default function ImmigrationAILanding() {
                 <span>Get Started</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <button className="bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 transition-all">
-                Watch Demo
-              </button>
+              <Link href="/auth/signup" className="bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 transition-all">
+                Start Free Trial
+              </Link>
             </div>
 
             <div className="flex flex-col items-center space-y-3 mt-6">
