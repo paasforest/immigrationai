@@ -223,12 +223,12 @@ export class AccountNumberService {
   // Map payment plan names to database plan names
   private mapPlanToDatabase(plan: string): string {
     const planMapping = {
-      'starter': 'free',
-      'entry': 'pro', 
-      'professional': 'pro',
+      'starter': 'starter',
+      'entry': 'entry', 
+      'professional': 'professional',
       'enterprise': 'enterprise'
     };
-    return planMapping[plan as keyof typeof planMapping] || 'free';
+    return planMapping[plan as keyof typeof planMapping] || 'starter';
   }
 
   // Update user subscription

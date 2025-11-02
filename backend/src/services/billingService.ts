@@ -239,7 +239,7 @@ export class BillingService {
 
     if (subResult.rows.length > 0) {
       await query(
-        `UPDATE users SET subscription_plan = 'free', subscription_status = 'cancelled' WHERE id = $1`,
+        `UPDATE users SET subscription_plan = 'starter', subscription_status = 'cancelled' WHERE id = $1`,
         [subResult.rows[0].user_id]
       );
     }

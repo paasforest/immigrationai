@@ -63,15 +63,32 @@ export class AuthService {
   ): Promise<{ user: UserPublic; token: string; refreshToken: string }> {
     // Find user using Prisma
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        companyName: true,
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        createdAt: true
+      }
     });
     
     if (!user) {
       throw new AppError('Invalid email or password', 401);
     }
     
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    // Check password - need to fetch full user for password
+    const fullUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (!fullUser) {
+      throw new AppError('Invalid email or password', 401);
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, fullUser.passwordHash);
     
     if (!isValidPassword) {
       throw new AppError('Invalid email or password', 401);
@@ -85,7 +102,7 @@ export class AuthService {
     await this.storeRefreshToken(user.id, refreshToken);
     
     return {
-      user: sanitizeUser(user),
+      user: user as UserPublic,
       token,
       refreshToken,
     };

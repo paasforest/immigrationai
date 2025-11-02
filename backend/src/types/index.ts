@@ -5,7 +5,7 @@ export interface User {
   password_hash: string;
   full_name: string | null;
   company_name: string | null;
-  subscription_plan: 'free' | 'pro' | 'enterprise';
+  subscription_plan: 'starter' | 'entry' | 'professional' | 'enterprise';
   subscription_status: 'active' | 'inactive' | 'cancelled' | 'past_due';
   created_at: Date;
   updated_at: Date;
@@ -14,11 +14,11 @@ export interface User {
 export interface UserPublic {
   id: string;
   email: string;
-  full_name: string | null;
-  company_name: string | null;
-  subscription_plan: string;
-  subscription_status: string;
-  created_at: Date;
+  fullName: string | null;
+  companyName: string | null;
+  subscriptionPlan: string;
+  subscriptionStatus: string;
+  createdAt: Date;
 }
 
 // Document Types
@@ -49,7 +49,7 @@ export interface ApiUsage {
 export interface Subscription {
   id: string;
   user_id: string;
-  plan: 'free' | 'pro' | 'enterprise';
+  plan: 'starter' | 'entry' | 'professional' | 'enterprise';
   stripe_subscription_id: string | null;
   status: 'active' | 'inactive' | 'cancelled' | 'past_due';
   current_period_end: Date | null;

@@ -38,10 +38,25 @@ export const getPagination = (page: number = 1, limit: number = 10) => {
   return { limit, offset, page };
 };
 
-// Format user object (remove sensitive fields)
+// Format user object (remove sensitive fields and convert snake_case to camelCase)
 export const sanitizeUser = (user: any) => {
-  const { password_hash, ...sanitized } = user;
-  return sanitized;
+  const { password_hash, passwordHash, ...rest } = user;
+  
+  // Convert snake_case to camelCase if needed
+  if (rest.full_name !== undefined) {
+    return {
+      id: rest.id,
+      email: rest.email,
+      fullName: rest.full_name,
+      companyName: rest.company_name,
+      subscriptionPlan: rest.subscription_plan,
+      subscriptionStatus: rest.subscription_status,
+      createdAt: rest.created_at,
+    };
+  }
+  
+  // Already camelCase
+  return rest;
 };
 
 // Calculate cost based on tokens (GPT-4 pricing)
