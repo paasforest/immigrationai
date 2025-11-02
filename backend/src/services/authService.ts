@@ -27,12 +27,12 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
     
-    // Create user
+    // Create user with inactive status (payment required before access)
     const result = await query(
       `INSERT INTO users (email, password_hash, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
        RETURNING id, email, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at`,
-      [email, password_hash, fullName || null, companyName || null, subscriptionPlan || 'starter', 'active']
+      [email, password_hash, fullName || null, companyName || null, subscriptionPlan || 'starter', 'inactive']
     );
     
     const user = result.rows[0];

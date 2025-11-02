@@ -114,9 +114,9 @@ export async function canAccessFeature(
   documentType?: string
 ): Promise<{ allowed: boolean; reason?: string }> {
   try {
-    // Get user's plan
+    // Get user's plan and status
     const userResult = await query(
-      'SELECT subscription_plan FROM users WHERE id = $1',
+      'SELECT subscription_plan, subscription_status FROM users WHERE id = $1',
       [userId]
     );
     
@@ -125,6 +125,16 @@ export async function canAccessFeature(
     }
     
     const plan = userResult.rows[0].subscription_plan;
+    const status = userResult.rows[0].subscription_status;
+    
+    // CRITICAL: Block access if subscription is not active
+    if (status !== 'active') {
+      return { 
+        allowed: false, 
+        reason: 'Please complete payment to activate your account. Upload your payment proof or contact support for assistance.' 
+      };
+    }
+    
     const tierLimits = TIER_LIMITS[plan] || TIER_LIMITS.starter;
     
     // Check if feature is allowed in this tier

@@ -267,6 +267,29 @@ const features = [
           </p>
         </div>
 
+        {/* Payment Required Notice */}
+        {user.subscriptionStatus !== 'active' && (
+          <div className="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-lg p-6">
+            <div className="flex items-start space-x-4">
+              <DollarSign className="w-8 h-8 text-amber-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-amber-900 mb-2">
+                  Payment Required to Activate Account
+                </h3>
+                <p className="text-amber-800 mb-4">
+                  Your account is currently inactive. Please complete payment to start using all features.
+                </p>
+                <Link href="/pricing">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Complete Payment Now
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Account Number Card */}
         <div className="mb-8">
           <AccountNumberCard />
