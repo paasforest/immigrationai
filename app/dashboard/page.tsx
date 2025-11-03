@@ -243,15 +243,6 @@ const features = [
       badge: "ENTERPRISE",
       enterprise: true
     },
-    {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Bulk Processing",
-      description: "Process multiple documents efficiently for high-volume operations",
-      href: "/documents/bulk-processing",
-      color: "from-green-500 to-emerald-600",
-      badge: "ENTERPRISE",
-      enterprise: true
-    },
   ];
 
   return (
