@@ -50,184 +50,208 @@ export default function DashboardPage() {
     
     const userLevel = planLevels[userPlan as keyof typeof planLevels] || 1;
     
-    // Features available to all plans
-    if (!feature.premium && !feature.enterprise) {
-      return { accessible: true, reason: null };
-    }
-    
-    // Premium features require professional or enterprise
-    if (feature.premium && !feature.enterprise) {
-      if (userLevel >= 3) {
-        return { accessible: true, reason: null };
-      } else {
-        return { 
-          accessible: false, 
-          reason: 'Requires Professional plan or higher' 
-        };
-      }
-    }
-    
-    // Enterprise features require enterprise plan
+    // Enterprise features require enterprise plan (level 4)
     if (feature.enterprise) {
       if (userLevel >= 4) {
         return { accessible: true, reason: null };
       } else {
         return { 
           accessible: false, 
-          reason: 'Requires Enterprise plan' 
+          reason: 'Requires Enterprise plan (R1,499/month)' 
         };
       }
     }
     
+    // Premium features require professional or enterprise (level 3+)
+    if (feature.premium && !feature.enterprise) {
+      if (userLevel >= 3) {
+        return { accessible: true, reason: null };
+      } else {
+        return { 
+          accessible: false, 
+          reason: 'Requires Professional plan or higher (R699/month)' 
+        };
+      }
+    }
+    
+    // Entry-required features need entry plan or higher (level 2+)
+    if (feature.entryRequired) {
+      if (userLevel >= 2) {
+        return { accessible: true, reason: null };
+      } else {
+        return { 
+          accessible: false, 
+          reason: 'Requires Entry plan or higher (R299/month)' 
+        };
+      }
+    }
+    
+    // Starter-only features or features available to all
+    // Starter-only logic: if explicitly marked, only starter can access
+    if (feature.starterOnly) {
+      if (userLevel === 1) {
+        return { accessible: true, reason: null };
+      } else {
+        // Allow higher plans to access starter features too
+        return { accessible: true, reason: null };
+      }
+    }
+    
+    // Default: accessible to all
     return { accessible: true, reason: null };
   };
 
 const features = [
+    // STARTER PLAN ONLY (basic tier)
     {
       icon: <FileText className="w-8 h-8" />,
       title: "SOP Generator",
       description: "Generate compelling Statements of Purpose with AI",
       href: "/documents/sop",
-      color: "from-blue-500 to-indigo-500"
+      color: "from-blue-500 to-indigo-500",
+      starterOnly: true
     },
+    
+    // ENTRY PLAN & ABOVE (most features)
     {
       icon: <CheckCircle className="w-8 h-8" />,
       title: "SOP Reviewer",
       description: "Get AI feedback and quality scores",
       href: "/documents/review",
-      color: "from-green-500 to-teal-500"
+      color: "from-green-500 to-teal-500",
+      entryRequired: true
     },
     {
       icon: <MessageSquare className="w-8 h-8" />,
       title: "AI Chat Assistant",
       description: "Ask immigration questions to AI expert",
       href: "/documents/ai-chat",
-      color: "from-purple-500 to-pink-500"
+      color: "from-purple-500 to-pink-500",
+      entryRequired: true
     },
     {
       icon: <List className="w-8 h-8" />,
       title: "Visa Eligibility",
       description: "Check your visa eligibility with AI",
       href: "/documents/visa-checker",
-      color: "from-orange-500 to-red-500"
+      color: "from-orange-500 to-red-500",
+      entryRequired: true
     },
     {
       icon: <Mail className="w-8 h-8" />,
       title: "Email Generator",
       description: "Professional emails for embassies",
       href: "/documents/email-generator",
-      color: "from-cyan-500 to-blue-500"
+      color: "from-cyan-500 to-blue-500",
+      entryRequired: true
     },
     {
       icon: <FileCheck className="w-8 h-8" />,
       title: "Support Letters",
       description: "Invitation, sponsorship, employment letters",
       href: "/documents/support-letter",
-      color: "from-violet-500 to-purple-500"
+      color: "from-violet-500 to-purple-500",
+      entryRequired: true
     },
     {
       icon: <Plane className="w-8 h-8" />,
       title: "Travel History",
       description: "Format travel records professionally",
       href: "/documents/travel-history",
-      color: "from-sky-500 to-cyan-500"
+      color: "from-sky-500 to-cyan-500",
+      entryRequired: true
     },
     {
       icon: <DollarSign className="w-8 h-8" />,
       title: "Financial Letter",
       description: "Justify funds for visa application",
       href: "/documents/financial-letter",
-      color: "from-emerald-500 to-green-500"
+      color: "from-emerald-500 to-green-500",
+      entryRequired: true
     },
-        {
-          icon: <Target className="w-8 h-8" />,
-          title: "Purpose of Visit",
-          description: "Explain your visit intent clearly",
-          href: "/documents/purpose-of-visit",
-          color: "from-rose-500 to-pink-500"
-        },
-        {
-          icon: <BarChart3 className="w-8 h-8" />,
-          title: "Analytics Dashboard",
-          description: "View feedback and success rates",
-          href: "/documents/analytics",
-          color: "from-indigo-500 to-purple-500"
-        },
-        {
-          icon: <Heart className="w-8 h-8" />,
-          title: "Relationship Proof Kit",
-          description: "Organize relationship evidence professionally",
-          href: "/documents/proofkit",
-          color: "from-pink-500 to-rose-500",
-          badge: "NEW",
-          premium: true
-        },
-        {
-          icon: <Camera className="w-8 h-8" />,
-          title: "Visa Interview Practice Coach",
-          description: "Practice with real consulate questions + AI feedback",
-          href: "/documents/mock-interview",
-          color: "from-purple-500 to-violet-500",
-          badge: "HOT",
-          premium: true
-        },
-        {
-          icon: <BookOpen className="w-8 h-8" />,
-          title: "Interview Questions Database",
-          description: "500+ real questions by visa type, difficulty & category",
-          href: "/documents/interview-questions",
-          color: "from-blue-500 to-indigo-500",
-          badge: "NEW",
-          premium: true
-        },
-        {
-          icon: <Target className="w-8 h-8" />,
-          title: "Interview Response Builder",
-          description: "Craft perfect answers using AI and the STAR method",
-          href: "/documents/interview-response-builder",
-          color: "from-green-500 to-emerald-500",
-          badge: "HOT",
-          premium: true
-        },
-        {
-          icon: <Globe className="w-8 h-8" />,
-          title: "English Test Practice",
-          description: "Practice IELTS, TOEFL & CELPIP speaking with AI scoring",
-          href: "/documents/english-test-practice",
-          color: "from-orange-500 to-red-500",
-          badge: "NEW",
-          premium: true
-        },
-        {
-          icon: <BarChart3 className="w-8 h-8" />,
-          title: "Analytics Dashboard",
-          description: "Advanced analytics, usage tracking, and performance metrics",
-          href: "/documents/analytics",
-          color: "from-purple-500 to-indigo-600",
-          badge: "ENTERPRISE",
-          premium: true,
-          enterprise: true
-        },
-        {
-          icon: <Users className="w-8 h-8" />,
-          title: "Team Management",
-          description: "Manage team members, roles, and permissions",
-          href: "/documents/team-management",
-          color: "from-blue-500 to-cyan-600",
-          badge: "ENTERPRISE",
-          premium: true,
-          enterprise: true
-        },
-        {
-          icon: <Zap className="w-8 h-8" />,
-          title: "Bulk Processing",
-          description: "Process multiple documents efficiently for high-volume operations",
-          href: "/documents/bulk-processing",
-          color: "from-green-500 to-emerald-600",
-          badge: "ENTERPRISE",
-          premium: true,
-          enterprise: true
-        },
+    {
+      icon: <Target className="w-8 h-8" />,
+      title: "Purpose of Visit",
+      description: "Explain your visit intent clearly",
+      href: "/documents/purpose-of-visit",
+      color: "from-rose-500 to-pink-500",
+      entryRequired: true
+    },
+    
+    // PROFESSIONAL PLAN & ABOVE (premium features)
+    {
+      icon: <Heart className="w-8 h-8" />,
+      title: "Relationship Proof Kit",
+      description: "Organize relationship evidence professionally",
+      href: "/documents/proofkit",
+      color: "from-pink-500 to-rose-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <Camera className="w-8 h-8" />,
+      title: "Visa Interview Practice Coach",
+      description: "Practice with real consulate questions + AI feedback",
+      href: "/documents/mock-interview",
+      color: "from-purple-500 to-violet-500",
+      badge: "HOT",
+      premium: true
+    },
+    {
+      icon: <BookOpen className="w-8 h-8" />,
+      title: "Interview Questions Database",
+      description: "500+ real questions by visa type, difficulty & category",
+      href: "/documents/interview-questions",
+      color: "from-blue-500 to-indigo-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <Target className="w-8 h-8" />,
+      title: "Interview Response Builder",
+      description: "Craft perfect answers using AI and the STAR method",
+      href: "/documents/interview-response-builder",
+      color: "from-green-500 to-emerald-500",
+      badge: "HOT",
+      premium: true
+    },
+    {
+      icon: <Globe className="w-8 h-8" />,
+      title: "English Test Practice",
+      description: "Practice IELTS, TOEFL & CELPIP speaking with AI scoring",
+      href: "/documents/english-test-practice",
+      color: "from-orange-500 to-red-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      title: "Analytics Dashboard",
+      description: "Advanced analytics, usage tracking, and performance metrics",
+      href: "/documents/analytics",
+      color: "from-purple-500 to-indigo-600",
+      premium: true
+    },
+    
+    // ENTERPRISE PLAN ONLY
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: "Team Management",
+      description: "Manage team members, roles, and permissions",
+      href: "/documents/team-management",
+      color: "from-blue-500 to-cyan-600",
+      badge: "ENTERPRISE",
+      enterprise: true
+    },
+    {
+      icon: <Zap className="w-8 h-8" />,
+      title: "Bulk Processing",
+      description: "Process multiple documents efficiently for high-volume operations",
+      href: "/documents/bulk-processing",
+      color: "from-green-500 to-emerald-600",
+      badge: "ENTERPRISE",
+      enterprise: true
+    },
   ];
 
   return (
