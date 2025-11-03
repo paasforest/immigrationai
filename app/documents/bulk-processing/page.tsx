@@ -595,5 +595,3 @@ export default function BulkProcessing() {
     </div>
   );
 }
-
-
