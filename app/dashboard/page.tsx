@@ -252,6 +252,16 @@ const features = [
       badge: "ENTERPRISE",
       enterprise: true
     },
+    
+    // UTILITY FEATURES (available to all)
+    {
+      icon: <FileText className="w-8 h-8" />,
+      title: "Document Library",
+      description: "View and manage all your saved documents",
+      href: "/documents/library",
+      color: "from-gray-500 to-slate-600",
+      starterOnly: true
+    },
   ];
 
   return (
