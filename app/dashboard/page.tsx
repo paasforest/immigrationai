@@ -143,7 +143,7 @@ const features = [
       description: "Professional emails for embassies",
       href: "/documents/email-generator",
       color: "from-cyan-500 to-blue-500",
-      entryRequired: true
+      premium: true
     },
     {
       icon: <FileCheck className="w-8 h-8" />,
@@ -151,7 +151,7 @@ const features = [
       description: "Invitation, sponsorship, employment letters",
       href: "/documents/support-letter",
       color: "from-violet-500 to-purple-500",
-      entryRequired: true
+      premium: true
     },
     {
       icon: <Plane className="w-8 h-8" />,
@@ -159,7 +159,7 @@ const features = [
       description: "Format travel records professionally",
       href: "/documents/travel-history",
       color: "from-sky-500 to-cyan-500",
-      entryRequired: true
+      premium: true
     },
     {
       icon: <DollarSign className="w-8 h-8" />,
@@ -167,7 +167,7 @@ const features = [
       description: "Justify funds for visa application",
       href: "/documents/financial-letter",
       color: "from-emerald-500 to-green-500",
-      entryRequired: true
+      premium: true
     },
     {
       icon: <Target className="w-8 h-8" />,
@@ -175,7 +175,7 @@ const features = [
       description: "Explain your visit intent clearly",
       href: "/documents/purpose-of-visit",
       color: "from-rose-500 to-pink-500",
-      entryRequired: true
+      premium: true
     },
     
     // PROFESSIONAL PLAN & ABOVE (premium features)
@@ -435,7 +435,7 @@ const features = [
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-3xl font-bold text-blue-600">
-                  {user.subscriptionPlan === 'starter' ? '3' : '∞'}
+                  {user.subscriptionPlan === 'starter' ? '3' : user.subscriptionPlan === 'entry' ? '5' : '∞'}
                 </div>
                 <div className="text-sm text-gray-600">Documents Available</div>
               </div>
