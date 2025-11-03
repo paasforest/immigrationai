@@ -93,19 +93,19 @@ export default function PaymentModal({ isOpen, onClose, accountNumber: propAccou
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <span className="text-sm font-medium text-gray-600">Bank:</span>
-                <p className="font-semibold">First National Bank (FNB)</p>
+                <p className="font-semibold">ABSA Bank</p>
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-600">Account Name:</span>
-                <p className="font-semibold">Immigration AI (Pty) Ltd</p>
+                <p className="font-semibold">immigrationai</p>
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-600">Account Number:</span>
-                <p className="font-mono font-semibold">1234567890</p>
+                <p className="font-mono font-semibold">4115223741</p>
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-600">Branch Code:</span>
-                <p className="font-mono font-semibold">250655</p>
+                <p className="font-mono font-semibold">632005</p>
               </div>
               <div className="md:col-span-2">
                 <span className="text-sm font-medium text-gray-600">Reference:</span>

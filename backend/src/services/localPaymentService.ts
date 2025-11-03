@@ -28,10 +28,10 @@ export class LocalPaymentService {
 
     // Bank details for payment
     const bankDetails = {
-      bankName: 'First National Bank (FNB)',
-      accountName: 'Immigration AI (Pty) Ltd',
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '1234567890',
-      branchCode: process.env.BANK_BRANCH_CODE || '250655',
+      bankName: 'ABSA Bank',
+      accountName: 'immigrationai',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: reference,
       amount: (amount / 100).toFixed(2),
       description: itemName,
@@ -72,10 +72,10 @@ export class LocalPaymentService {
 
     // EFT details for payment
     const eftDetails = {
-      bankName: 'First National Bank (FNB)',
-      accountName: 'Immigration AI (Pty) Ltd',
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '1234567890',
-      branchCode: process.env.BANK_BRANCH_CODE || '250655',
+      bankName: 'ABSA Bank',
+      accountName: 'immigrationai',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: reference,
       amount: (amount / 100).toFixed(2),
       description: itemName,
@@ -115,15 +115,15 @@ export class LocalPaymentService {
 
     // Cash deposit details
     const cashDepositDetails = {
-      bankName: 'First National Bank (FNB)',
-      accountName: 'Immigration AI (Pty) Ltd',
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '1234567890',
-      branchCode: process.env.BANK_BRANCH_CODE || '250655',
+      bankName: 'ABSA Bank',
+      accountName: 'immigrationai',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: reference,
       amount: (amount / 100).toFixed(2),
       description: itemName,
       instructions: [
-        'Visit any FNB branch',
+        'Visit any ABSA branch',
         'Make a cash deposit to the account above',
         'Use the exact reference number provided',
         'Keep the deposit slip as proof',
@@ -131,7 +131,7 @@ export class LocalPaymentService {
         'Your account will be activated within 24 hours'
       ],
       branchLocations: [
-        'FNB branches nationwide',
+        'ABSA branches nationwide',
         'ATM cash deposits available',
         'Online banking cash deposits'
       ]
@@ -165,10 +165,10 @@ export class LocalPaymentService {
 
     // Mobile payment details
     const mobilePaymentDetails = {
-      bankName: 'First National Bank (FNB)',
-      accountName: 'Immigration AI (Pty) Ltd',
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '1234567890',
-      branchCode: process.env.BANK_BRANCH_CODE || '250655',
+      bankName: 'ABSA Bank',
+      accountName: 'immigrationai',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: reference,
       amount: (amount / 100).toFixed(2),
       description: itemName,
@@ -181,7 +181,7 @@ export class LocalPaymentService {
         'Your account will be activated within 24 hours'
       ],
       supportedApps: [
-        'FNB App', 'Standard Bank App', 'ABSA App', 'Nedbank App', 'Capitec App'
+        'ABSA App', 'FNB App', 'Standard Bank App', 'Nedbank App', 'Capitec App'
       ]
     };
 

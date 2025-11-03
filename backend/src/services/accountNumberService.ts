@@ -104,10 +104,10 @@ export class AccountNumberService {
     
     // Bank details
     const bankDetails = {
-      bankName: process.env.BANK_NAME || 'First National Bank (FNB)',
-      accountName: process.env.ACCOUNT_NAME || 'Immigration AI (Pty) Ltd',
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '1234567890',
-      branchCode: process.env.BANK_BRANCH_CODE || '250655',
+      bankName: process.env.BANK_NAME || 'ABSA Bank',
+      accountName: process.env.ACCOUNT_NAME || 'immigrationai',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: accountNumber, // Use customer account number as reference
       amount: (amount / 100).toFixed(2),
       plan: plan.charAt(0).toUpperCase() + plan.slice(1),

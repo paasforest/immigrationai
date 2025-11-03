@@ -56,10 +56,10 @@ function PaymentInstructionsContent({ searchParams }: PaymentInstructionsProps) 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">Bank Details</h3>
             <div className="space-y-1 text-sm">
-              <p><strong>Bank:</strong> First National Bank (FNB)</p>
-              <p><strong>Account Name:</strong> Immigration AI (Pty) Ltd</p>
-              <p><strong>Account Number:</strong> 1234567890</p>
-              <p><strong>Branch Code:</strong> 250655</p>
+              <p><strong>Bank:</strong> ABSA Bank</p>
+              <p><strong>Account Name:</strong> immigrationai</p>
+              <p><strong>Account Number:</strong> 4115223741</p>
+              <p><strong>Branch Code:</strong> 632005</p>
               <p><strong>Reference:</strong> {account_number}</p>
             </div>
           </div>
