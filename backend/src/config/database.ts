@@ -18,10 +18,23 @@ export const query = async (text: string, params?: any[]) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
+    
+    // SECURITY: Only log query details in development (prevents data leakage)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Executed query', { text, duration, rows: res.rowCount });
+    } else {
+      // In production, only log performance metrics, not sensitive query data
+      console.log('Query executed', { duration, rows: res.rowCount });
+    }
+    
     return res;
   } catch (error) {
-    console.error('Database query error:', error);
+    // SECURITY: Don't log query text in production (may contain sensitive data)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Database query error:', error);
+    } else {
+      console.error('Database query failed');
+    }
     throw error;
   }
 };
