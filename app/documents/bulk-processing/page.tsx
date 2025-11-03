@@ -95,8 +95,15 @@ export default function BulkProcessingPage() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
     for (let i = 0; i < items.length; i++) {
-      setItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'processing', progress: 10 } : it));
-      const item = items[i];
+      // Capture current item before state updates to avoid stale closure
+      const currentItem = items[i];
+      
+      setItems(prev => {
+        const updated = [...prev];
+        updated[i] = { ...updated[i], status: 'processing', progress: 10 };
+        return updated;
+      });
+      
       try {
         const res = await fetch(`${API_BASE_URL}/api/ai/generate-sop`, {
           method: 'POST',
@@ -105,25 +112,55 @@ export default function BulkProcessingPage() {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
-            fullName: item.fullName || 'Applicant',
-            currentCountry: item.currentCountry || 'South Africa',
-            targetCountry: item.targetCountry || 'Canada',
-            purpose: item.purpose || 'study',
-            institution: item.institution || 'University',
-            program: item.program || 'Program',
-            background: item.background || 'Background details',
-            motivation: item.motivation || 'Motivation',
-            careerGoals: item.careerGoals || 'Career goals',
+            fullName: currentItem.fullName || 'Applicant',
+            currentCountry: currentItem.currentCountry || 'South Africa',
+            targetCountry: currentItem.targetCountry || 'Canada',
+            purpose: currentItem.purpose || 'study',
+            institution: currentItem.institution || 'University',
+            program: currentItem.program || 'Program',
+            background: currentItem.background || 'Background details',
+            motivation: currentItem.motivation || 'Motivation',
+            careerGoals: currentItem.careerGoals || 'Career goals',
           }),
         });
+        
         const data = await res.json();
-        if (data?.success) {
-          setItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'completed', progress: 100, result: { sop: data.data.sop } } : it));
-        } else {
-          setItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'error', progress: 100, error: data?.message || 'Failed' } : it));
+        
+        setItems(prev => {
+          const updated = [...prev];
+          if (data?.success) {
+            updated[i] = { 
+              ...updated[i], 
+              status: 'completed', 
+              progress: 100, 
+              result: { sop: data.data.sop } 
+            };
+          } else {
+            updated[i] = { 
+              ...updated[i], 
+              status: 'error', 
+              progress: 100, 
+              error: data?.message || 'Failed' 
+            };
+          }
+          return updated;
+        });
+        
+        // Add small delay between requests to avoid overwhelming the API
+        if (i < items.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
         }
       } catch (e: any) {
-        setItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'error', progress: 100, error: e.message } : it));
+        setItems(prev => {
+          const updated = [...prev];
+          updated[i] = { 
+            ...updated[i], 
+            status: 'error', 
+            progress: 100, 
+            error: e.message 
+          };
+          return updated;
+        });
       }
     }
     setIsRunning(false);
@@ -193,12 +230,46 @@ export default function BulkProcessingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Jobs</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Jobs</span>
+              {items.length > 0 && (
+                <span className="text-sm font-normal text-gray-600">
+                  {items.filter(i => i.status === 'completed').length}/{items.length} completed
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {items.length === 0 && (
                 <p className="text-sm text-gray-600">No items loaded yet.</p>
+              )}
+              {items.length > 0 && (
+                <div className="mb-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium text-blue-900">Overall Progress</span>
+                    <span className="text-blue-700">
+                      {Math.round((items.filter(i => i.status === 'completed' || i.status === 'error').length / items.length) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${(items.filter(i => i.status === 'completed' || i.status === 'error').length / items.length) * 100}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-blue-600 mt-2">
+                    <span>✓ {items.filter(i => i.status === 'completed').length} success</span>
+                    {items.filter(i => i.status === 'error').length > 0 && (
+                      <span className="text-red-600">✗ {items.filter(i => i.status === 'error').length} errors</span>
+                    )}
+                    {items.filter(i => i.status === 'processing').length > 0 && (
+                      <span>⟳ {items.filter(i => i.status === 'processing').length} processing</span>
+                    )}
+                  </div>
+                </div>
               )}
               {items.map((it) => (
                 <div key={it.id} className="bg-white rounded-lg border p-4">
