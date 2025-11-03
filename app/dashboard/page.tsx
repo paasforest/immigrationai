@@ -150,7 +150,7 @@ const features = [
           icon: <BarChart3 className="w-8 h-8" />,
           title: "Analytics Dashboard",
           description: "View feedback and success rates",
-          href: "/analytics",
+          href: "/documents/analytics",
           color: "from-indigo-500 to-purple-500"
         },
         {
