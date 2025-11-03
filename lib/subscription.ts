@@ -21,11 +21,12 @@ export interface UsageStats {
 }
 
 // Subscription plan configurations - South African Plans
+// IMPORTANT: Must match backend/src/services/limitEnforcement.ts exactly!
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionLimits> = {
   starter: {
     monthlyGenerations: 3,
-    documentTypes: ['sop'],
-    features: ['basic_sop', 'pdf_export', 'standard_support'],
+    documentTypes: ['sop', 'cover_letter'], // Fixed: Added cover_letter to match backend
+    features: ['basic_sop', 'cover_letter', 'pdf_export', 'standard_support'], // Fixed: Added cover_letter
     supportLevel: 'standard',
     apiAccess: false,
     customTemplates: false,
@@ -34,13 +35,15 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionLimits> = 
   },
   entry: {
     monthlyGenerations: 5,
-    documentTypes: ['sop', 'cover_letter', 'review'],
+    documentTypes: ['sop', 'cover_letter', 'review', 'checklist'], // Fixed: Added checklist to match backend
     features: [
       'basic_sop',
       'cover_letter',
       'sop_reviewer',
+      'checklist_generator', // Fixed: Added to match backend
       'pdf_export',
       'ielts_practice',
+      'interview_practice', // Fixed: Added to match backend
       'priority_support'
     ],
     supportLevel: 'priority',
@@ -51,19 +54,26 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionLimits> = 
   },
   professional: {
     monthlyGenerations: -1, // Unlimited
-    documentTypes: ['sop', 'cover_letter', 'review', 'checklist'],
+    documentTypes: ['sop', 'cover_letter', 'review', 'checklist', 'email', 'support_letter', 'travel_history', 'financial_letter', 'purpose_of_visit'], // Fixed: Added 5 missing types
     features: [
       'basic_sop',
       'advanced_sop',
       'cover_letter',
       'sop_reviewer',
       'checklist_generator',
+      'email_template', // Fixed: Added to match backend
+      'support_letter', // Fixed: Added to match backend
+      'travel_history', // Fixed: Added to match backend
+      'financial_letter', // Fixed: Added to match backend
+      'purpose_of_visit', // Fixed: Added to match backend
       'pdf_export',
       'document_history',
       'custom_templates',
       'priority_support',
       'ai_analysis',
       'mock_interviews',
+      'interview_practice', // Fixed: Added to match backend
+      'all_english_tests', // Fixed: Added to match backend
       'analytics'
     ],
     supportLevel: 'priority',
@@ -74,13 +84,18 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionLimits> = 
   },
   enterprise: {
     monthlyGenerations: -1, // Unlimited
-    documentTypes: ['sop', 'cover_letter', 'review', 'checklist', 'custom'],
+    documentTypes: ['sop', 'cover_letter', 'review', 'checklist', 'email', 'support_letter', 'travel_history', 'financial_letter', 'purpose_of_visit', 'custom'], // Fixed: Added 5 missing types
     features: [
       'basic_sop',
       'advanced_sop',
       'cover_letter',
       'sop_reviewer',
       'checklist_generator',
+      'email_template', // Fixed: Added to match backend
+      'support_letter', // Fixed: Added to match backend
+      'travel_history', // Fixed: Added to match backend
+      'financial_letter', // Fixed: Added to match backend
+      'purpose_of_visit', // Fixed: Added to match backend
       'pdf_export',
       'document_history',
       'custom_templates',
@@ -89,6 +104,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionLimits> = 
       'api_access',
       'team_collaboration',
       'bulk_processing',
+      'interview_practice', // Fixed: Added to match backend
+      'all_english_tests', // Fixed: Added to match backend
       'advanced_analytics',
       'custom_integrations',
       'sla_guarantee'
