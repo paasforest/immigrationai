@@ -20,10 +20,10 @@ export class AuthController {
       );
     }
     
-    const { email, password, fullName, companyName, subscriptionPlan } = validation.data;
+    const { email, password, fullName, companyName, subscriptionPlan, tracking } = req.body;
     
-    // Create user
-    const result = await authService.signup(email, password, fullName, companyName, subscriptionPlan);
+    // Create user with tracking data
+    const result = await authService.signup(email, password, fullName, companyName, subscriptionPlan, tracking);
     
     return sendSuccess(
       res,

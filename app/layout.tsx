@@ -1,21 +1,24 @@
-import './globals.css';
-import type { Metadata } from 'next';
+'use client';
+
+import { useEffect } from 'react';
 import { Inter } from 'next/font/google';
+import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { initializeTracking } from '@/lib/utm-tracker';
 
 const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: 'Immigration AI - Your Immigration Journey, Simplified',
-  description: 'Generate professional SOPs, cover letters, and visa documents with AI assistance. Trusted by thousands of successful applicants worldwide.',
-};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Initialize UTM tracking on app load
+  useEffect(() => {
+    initializeTracking();
+  }, []);
+
   return (
     <html lang="en">
       <body className={inter.className}>

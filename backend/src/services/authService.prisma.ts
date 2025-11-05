@@ -33,7 +33,8 @@ export class AuthService {
     email: string,
     password: string,
     fullName?: string,
-    companyName?: string
+    companyName?: string,
+    trackingData?: any
   ): Promise<{ user: UserPublic; token: string; refreshToken: string }> {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -63,6 +64,27 @@ export class AuthService {
     // Generate account number after user creation
     const { accountNumberService } = await import('./accountNumberService');
     const accountNumber = await accountNumberService.generateAccountNumber(user.id, fullName?.split(' ')[0] || 'User');
+    
+    // Save UTM tracking data if provided
+    if (trackingData && Object.keys(trackingData).length > 0) {
+      try {
+        const { trackingService } = await import('./trackingService');
+        await trackingService.saveUserTracking(user.id, {
+          utmSource: trackingData.utm_source,
+          utmMedium: trackingData.utm_medium,
+          utmCampaign: trackingData.utm_campaign,
+          utmContent: trackingData.utm_content,
+          utmTerm: trackingData.utm_term,
+          referrer: trackingData.referrer,
+          landingPage: trackingData.landingPage,
+          sessionId: trackingData.sessionId,
+        });
+        console.log(`📊 Tracking saved for new user from: ${trackingData.utm_source || 'direct'}`);
+      } catch (error) {
+        console.error('Failed to save tracking data (non-fatal):', error);
+        // Don't fail signup if tracking fails
+      }
+    }
     
     // Generate tokens
     const token = generateToken({ userId: user.id, email: user.email });

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Globe, Loader2, Check, Star, Zap, Crown } from 'lucide-react';
+import { getTrackingDataForConversion } from '@/lib/utm-tracker';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -106,14 +107,23 @@ export default function SignupPage() {
 
     setLoading(true);
 
+    // Capture UTM tracking data for attribution
+    const trackingData = getTrackingDataForConversion();
+
     const result = await signup({
       email: formData.email,
       password: formData.password,
       fullName: formData.fullName || undefined,
       subscriptionPlan: formData.subscriptionPlan,
+      // Include tracking data
+      tracking: trackingData,
     });
 
     if (result.success) {
+      // Log successful signup with UTM attribution
+      if (trackingData.utm_source) {
+        console.log('📊 Signup attributed to:', trackingData.utm_source);
+      }
       router.push('/dashboard');
     } else {
       setError(result.error || 'Signup failed');

@@ -30,6 +30,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   documentFeedback    DocumentFeedback[]
   applicationOutcomes ApplicationOutcome[]
+  userTracking        UserTracking?
   
   // Interview Coach Relations
   mockInterviews      MockInterview[]
@@ -318,4 +319,34 @@ model InterviewFeedbackHistory {
 
   @@index([mockInterviewId])
   @@map("interview_feedback_history")
+}
+
+// UTM Tracking for Marketing Attribution
+model UserTracking {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  utmSource    String?  @map("utm_source") @db.VarChar(100)      // e.g., "proconnectsa"
+  utmMedium    String?  @map("utm_medium") @db.VarChar(100)      // e.g., "website", "email"
+  utmCampaign  String?  @map("utm_campaign") @db.VarChar(100)    // e.g., "immigration_integration"
+  utmContent   String?  @map("utm_content") @db.VarChar(255)     // e.g., "hero_banner"
+  utmTerm      String?  @map("utm_term") @db.VarChar(255)        // e.g., "visa_assistance"
+  referrer     String?  @db.VarChar(500)                         // Full referrer URL
+  landingPage  String?  @map("landing_page") @db.VarChar(500)   // First page visited
+  sessionId    String?  @map("session_id") @db.VarChar(100)      // Browser session ID
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)       // User IP (optional)
+  userAgent    String?  @map("user_agent") @db.Text              // Browser info
+  converted    Boolean  @default(false)                          // Did they subscribe?
+  convertedAt  DateTime? @map("converted_at") @db.Timestamp(6)   // When they subscribed
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([converted])
+  @@index([createdAt])
+  @@map("user_tracking")
 }
