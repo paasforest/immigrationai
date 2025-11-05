@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types/request';
 import { paymentVerificationService } from '../services/paymentVerificationService';
+import { trackingService } from '../services/trackingService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -92,6 +93,52 @@ export class AdminController {
 
     const payments = await paymentVerificationService.searchPaymentsByAccount(accountNumber);
     return sendSuccess(res, payments, 'Payments retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm
+  getUTMAnalytics = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const { startDate, endDate } = req.query;
+    
+    const analytics = await trackingService.getTrackingAnalytics(
+      startDate ? new Date(startDate as string) : undefined,
+      endDate ? new Date(endDate as string) : undefined
+    );
+
+    return sendSuccess(res, analytics, 'UTM analytics retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm/sources
+  getUTMSources = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const analytics = await trackingService.getTrackingAnalytics();
+    return sendSuccess(res, analytics.bySource, 'UTM sources retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm/campaigns
+  getUTMCampaigns = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const analytics = await trackingService.getTrackingAnalytics();
+    return sendSuccess(res, analytics.byCampaign, 'UTM campaigns retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm/conversions
+  getUTMConversions = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const analytics = await trackingService.getTrackingAnalytics();
+    return sendSuccess(res, analytics.totals, 'UTM conversions retrieved successfully');
   });
 }
 

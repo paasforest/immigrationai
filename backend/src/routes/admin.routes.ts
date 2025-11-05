@@ -16,6 +16,12 @@ router.get('/payments/search/:accountNumber', adminController.searchPaymentsByAc
 router.post('/payments/:paymentId/verify', adminController.verifyPayment);
 router.post('/payments/:paymentId/reject', adminController.rejectPayment);
 
+// UTM Analytics
+router.get('/analytics/utm', adminController.getUTMAnalytics);
+router.get('/analytics/utm/sources', adminController.getUTMSources);
+router.get('/analytics/utm/campaigns', adminController.getUTMCampaigns);
+router.get('/analytics/utm/conversions', adminController.getUTMConversions);
+
 export default router;
 
 
