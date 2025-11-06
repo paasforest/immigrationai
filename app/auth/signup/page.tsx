@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Globe, Loader2, Check, Star, Zap, Crown } from 'lucide-react';
 import { getTrackingDataForConversion } from '@/lib/utm-tracker';
+import { trackGAConversion, trackGAEvent } from '@/components/GoogleAnalytics';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -124,6 +125,16 @@ export default function SignupPage() {
       if (trackingData.utm_source) {
         console.log('📊 Signup attributed to:', trackingData.utm_source);
       }
+      
+      // Track conversion in Google Analytics
+      trackGAConversion('signup', 0);
+      trackGAEvent('sign_up', {
+        method: 'email',
+        plan: formData.subscriptionPlan,
+        utm_source: trackingData.utm_source,
+        utm_campaign: trackingData.utm_campaign,
+      });
+      
       router.push('/dashboard');
     } else {
       setError(result.error || 'Signup failed');

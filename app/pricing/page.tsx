@@ -14,6 +14,7 @@ export default function PricingPage() {
   const { user, loading } = useAuth();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   // Redirect to login if user is not authenticated
   React.useEffect(() => {
@@ -21,6 +22,30 @@ export default function PricingPage() {
       window.location.href = '/auth/login';
     }
   }, [user, loading]);
+
+  // Read plan parameter from URL and pre-select plan
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const planParam = urlParams.get('plan');
+      
+      if (planParam) {
+        const validPlans = ['starter', 'entry', 'professional', 'enterprise'];
+        if (validPlans.includes(planParam.toLowerCase())) {
+          setSelectedPlan(planParam.toLowerCase());
+          console.log('📋 Pre-selected plan from URL:', planParam);
+          
+          // Scroll to the plan after a short delay
+          setTimeout(() => {
+            const planElement = document.getElementById(`plan-${planParam.toLowerCase()}`);
+            if (planElement) {
+              planElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 500);
+        }
+      }
+    }
+  }, []);
 
   const handleUpgrade = async (plan: string, paymentMethod: string) => {
     if (!user) {
@@ -255,16 +280,27 @@ export default function PricingPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {plans.map((plan) => (
             <Card 
-              key={plan.id} 
+              key={plan.id}
+              id={`plan-${plan.id}`}
               className={`relative transition-all duration-300 hover:shadow-xl ${
                 plan.popular ? 'border-blue-500 shadow-lg scale-105' : 'border-gray-200'
-              } ${isCurrentPlan(plan.id) ? 'ring-2 ring-green-500' : ''}`}
+              } ${isCurrentPlan(plan.id) ? 'ring-2 ring-green-500' : ''} ${
+                selectedPlan === plan.id ? 'ring-4 ring-purple-500 ring-offset-2' : ''
+              }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1">
                     <Star className="w-3 h-3 mr-1" />
                     Most Popular
+                  </Badge>
+                </div>
+              )}
+              
+              {selectedPlan === plan.id && !isCurrentPlan(plan.id) && (
+                <div className="absolute -top-4 right-4">
+                  <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1">
+                    🎯 Recommended
                   </Badge>
                 </div>
               )}
