@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   CheckCircle, 
   XCircle, 
@@ -28,6 +30,11 @@ export default function AdminPaymentsPage() {
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [manualAccount, setManualAccount] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualReference, setManualReference] = useState('');
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualError, setManualError] = useState('');
 
   useEffect(() => {
     fetchPendingPayments();
@@ -52,6 +59,56 @@ export default function AdminPaymentsPage() {
       console.error('Failed to fetch payments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManualVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualError('');
+
+    if (!manualAccount.trim()) {
+      setManualError('Account number is required');
+      return;
+    }
+
+    const parsedAmount = parseFloat(manualAmount);
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      setManualError('Amount must be a positive number');
+      return;
+    }
+
+    try {
+      setManualLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/admin/payments/manual-verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          accountNumber: manualAccount.trim(),
+          amount: parsedAmount,
+          bankReference: manualReference.trim() || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('Payment verified and plan activated successfully!');
+        setManualAccount('');
+        setManualAmount('');
+        setManualReference('');
+        fetchPendingPayments();
+        fetchStats();
+      } else {
+        setManualError(data.message || 'Failed to verify payment');
+      }
+    } catch (error) {
+      console.error('Manual verification failed:', error);
+      setManualError('Failed to verify payment');
+    } finally {
+      setManualLoading(false);
     }
   };
 
@@ -246,6 +303,62 @@ export default function AdminPaymentsPage() {
             </Card>
           </div>
         )}
+
+        {/* Manual verification form */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Manual Bank Transfer Verification</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {manualError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{manualError}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleManualVerify} className="grid gap-4 md:grid-cols-3">
+              <div>
+                <Label htmlFor="manual-account">Account Number</Label>
+                <Input
+                  id="manual-account"
+                  value={manualAccount}
+                  onChange={(e) => setManualAccount(e.target.value)}
+                  placeholder="e.g. PA12345"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="manual-amount">Amount Received (ZAR)</Label>
+                <Input
+                  id="manual-amount"
+                  type="number"
+                  step="0.01"
+                  value={manualAmount}
+                  onChange={(e) => setManualAmount(e.target.value)}
+                  placeholder="e.g. 149"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="manual-reference">Bank Reference (optional)</Label>
+                <Input
+                  id="manual-reference"
+                  value={manualReference}
+                  onChange={(e) => setManualReference(e.target.value)}
+                  placeholder="e.g. POP123"
+                />
+              </div>
+              <div className="md:col-span-3 flex justify-end">
+                <Button type="submit" disabled={manualLoading}>
+                  {manualLoading ? 'Verifying...' : 'Confirm Payment & Activate Plan'}
+                </Button>
+              </div>
+            </form>
+            <p className="text-xs text-slate-500 mt-3">
+              Use this form for deposits that appear in your bank statement. The system will match the account number with
+              the pending subscription and activate the user automatically.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Search */}
         <Card className="mb-6">

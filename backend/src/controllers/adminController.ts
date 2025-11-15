@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types/request';
 import { paymentVerificationService } from '../services/paymentVerificationService';
+import { accountNumberService } from '../services/accountNumberService';
 import { trackingService } from '../services/trackingService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { asyncHandler } from '../middleware/errorHandler';
@@ -139,6 +140,47 @@ export class AdminController {
 
     const analytics = await trackingService.getTrackingAnalytics();
     return sendSuccess(res, analytics.totals, 'UTM conversions retrieved successfully');
+  });
+
+  // POST /api/admin/payments/manual-verify
+  manualVerifyPayment = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const { accountNumber, amount, bankReference } = req.body;
+
+    if (!accountNumber || amount === undefined || amount === null) {
+      return sendError(
+        res,
+        'VALIDATION_ERROR',
+        'Account number and amount are required',
+        400
+      );
+    }
+
+    const parsedAmount =
+      typeof amount === 'number' ? amount : parseFloat(String(amount));
+
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      return sendError(res, 'VALIDATION_ERROR', 'Amount must be a positive number', 400);
+    }
+
+    const result = await accountNumberService.verifyPaymentByAccountNumber(
+      String(accountNumber).trim(),
+      parsedAmount,
+      bankReference ? String(bankReference).trim() : undefined
+    );
+
+    if (result.success) {
+      return sendSuccess(
+        res,
+        result,
+        result.message || 'Payment verified successfully'
+      );
+    }
+
+    return sendError(res, 'VERIFICATION_FAILED', result.message || 'Failed to verify payment', 400);
   });
 }
 

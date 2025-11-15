@@ -13,6 +13,7 @@ router.use(requireAdmin);
 router.get('/payments/pending', adminController.getPendingPayments);
 router.get('/payments/stats', adminController.getPaymentStats);
 router.get('/payments/search/:accountNumber', adminController.searchPaymentsByAccount);
+router.post('/payments/manual-verify', adminController.manualVerifyPayment);
 router.post('/payments/:paymentId/verify', adminController.verifyPayment);
 router.post('/payments/:paymentId/reject', adminController.rejectPayment);
 
