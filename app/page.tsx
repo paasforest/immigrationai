@@ -151,7 +151,7 @@ export default function ImmigrationAILanding() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</a>
               <a href="#pricing" className="text-gray-700 hover:text-blue-600 transition-colors">Pricing</a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">About</a>
+              <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</Link>
               <Link href="/auth/login" className="text-gray-700 hover:text-blue-600 transition-colors">Login</Link>
               <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all">
                 Get Started
@@ -172,7 +172,7 @@ export default function ImmigrationAILanding() {
             <div className="md:hidden py-4 bg-white rounded-lg shadow-lg mt-2">
               <a href="#features" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Features</a>
               <a href="#pricing" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Pricing</a>
-              <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">About</a>
+              <Link href="/about" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">About</Link>
               <Link href="/auth/login" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Login</Link>
               <Link href="/auth/signup" className="w-full block mt-2 mx-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-center">
                 Get Started
@@ -454,7 +454,7 @@ export default function ImmigrationAILanding() {
             <div>
               <h4 className="font-semibold text-white mb-4">Company</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+                <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
