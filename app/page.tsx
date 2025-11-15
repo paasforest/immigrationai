@@ -1,13 +1,154 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { FileText, CheckCircle, FileCheck, List, ArrowRight, Sparkles, Globe, Shield, Zap, Menu, X } from 'lucide-react';
+import { FileText, CheckCircle, FileCheck, List, ArrowRight, Sparkles, Globe, Shield, Zap, Menu, X, Compass, Target, AlertTriangle } from 'lucide-react';
+import { getTrackingDataForConversion, trackEvent } from '@/lib/utm-tracker';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+const countryOptions = [
+  { value: 'uk', label: 'United Kingdom' },
+  { value: 'usa', label: 'United States' },
+  { value: 'canada', label: 'Canada' },
+  { value: 'germany', label: 'Germany' },
+  { value: 'ireland', label: 'Ireland' },
+  { value: 'eu_schengen', label: 'Schengen (France, Netherlands, Italy)' },
+  { value: 'uae', label: 'United Arab Emirates' },
+];
+
+const visaOptionsByCountry: Record<string, { value: string; label: string }[]> = {
+  uk: [
+    { value: 'uk_skilled_worker', label: 'Skilled Worker / Health & Care Worker' },
+    { value: 'uk_student', label: 'Student / Graduate Route' },
+    { value: 'uk_partner', label: 'Partner / Spouse / Fiancé(e)' },
+    { value: 'uk_visit', label: 'Visitor (B1/B2 equivalent)' },
+  ],
+  usa: [
+    { value: 'usa_b1b2', label: 'B1/B2 Visitor' },
+    { value: 'usa_f1', label: 'F-1 Student' },
+    { value: 'usa_h1b', label: 'H-1B Specialty Occupation' },
+    { value: 'usa_k1', label: 'K-1/K3 Family' },
+  ],
+  canada: [
+    { value: 'canada_study', label: 'Study Permit' },
+    { value: 'canada_express_entry', label: 'Express Entry / PR' },
+    { value: 'canada_work_permit', label: 'Employer-Specific Work Permit' },
+  ],
+  germany: [
+    { value: 'germany_blue_card', label: 'Blue Card' },
+    { value: 'germany_job_seeker', label: 'Job Seeker' },
+    { value: 'germany_student', label: 'Student' },
+  ],
+  ireland: [
+    { value: 'ireland_critical_skills', label: 'Critical Skills Employment' },
+    { value: 'ireland_student', label: 'Student / Graduate' },
+  ],
+  eu_schengen: [
+    { value: 'schengen_short_stay', label: 'Short Stay (C) / Visitor' },
+  ],
+  uae: [
+    { value: 'uae_employment', label: 'Employment Residence' },
+  ],
+};
+
+const ageRanges = [
+  '18-24',
+  '25-34',
+  '35-44',
+  '45-54',
+  '55+',
+];
+
+const relationshipStatuses = [
+  'Single',
+  'Married',
+  'Engaged / Long-term partner',
+  'Separated / Divorced',
+];
+
+const educationLevels = [
+  'High school diploma',
+  'Diploma / Certificate',
+  'Bachelor degree',
+  'Postgraduate / Masters',
+  'Doctorate',
+];
+
+const workExperienceOptions = [
+  '0-1 years',
+  '2-4 years',
+  '5-7 years',
+  '8-10 years',
+  '10+ years',
+];
+
+const englishExamOptions = [
+  'IELTS 7.5+',
+  'IELTS 6.0 - 7.0',
+  'TOEFL 95+',
+  'CELPIP (Canada)',
+  'No test yet',
+];
+
+const proofOfFundsOptions = [
+  'Above required minimum',
+  'Slightly below minimum',
+  'Sponsor will cover everything',
+  'Not yet available',
+];
+
+const homeTiesOptions = [
+  'Full-time employment',
+  'Business ownership',
+  'Family / dependents',
+  'Property ownership',
+  'Limited ties',
+];
+
+const yesNoOptions = [
+  { value: 'no', label: 'No' },
+  { value: 'yes', label: 'Yes' },
+];
+
+type EligibilityResult = {
+  verdict: 'likely' | 'needs_more_info' | 'unlikely';
+  summary: string;
+  confidence: number;
+  riskFactors: string[];
+  recommendedSteps: string[];
+  recommendedDocuments: string[];
+  countryLabel: string;
+  visaTypeLabel: string;
+};
 
 export default function ImmigrationAILanding() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [eligibilityForm, setEligibilityForm] = useState({
+    country: 'uk',
+    visaType: 'uk_skilled_worker',
+    ageRange: '25-34',
+    relationshipStatus: 'Single',
+    educationLevel: 'Bachelor degree',
+    workExperienceYears: '5-7 years',
+    englishExam: 'IELTS 6.0 - 7.0',
+    proofOfFunds: 'Slightly below minimum',
+    homeTies: 'Full-time employment',
+    previousRefusals: 'no',
+    travelHistory: 'Limited travel',
+    sponsorIncome: '',
+    notes: '',
+    email: '',
+  });
+  const [eligibilityResult, setEligibilityResult] = useState<EligibilityResult | null>(null);
+  const [eligibilityLoading, setEligibilityLoading] = useState(false);
+  const [eligibilityError, setEligibilityError] = useState('');
+
+  const currentVisaOptions = useMemo(() => {
+    return visaOptionsByCountry[eligibilityForm.country] || [];
+  }, [eligibilityForm.country]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +157,79 @@ export default function ImmigrationAILanding() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!currentVisaOptions.find((option) => option.value === eligibilityForm.visaType)) {
+      setEligibilityForm((prev) => ({
+        ...prev,
+        visaType: currentVisaOptions[0]?.value || '',
+      }));
+    }
+  }, [currentVisaOptions, eligibilityForm.visaType]);
+
+  const verdictMeta = {
+    likely: {
+      label: 'Strong Match',
+      badge: 'bg-emerald-100 text-emerald-800',
+      pill: 'text-emerald-600 bg-emerald-50',
+    },
+    needs_more_info: {
+      label: 'Needs More Evidence',
+      badge: 'bg-amber-100 text-amber-800',
+      pill: 'text-amber-600 bg-amber-50',
+    },
+    unlikely: {
+      label: 'High Risk',
+      badge: 'bg-rose-100 text-rose-800',
+      pill: 'text-rose-600 bg-rose-50',
+    },
+  };
+
+  const handleEligibilityChange = (field: string, value: string) => {
+    setEligibilityForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEligibilitySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setEligibilityLoading(true);
+    setEligibilityError('');
+
+    try {
+      const tracking = getTrackingDataForConversion();
+      const response = await fetch(`${API_BASE_URL}/api/eligibility/check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eligibilityForm,
+          tracking,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setEligibilityError(data?.message || 'Unable to generate assessment right now.');
+        return;
+      }
+
+      setEligibilityResult(data.data);
+      trackEvent('eligibility_check_success', {
+        country: eligibilityForm.country,
+        visaType: eligibilityForm.visaType,
+        verdict: data.data?.verdict,
+      });
+    } catch (error) {
+      console.error('Eligibility check failed', error);
+      setEligibilityError('Network error. Please try again.');
+    } finally {
+      setEligibilityLoading(false);
+    }
+  };
 
   const features = [
     {
@@ -220,6 +434,324 @@ export default function ImmigrationAILanding() {
                 <Shield className="w-4 h-4 text-green-600" />
                 <span className="text-green-800 font-semibold text-sm">100% Money-Back Guarantee - 7 Days</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Eligibility Check Section */}
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto grid gap-8 lg:grid-cols-2">
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-sm uppercase tracking-wider text-blue-600 font-semibold">
+                  Africa-focused screening
+                </p>
+                <h3 className="text-3xl font-bold text-slate-900 mt-2">
+                  Check your visa eligibility
+                </h3>
+                <p className="text-slate-600 mt-1">
+                  Real embassy-style questions for UK, USA, Canada, Germany, Ireland, Schengen & UAE routes.
+                </p>
+              </div>
+              <Compass className="w-10 h-10 text-blue-500 hidden md:block" />
+            </div>
+
+            {eligibilityError && (
+              <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {eligibilityError}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleEligibilitySubmit}>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Destination</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.country}
+                    onChange={(e) => handleEligibilityChange('country', e.target.value)}
+                  >
+                    {countryOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Visa route</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.visaType}
+                    onChange={(e) => handleEligibilityChange('visaType', e.target.value)}
+                  >
+                    {currentVisaOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Age band</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.ageRange}
+                    onChange={(e) => handleEligibilityChange('ageRange', e.target.value)}
+                  >
+                    {ageRanges.map((range) => (
+                      <option key={range} value={range}>{range}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Relationship status</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.relationshipStatus}
+                    onChange={(e) => handleEligibilityChange('relationshipStatus', e.target.value)}
+                  >
+                    {relationshipStatuses.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Highest qualification</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.educationLevel}
+                    onChange={(e) => handleEligibilityChange('educationLevel', e.target.value)}
+                  >
+                    {educationLevels.map((level) => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Relevant experience</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.workExperienceYears}
+                    onChange={(e) => handleEligibilityChange('workExperienceYears', e.target.value)}
+                  >
+                    {workExperienceOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">English / language proof</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.englishExam}
+                    onChange={(e) => handleEligibilityChange('englishExam', e.target.value)}
+                  >
+                    {englishExamOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Proof of funds</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.proofOfFunds}
+                    onChange={(e) => handleEligibilityChange('proofOfFunds', e.target.value)}
+                  >
+                    {proofOfFundsOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Strongest home tie</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.homeTies}
+                    onChange={(e) => handleEligibilityChange('homeTies', e.target.value)}
+                  >
+                    {homeTiesOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Previous refusals?</label>
+                  <select
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.previousRefusals}
+                    onChange={(e) => handleEligibilityChange('previousRefusals', e.target.value)}
+                  >
+                    {yesNoOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Provide extra context (sponsor income, travel history, relationship proof)
+                </label>
+                <textarea
+                  className="mt-1 w-full rounded-2xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  value={eligibilityForm.notes}
+                  placeholder="Example: Sponsor earns £28,000/year, we have shared lease since 2021, previous UK visit in 2022..."
+                  onChange={(e) => handleEligibilityChange('notes', e.target.value)}
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Contact email (optional)</label>
+                  <input
+                    type="email"
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.email}
+                    placeholder="We'll send a checklist here"
+                    onChange={(e) => handleEligibilityChange('email', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Sponsor income (if applicable)</label>
+                  <input
+                    type="text"
+                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                    value={eligibilityForm.sponsorIncome}
+                    placeholder="e.g., £20,000 / R350,000 / $45,000"
+                    onChange={(e) => handleEligibilityChange('sponsorIncome', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={eligibilityLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+              >
+                {eligibilityLoading ? (
+                  <span>Evaluating...</span>
+                ) : (
+                  <>
+                    <span>Check eligibility now</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-slate-500 text-center">
+                We reference actual embassy criteria and never share your data.
+              </p>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 text-white rounded-3xl shadow-xl p-8 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-200 via-transparent to-transparent" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <p className="text-sm uppercase tracking-widest text-blue-200">Instant verdict</p>
+                  <h3 className="text-3xl font-bold">Embassy-style feedback</h3>
+                  <p className="text-blue-100 mt-2">Tailored for African applicants targeting high-demand countries.</p>
+                </div>
+                <Target className="w-10 h-10 text-blue-300 hidden md:block" />
+              </div>
+
+              {eligibilityResult ? (
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`px-4 py-1 rounded-full text-sm font-semibold ${verdictMeta[eligibilityResult.verdict].badge}`}>
+                      {verdictMeta[eligibilityResult.verdict].label}
+                    </span>
+                    <span className="text-sm text-blue-200">
+                      {eligibilityResult.countryLabel} • {eligibilityResult.visaTypeLabel}
+                    </span>
+                    <span className="text-sm px-3 py-1 rounded-full bg-white/10 text-blue-100">
+                      Confidence {Math.round((eligibilityResult.confidence || 0) * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-lg leading-relaxed text-blue-50">{eligibilityResult.summary}</p>
+
+                  {eligibilityResult.riskFactors.length > 0 && (
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                      <div className="flex items-center space-x-2 text-amber-200 font-semibold mb-2">
+                        <AlertTriangle className="w-5 h-5" />
+                        <span>What the officer will probe</span>
+                      </div>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-blue-100">
+                        {eligibilityResult.riskFactors.map((risk, idx) => (
+                          <li key={idx}>{risk}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {eligibilityResult.recommendedSteps.length > 0 && (
+                    <div>
+                      <h4 className="text-white font-semibold mb-2">Next actions</h4>
+                      <ul className="space-y-2">
+                        {eligibilityResult.recommendedSteps.slice(0, 3).map((step, idx) => (
+                          <li key={idx} className="flex items-start space-x-2">
+                            <CheckCircle className="w-4 h-4 text-emerald-400 mt-1" />
+                            <span className="text-blue-100 text-sm">{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {eligibilityResult.recommendedDocuments.length > 0 && (
+                    <div className="bg-white rounded-2xl p-4 text-slate-900">
+                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                        Document checklist preview
+                      </p>
+                      <ul className="space-y-1">
+                        {eligibilityResult.recommendedDocuments.slice(0, 4).map((doc, idx) => (
+                          <li key={idx} className="flex items-center space-x-2 text-sm text-slate-700">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                            <span>{doc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Link
+                        href="/auth/signup"
+                        className="mt-4 inline-flex items-center text-blue-600 font-semibold"
+                      >
+                        Unlock full checklist &amp; templates
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white/5 rounded-3xl p-6 border border-white/10">
+                  <p className="text-xl font-semibold text-white mb-3">We check what embassies check.</p>
+                  <ul className="space-y-3 text-sm text-blue-100">
+                    <li>• Financial maintenance thresholds (UK £18,600+, Canada settlement funds)</li>
+                    <li>• Relationship evidence strength (marriage vs. engaged vs. dating)</li>
+                    <li>• Ties to home country & refusal history (214b, Schengen prior records)</li>
+                    <li>• Sponsor income, employer compliance, medical insurance, travel history</li>
+                  </ul>
+                  <p className="mt-4 text-sm text-blue-200">
+                    Submit the form to receive an instant verdict and see what to fix before you apply.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

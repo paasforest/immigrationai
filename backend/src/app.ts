@@ -19,6 +19,7 @@ import interviewCoachRoutes from './routes/interview-coach.routes';
 import uploadRoutes from './routes/upload.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import teamRoutes from './routes/team.routes';
+import eligibilityRoutes from './routes/eligibility.routes';
 
 // Load environment variables
 dotenv.config();
@@ -103,6 +104,7 @@ app.use('/api/interview-coach', interviewCoachRoutes); // Interview Coach system
 app.use('/api/upload', uploadRoutes); // File upload to Supabase Storage
 app.use('/api', analyticsRoutes); // Analytics dashboard
 app.use('/api', teamRoutes); // Team management
+app.use('/api/eligibility', eligibilityRoutes); // Public eligibility checks
 
 // ============================================================================
 // ERROR HANDLING

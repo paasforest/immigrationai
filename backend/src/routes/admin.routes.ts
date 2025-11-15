@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/adminController';
+import { eligibilityController } from '../controllers/eligibilityController';
 import { requireAuth } from '../middleware/auth';
 import { requireAdmin } from '../middleware/requireAdmin';
 
@@ -22,6 +23,7 @@ router.get('/analytics/utm', adminController.getUTMAnalytics);
 router.get('/analytics/utm/sources', adminController.getUTMSources);
 router.get('/analytics/utm/campaigns', adminController.getUTMCampaigns);
 router.get('/analytics/utm/conversions', adminController.getUTMConversions);
+router.get('/analytics/eligibility', eligibilityController.getAnalytics);
 
 export default router;
 

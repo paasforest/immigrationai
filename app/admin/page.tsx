@@ -16,7 +16,9 @@ import {
   Shield,
   ArrowLeft,
   Activity,
-  Target
+  Target,
+  Compass,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,10 +29,18 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [eligibilityInsights, setEligibilityInsights] = useState<any>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
   }, [user]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchEligibilityInsights();
+    }
+  }, [isAdmin]);
 
   const checkAdminAccess = async () => {
     if (!user) {
@@ -57,6 +67,27 @@ export default function AdminDashboardPage() {
       router.push('/dashboard');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEligibilityInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE_URL}/api/admin/analytics/eligibility`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        setEligibilityInsights(payload.data);
+      }
+    } catch (error) {
+      console.error('Failed to load eligibility analytics', error);
+    } finally {
+      setInsightsLoading(false);
     }
   };
 
@@ -168,7 +199,7 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -202,6 +233,100 @@ export default function AdminDashboardPage() {
                 </div>
                 <Activity className="w-12 h-12 text-green-600" />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Eligibility Checks</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {eligibilityInsights?.totals?.totalChecks ?? (insightsLoading ? '—' : 0)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {eligibilityInsights?.totals?.last24h
+                      ? `${eligibilityInsights.totals.last24h} in last 24h`
+                      : 'Awaiting first checks'}
+                  </p>
+                </div>
+                <Globe className="w-12 h-12 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Eligibility Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Hot destinations</span>
+                <Compass className="w-5 h-5 text-blue-500" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {eligibilityInsights?.topCountries?.length ? (
+                <div className="space-y-4">
+                  {eligibilityInsights.topCountries.map((item: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-lg font-semibold text-gray-900">{item.country}</p>
+                        <p className="text-sm text-gray-500">Last 30 days</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-blue-600">{item.checks}</p>
+                        <p className="text-xs text-gray-500">checks logged</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  {insightsLoading ? 'Loading...' : 'No eligibility activity recorded yet.'}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Latest applicant signals</span>
+                <Target className="w-5 h-5 text-indigo-500" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {eligibilityInsights?.recent?.length ? (
+                <div className="space-y-4">
+                  {eligibilityInsights.recent.map((item: any, idx: number) => (
+                    <div key={idx} className="p-4 border border-gray-100 rounded-2xl">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-gray-900">
+                          {item.country} • {item.visaType}
+                        </span>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          item.verdict === 'likely'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : item.verdict === 'needs_more_info'
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-rose-50 text-rose-700'
+                        }`}>
+                          {item.verdict}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-2">{item.summary}</p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(item.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  {insightsLoading ? 'Loading...' : 'No recent submissions.'}
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
