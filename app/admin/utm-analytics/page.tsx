@@ -4,27 +4,66 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
-  ArrowLeft, 
-  TrendingUp, 
-  Users, 
-  Target, 
-  DollarSign,
-  BarChart3,
-  RefreshCw,
+  Target,
+  TrendingUp,
+  Users,
+  MousePointerClick,
   Calendar,
+  ArrowLeft,
+  RefreshCw,
+  Filter,
+  Download,
   ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+interface SourceAnalytics {
+  source: string;
+  medium: string;
+  signups: number;
+  conversions: number;
+  conversionRate: number;
+  lastSeen?: string;
+}
+
+interface CampaignAnalytics {
+  campaign: string;
+  source: string;
+  medium: string;
+  signups: number;
+  conversions: number;
+  lastSeen?: string;
+}
+
+interface MediumAnalytics {
+  medium: string;
+  signups: number;
+  conversions: number;
+  lastSeen?: string;
+}
+
+interface Analytics {
+  totals: {
+    totalSignups: number;
+    totalConversions: number;
+    totalSources: number;
+    totalCampaigns: number;
+    proconnectsaSignups: number;
+    proconnectsaConversions: number;
+  };
+  bySource: SourceAnalytics[];
+  byCampaign: CampaignAnalytics[];
+  byMedium: MediumAnalytics[];
+}
+
 export default function UTMAnalyticsPage() {
   const router = useRouter();
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchAnalytics();
@@ -32,289 +71,353 @@ export default function UTMAnalyticsPage() {
 
   const fetchAnalytics = async () => {
     try {
-      setRefreshing(true);
-      const token = localStorage.getItem('auth_token');
+      setLoading(true);
+      setError('');
       
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/auth/login');
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/admin/analytics/utm`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setAnalytics(data.data);
+      if (!response.ok) {
+        if (response.status === 403) {
+          alert('Access Denied: Admin privileges required');
+          router.push('/dashboard');
+          return;
         }
-      } else if (response.status === 403) {
-        alert('Access Denied: Admin privileges required');
-        router.push('/dashboard');
+        throw new Error('Failed to fetch analytics');
       }
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+
+      const data = await response.json();
+      if (data.success) {
+        setAnalytics(data.data);
+      }
+    } catch (err: any) {
+      console.error('Analytics fetch error:', err);
+      setError(err.message || 'Failed to load analytics');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <BarChart3 className="w-12 h-12 animate-pulse text-blue-600 mx-auto mb-4" />
+          <RefreshCw className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading analytics...</p>
         </div>
       </div>
     );
   }
 
-  const totals = analytics?.totals || {};
-  const bySource = analytics?.bySource || [];
-  const byCampaign = analytics?.byCampaign || [];
-
-  // Find ProConnectSA stats
-  const proConnectSAStats = bySource.find((s: any) => s.utm_source === 'proconnectsa') || { signups: 0, conversions: 0, conversion_rate: 0 };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/admin">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Admin Dashboard
-            </Button>
-          </Link>
-          
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">UTM Analytics</h1>
-              <p className="text-gray-600">
-                Track marketing campaigns and traffic sources
-              </p>
+            <div className="flex items-center space-x-4">
+              <Target className="w-8 h-8 text-purple-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">UTM Analytics</h1>
+                <p className="text-sm text-gray-600">Track marketing campaigns and traffic sources</p>
+              </div>
             </div>
-            <Button onClick={fetchAnalytics} disabled={refreshing}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Button onClick={fetchAnalytics} variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+              <Link href="/admin">
+                <Button variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Admin Home
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
+      </header>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Message */}
+        {error && (
+          <Card className="mb-6 border-l-4 border-l-red-600">
+            <CardContent className="p-4">
+              <p className="text-red-600">⚠️ {error}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Tracked Signups</p>
-                  <p className="text-3xl font-bold text-gray-900">{totals.total_tracked_users || 0}</p>
-                </div>
-                <Users className="w-12 h-12 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+        {analytics && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Signups</p>
+                      <p className="text-3xl font-bold text-gray-900">{analytics.totals.totalSignups}</p>
+                    </div>
+                    <Users className="w-12 h-12 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">ProConnectSA Signups</p>
-                  <p className="text-3xl font-bold text-purple-600">{proConnectSAStats.signups || 0}</p>
-                </div>
-                <Target className="w-12 h-12 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Conversions</p>
+                      <p className="text-3xl font-bold text-gray-900">{analytics.totals.totalConversions}</p>
+                    </div>
+                    <TrendingUp className="w-12 h-12 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Conversions</p>
-                  <p className="text-3xl font-bold text-green-600">{totals.total_conversions || 0}</p>
-                </div>
-                <DollarSign className="w-12 h-12 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Traffic Sources</p>
+                      <p className="text-3xl font-bold text-gray-900">{analytics.totals.totalSources}</p>
+                    </div>
+                    <MousePointerClick className="w-12 h-12 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">ProConnectSA Paid</p>
-                  <p className="text-3xl font-bold text-orange-600">{proConnectSAStats.conversions || 0}</p>
-                </div>
-                <TrendingUp className="w-12 h-12 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ProConnectSA Highlight */}
-        <Card className="mb-8 border-l-4 border-l-purple-600">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Target className="w-6 h-6 mr-2 text-purple-600" />
-              ProConnectSA Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-2">Total Signups</p>
-                <p className="text-4xl font-bold text-purple-600">{proConnectSAStats.signups || 0}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-2">Paid Customers</p>
-                <p className="text-4xl font-bold text-green-600">{proConnectSAStats.conversions || 0}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-2">Conversion Rate</p>
-                <p className="text-4xl font-bold text-blue-600">{proConnectSAStats.conversion_rate || 0}%</p>
-              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                      <p className="text-3xl font-bold text-gray-900">{analytics.totals.totalCampaigns}</p>
+                    </div>
+                    <Target className="w-12 h-12 text-purple-600" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-purple-800">
-                💡 <strong>Tip:</strong> Add UTM parameters to ProConnectSA links to track more traffic. 
-                See <code className="bg-purple-200 px-2 py-1 rounded">PROCONNECTSA_LINKS.md</code> for ready-to-use URLs.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Traffic Sources */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* By Source */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Traffic by Source
-                </span>
-                <Badge>{bySource.length} sources</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {bySource.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p>No tracking data yet</p>
-                  <p className="text-sm">Signups with UTM parameters will appear here</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {bySource.map((source: any, index: number) => (
-                    <div key={index} className="border-b pb-4 last:border-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center">
-                          <span className="font-semibold text-gray-900 capitalize">
-                            {source.utm_source || 'Direct'}
-                          </span>
-                          {source.utm_source === 'proconnectsa' && (
-                            <Badge className="ml-2 bg-purple-100 text-purple-800">Your Business</Badge>
-                          )}
+            {/* ProConnectSA Highlight */}
+            <Card className="mb-8 border-l-4 border-l-purple-600">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Target className="w-5 h-5 mr-2 text-purple-600" />
+                  ProConnectSA Campaign Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analytics.bySource.find(s => s.source === 'proconnectsa') ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-600 font-semibold mb-2">✅ Campaign Active & Tracking</p>
+                      <p className="text-gray-600">
+                        Signups from ProConnectSA: <span className="font-bold text-blue-600">
+                          {analytics.bySource.find(s => s.source === 'proconnectsa')?.signups || 0}
+                        </span>
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Conversions: <span className="font-semibold text-green-600">
+                          {analytics.totals.proconnectsaConversions}
+                        </span>
+                      </p>
+                    </div>
+                    <ExternalLink className="w-6 h-6 text-gray-400" />
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-yellow-600 font-semibold mb-2">⚠️ No ProConnectSA Traffic Yet</p>
+                    <p className="text-gray-600 text-sm">
+                      Add UTM parameters to ProConnectSA links to start tracking. Once users click those links and sign up, data will appear here.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Traffic by Source */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Traffic by Source</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analytics.bySource.length > 0 ? (
+                  <div className="space-y-4">
+                    {analytics.bySource.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              item.source === 'proconnectsa' ? 'bg-purple-600' : 'bg-blue-600'
+                            }`} />
+                            <div>
+                              <p className="font-semibold text-gray-900 capitalize">{item.source || 'Direct'}</p>
+                              <p className="text-sm text-gray-600">
+                                Medium: {item.medium || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-2xl font-bold text-blue-600">{source.signups}</span>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-gray-900">{item.signups}</p>
+                          <p className="text-sm text-gray-600">signups</p>
+                        </div>
+                        <div className="text-right ml-6">
+                          <p className="text-xl font-semibold text-green-600">{item.conversions}</p>
+                          <p className="text-sm text-gray-600">conversions</p>
+                          <p className="text-xs text-gray-500">{item.conversionRate?.toFixed(2)}% rate</p>
+                        </div>
+                        <div className="ml-6 text-right">
+                          <p className="text-xs text-gray-500">Last seen</p>
+                          <p className="text-xs text-gray-600">{formatDate(item.lastSeen)}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">
-                          Conversions: <span className="font-semibold">{source.conversions}</span>
-                        </span>
-                        <span className="text-green-600 font-semibold">
-                          {source.conversion_rate}% conversion rate
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">No UTM tracking data yet</p>
+                    <p className="text-sm text-gray-500 mt-2">Data will appear here once users sign up via UTM-tagged links</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* By Campaign */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <Target className="w-5 h-5 mr-2" />
-                  By Campaign
-                </span>
-                <Badge>{byCampaign.length} campaigns</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {byCampaign.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p>No campaign data yet</p>
-                  <p className="text-sm">Campaign tracking will appear here</p>
-                </div>
-              ) : (
+            {/* Traffic by Campaign */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Traffic by Campaign</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analytics.byCampaign.length > 0 ? (
+                  <div className="space-y-4">
+                    {analytics.byCampaign.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{item.campaign || 'No Campaign'}</p>
+                          <p className="text-sm text-gray-600">
+                            Source: {item.source || 'N/A'} • Medium: {item.medium || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-gray-900">{item.signups}</p>
+                          <p className="text-sm text-gray-600">signups</p>
+                          <p className="text-sm text-green-600">{item.conversions} conversions</p>
+                        </div>
+                        <div className="ml-6 text-right">
+                          <p className="text-xs text-gray-500">Last seen</p>
+                          <p className="text-xs text-gray-600">{formatDate(item.lastSeen)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">No campaign data yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Traffic by Medium */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Traffic by Medium</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analytics.byMedium.length > 0 ? (
+                  <div className="space-y-4">
+                    {analytics.byMedium.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div>
+                          <p className="font-semibold text-gray-900 capitalize">{item.medium}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-gray-900">{item.signups}</p>
+                          <p className="text-sm text-gray-600">signups</p>
+                          <p className="text-sm text-green-600">{item.conversions} conversions</p>
+                        </div>
+                        <div className="ml-6 text-right">
+                          <p className="text-xs text-gray-500">Last seen</p>
+                          <p className="text-xs text-gray-600">{formatDate(item.lastSeen)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <MousePointerClick className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">No medium data yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Setup Instructions */}
+            <Card className="border-l-4 border-l-blue-600">
+              <CardHeader>
+                <CardTitle>How to Use UTM Tracking</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
-                  {byCampaign.map((campaign: any, index: number) => (
-                    <div key={index} className="border-b pb-4 last:border-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-900">
-                          {campaign.utm_campaign || 'Unnamed Campaign'}
-                        </span>
-                        <span className="text-2xl font-bold text-purple-600">{campaign.signups}</span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Conversions: <span className="font-semibold">{campaign.conversions}</span>
-                      </div>
-                    </div>
-                  ))}
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">📋 For ProConnectSA Links:</h3>
+                    <code className="block bg-gray-100 p-3 rounded text-sm overflow-x-auto">
+                      https://immigrationai.co.za?utm_source=proconnectsa&utm_medium=website&utm_campaign=immigration_integration&utm_content=hero_button
+                    </code>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">🎯 UTM Parameters:</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                      <li><strong>utm_source:</strong> Where traffic comes from (e.g., proconnectsa, facebook, google)</li>
+                      <li><strong>utm_medium:</strong> Marketing medium (e.g., website, email, social)</li>
+                      <li><strong>utm_campaign:</strong> Campaign name (e.g., immigration_integration)</li>
+                      <li><strong>utm_content:</strong> Specific link/button (e.g., hero_button, footer_link)</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">✅ What Gets Tracked:</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                      <li>When user clicks a UTM link, parameters are captured</li>
+                      <li>When they sign up, data is saved to database</li>
+                      <li>This dashboard shows all conversions by source/campaign</li>
+                      <li>ProConnectSA traffic is highlighted separately</li>
+                    </ul>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">📊 Add Tracking to ProConnectSA</h3>
-                <p className="text-sm text-blue-800 mb-3">
-                  Update ProConnectSA links with UTM parameters to track traffic
-                </p>
-                <code className="text-xs bg-blue-100 p-2 rounded block mb-2">
-                  ?utm_source=proconnectsa&utm_medium=website&utm_campaign=immigration_integration
-                </code>
-                <a 
-                  href="https://immigrationai.co.za/PROCONNECTSA_LINKS.md" 
-                  target="_blank"
-                  className="text-sm text-blue-600 hover:underline flex items-center"
-                >
-                  View tracking URLs <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h3 className="font-semibold text-green-900 mb-2">✅ Test Tracking</h3>
-                <p className="text-sm text-green-800 mb-3">
-                  Test the tracking system with a signup
-                </p>
-                <code className="text-xs bg-green-100 p-2 rounded block mb-2">
-                  immigrationai.co.za?utm_source=test
-                </code>
-                <p className="text-xs text-green-700">
-                  Sign up and check if data appears above
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   );
 }
-

@@ -14,7 +14,8 @@ export class AuthService {
     password: string,
     fullName?: string,
     companyName?: string,
-    subscriptionPlan?: string
+    subscriptionPlan?: string,
+    tracking?: any
   ): Promise<{ user: UserPublic; token: string; refreshToken: string }> {
     // Check if user already exists
     const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
@@ -41,6 +42,25 @@ export class AuthService {
     const { accountNumberService } = await import('./accountNumberService');
     const firstName = fullName?.split(' ')[0] || 'User';
     await accountNumberService.generateAccountNumber(user.id, firstName);
+
+    // Save UTM/Tracking data if present
+    if (tracking && typeof tracking === 'object' && Object.keys(tracking).length > 0) {
+      try {
+        const { trackingService } = await import('./trackingService');
+        await trackingService.saveUserTracking(user.id, {
+          utmSource: tracking.utm_source || tracking.utmSource,
+          utmMedium: tracking.utm_medium || tracking.utmMedium,
+          utmCampaign: tracking.utm_campaign || tracking.utmCampaign,
+          utmContent: tracking.utm_content || tracking.utmContent,
+          utmTerm: tracking.utm_term || tracking.utmTerm,
+          referrer: tracking.referrer,
+          landingPage: tracking.landingPage,
+          sessionId: tracking.sessionId,
+        });
+      } catch (error) {
+        console.error('Failed to save tracking data (non-fatal):', error);
+      }
+    }
     
     // Generate tokens
     const token = generateToken({ userId: user.id, email: user.email });

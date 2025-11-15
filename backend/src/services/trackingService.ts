@@ -151,55 +151,101 @@ export class TrackingService {
    */
   async getTrackingAnalytics(startDate?: Date, endDate?: Date) {
     try {
-      const dateFilter = startDate && endDate
-        ? `AND created_at BETWEEN $1 AND $2`
-        : '';
-
+      const dateFilter = startDate && endDate ? `AND created_at BETWEEN $1 AND $2` : '';
       const params = startDate && endDate ? [startDate, endDate] : [];
 
-      // Get signups by source
       const sourceResult = await query(
         `SELECT 
-           utm_source, 
-           COUNT(*) as signups,
-           SUM(CASE WHEN converted THEN 1 ELSE 0 END) as conversions,
-           ROUND(SUM(CASE WHEN converted THEN 1 ELSE 0 END)::numeric / COUNT(*)::numeric * 100, 2) as conversion_rate
-         FROM user_tracking 
-         WHERE utm_source IS NOT NULL ${dateFilter}
-         GROUP BY utm_source
+           COALESCE(utm_source, 'direct') AS source,
+           COALESCE(MAX(utm_medium), 'n/a') AS medium,
+           COUNT(*) AS signups,
+           SUM(CASE WHEN converted THEN 1 ELSE 0 END) AS conversions,
+           ROUND(
+             CASE WHEN COUNT(*) = 0 THEN 0
+                  ELSE (SUM(CASE WHEN converted THEN 1 ELSE 0 END)::numeric / COUNT(*)::numeric) * 100
+             END,
+             2
+           ) AS conversion_rate,
+           MAX(created_at) AS last_seen
+         FROM user_tracking
+         WHERE 1=1 ${dateFilter}
+         GROUP BY source
          ORDER BY signups DESC`,
         params
       );
 
-      // Get signups by campaign
       const campaignResult = await query(
         `SELECT 
-           utm_campaign, 
-           COUNT(*) as signups,
-           SUM(CASE WHEN converted THEN 1 ELSE 0 END) as conversions
-         FROM user_tracking 
-         WHERE utm_campaign IS NOT NULL ${dateFilter}
-         GROUP BY utm_campaign
+           COALESCE(utm_campaign, 'uncategorized') AS campaign,
+           COALESCE(MAX(utm_source), 'direct') AS source,
+           COALESCE(MAX(utm_medium), 'n/a') AS medium,
+           COUNT(*) AS signups,
+           SUM(CASE WHEN converted THEN 1 ELSE 0 END) AS conversions,
+           MAX(created_at) AS last_seen
+         FROM user_tracking
+         WHERE 1=1 ${dateFilter}
+         GROUP BY campaign
          ORDER BY signups DESC`,
         params
       );
 
-      // Get total stats
+      const mediumResult = await query(
+        `SELECT 
+           COALESCE(utm_medium, 'n/a') AS medium,
+           COUNT(*) AS signups,
+           SUM(CASE WHEN converted THEN 1 ELSE 0 END) AS conversions,
+           MAX(created_at) AS last_seen
+         FROM user_tracking
+         WHERE 1=1 ${dateFilter}
+         GROUP BY medium
+         ORDER BY signups DESC`,
+        params
+      );
+
       const totalResult = await query(
         `SELECT 
-           COUNT(*) as total_tracked_users,
-           SUM(CASE WHEN converted THEN 1 ELSE 0 END) as total_conversions,
-           COUNT(CASE WHEN utm_source = 'proconnectsa' THEN 1 END) as proconnectsa_signups,
-           SUM(CASE WHEN utm_source = 'proconnectsa' AND converted THEN 1 ELSE 0 END) as proconnectsa_conversions
+           COUNT(*) AS total_signups,
+           SUM(CASE WHEN converted THEN 1 ELSE 0 END) AS total_conversions,
+           COUNT(DISTINCT utm_source) AS total_sources,
+           COUNT(DISTINCT utm_campaign) AS total_campaigns,
+           COUNT(*) FILTER (WHERE utm_source = 'proconnectsa') AS proconnectsa_signups,
+           SUM(CASE WHEN utm_source = 'proconnectsa' AND converted THEN 1 ELSE 0 END) AS proconnectsa_conversions
          FROM user_tracking
          WHERE 1=1 ${dateFilter}`,
         params
       );
 
       return {
-        bySource: sourceResult.rows,
-        byCampaign: campaignResult.rows,
-        totals: totalResult.rows[0],
+        bySource: sourceResult.rows.map((row) => ({
+          source: row.source,
+          medium: row.medium,
+          signups: Number(row.signups) || 0,
+          conversions: Number(row.conversions) || 0,
+          conversionRate: Number(row.conversion_rate) || 0,
+          lastSeen: row.last_seen,
+        })),
+        byCampaign: campaignResult.rows.map((row) => ({
+          campaign: row.campaign,
+          source: row.source,
+          medium: row.medium,
+          signups: Number(row.signups) || 0,
+          conversions: Number(row.conversions) || 0,
+          lastSeen: row.last_seen,
+        })),
+        byMedium: mediumResult.rows.map((row) => ({
+          medium: row.medium,
+          signups: Number(row.signups) || 0,
+          conversions: Number(row.conversions) || 0,
+          lastSeen: row.last_seen,
+        })),
+        totals: {
+          totalSignups: Number(totalResult.rows[0]?.total_signups) || 0,
+          totalConversions: Number(totalResult.rows[0]?.total_conversions) || 0,
+          totalSources: Number(totalResult.rows[0]?.total_sources) || 0,
+          totalCampaigns: Number(totalResult.rows[0]?.total_campaigns) || 0,
+          proconnectsaSignups: Number(totalResult.rows[0]?.proconnectsa_signups) || 0,
+          proconnectsaConversions: Number(totalResult.rows[0]?.proconnectsa_conversions) || 0,
+        },
       };
     } catch (error) {
       console.error('Failed to get tracking analytics:', error);

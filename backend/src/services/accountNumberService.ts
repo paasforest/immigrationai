@@ -207,6 +207,13 @@ export class AccountNumberService {
       ['completed', accountNumber]
     );
 
+    try {
+      const { trackingService } = await import('./trackingService');
+      await trackingService.markUserConverted(user.id);
+    } catch (error) {
+      console.error('Failed to mark user conversion (non-fatal):', error);
+    }
+
     return {
       success: true,
       userId: user.id,
