@@ -3,6 +3,7 @@ import { AuthRequest } from '../types/request';
 import { paymentVerificationService } from '../services/paymentVerificationService';
 import { accountNumberService } from '../services/accountNumberService';
 import { trackingService } from '../services/trackingService';
+import { getRecentSessions as getRecentSessionsService, getSessionStats as getSessionStatsService } from '../services/sessionService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -140,6 +141,25 @@ export class AdminController {
 
     const analytics = await trackingService.getTrackingAnalytics();
     return sendSuccess(res, analytics.totals, 'UTM conversions retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm/sessions
+  getRecentSessions = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+    const limit = Number(req.query.limit || 50);
+    const sessions = await getRecentSessionsService(limit);
+    return sendSuccess(res, sessions, 'Recent sessions retrieved successfully');
+  });
+
+  // GET /api/admin/analytics/utm/session-stats
+  getSessionStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+    const stats = await getSessionStatsService();
+    return sendSuccess(res, stats, 'Session stats retrieved successfully');
   });
 
   // POST /api/admin/payments/manual-verify

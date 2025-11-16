@@ -59,9 +59,31 @@ interface Analytics {
   byMedium: MediumAnalytics[];
 }
 
+interface SessionItem {
+  id: string;
+  session_id?: string;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  referrer?: string | null;
+  landing_page?: string | null;
+  ip_address?: string | null;
+  created_at: string;
+}
+
+interface SessionStats {
+  totalSessions: number;
+  bySource: Array<{ utm_source: string | null; count: number }>;
+  byCampaign: Array<{ utm_campaign: string | null; count: number }>;
+}
+
 export default function UTMAnalyticsPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -80,14 +102,20 @@ export default function UTMAnalyticsPage() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/admin/analytics/utm`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const [utmRes, sessionsRes, statsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/admin/analytics/utm`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE_URL}/api/admin/analytics/utm/sessions?limit=25`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE_URL}/api/admin/analytics/utm/session-stats`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+      ]);
 
-      if (!response.ok) {
-        if (response.status === 403) {
+      if (!utmRes.ok || !sessionsRes.ok || !statsRes.ok) {
+        if (utmRes.status === 403 || sessionsRes.status === 403 || statsRes.status === 403) {
           alert('Access Denied: Admin privileges required');
           router.push('/dashboard');
           return;
@@ -95,10 +123,14 @@ export default function UTMAnalyticsPage() {
         throw new Error('Failed to fetch analytics');
       }
 
-      const data = await response.json();
-      if (data.success) {
-        setAnalytics(data.data);
-      }
+      const [utmData, sessionsData, statsData] = await Promise.all([
+        utmRes.json(),
+        sessionsRes.json(),
+        statsRes.json(),
+      ]);
+      if (utmData.success) setAnalytics(utmData.data);
+      if (sessionsData.success) setSessions(sessionsData.data || []);
+      if (statsData.success) setSessionStats(statsData.data);
     } catch (err: any) {
       console.error('Analytics fetch error:', err);
       setError(err.message || 'Failed to load analytics');
@@ -303,6 +335,82 @@ export default function UTMAnalyticsPage() {
                     <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-600">No UTM tracking data yet</p>
                     <p className="text-sm text-gray-500 mt-2">Data will appear here once users sign up via UTM-tagged links</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Sessions */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Recent Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sessions.length > 0 ? (
+                  <div className="space-y-3">
+                    {sessions.map((s) => (
+                      <div key={s.id} className="p-3 bg-white border rounded-lg flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {(s.utm_source || 'direct')}{s.utm_campaign ? ` • ${s.utm_campaign}` : ''}{s.utm_medium ? ` • ${s.utm_medium}` : ''}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {s.landing_page || '—'} {s.referrer ? ` • Ref: ${(() => { try { return new URL(s.referrer || '').hostname; } catch { return s.referrer; } })()}` : ''}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">{formatDate(s.created_at)}</p>
+                          <p className="text-[10px] text-gray-400">{s.session_id || ''}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-gray-600">
+                    No session activity yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Session Stats */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Session Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sessionStats ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Total Sessions</p>
+                      <p className="text-2xl font-bold text-gray-900">{sessionStats.totalSessions}</p>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-2">Top Sources</p>
+                      <div className="space-y-1 text-sm text-gray-800">
+                        {sessionStats.bySource.slice(0, 5).map((x, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span className="capitalize">{x.utm_source || 'direct'}</span>
+                            <span className="font-medium">{x.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-2">Top Campaigns</p>
+                      <div className="space-y-1 text-sm text-gray-800">
+                        {sessionStats.byCampaign.slice(0, 5).map((x, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span>{x.utm_campaign || 'none'}</span>
+                            <span className="font-medium">{x.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-gray-600">
+                    No stats yet.
                   </div>
                 )}
               </CardContent>

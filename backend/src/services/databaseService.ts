@@ -102,14 +102,14 @@ export const databaseService = {
   },
 
   getRefreshToken: async (token: string) => {
-    return prisma.refreshToken.findUnique({
+    return prisma.refreshToken.findFirst({
       where: { token },
       include: { user: true }
     });
   },
 
   deleteRefreshToken: async (token: string) => {
-    return prisma.refreshToken.delete({
+    return prisma.refreshToken.deleteMany({
       where: { token }
     });
   },
@@ -132,14 +132,14 @@ export const databaseService = {
   },
 
   getPasswordResetToken: async (token: string) => {
-    return prisma.passwordResetToken.findUnique({
+    return prisma.passwordResetToken.findFirst({
       where: { token },
       include: { user: true }
     });
   },
 
   deletePasswordResetToken: async (token: string) => {
-    return prisma.passwordResetToken.delete({
+    return prisma.passwordResetToken.deleteMany({
       where: { token }
     });
   },
@@ -174,18 +174,17 @@ export const databaseService = {
   createChecklist: async (userId: string, country: string, visaType: string, items: any[]) => {
     return prisma.checklist.create({
       data: {
-        userId,
         country,
         visaType,
-        items: JSON.stringify(items)
+        requirements: items as any
       }
     });
   },
 
   getUserChecklists: async (userId: string) => {
     return prisma.checklist.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' }
+      where: {},
+      orderBy: { lastUpdated: 'desc' }
     });
   },
 

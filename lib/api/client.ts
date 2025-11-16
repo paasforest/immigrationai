@@ -36,6 +36,28 @@ class ApiClient {
     return this.token;
   }
 
+  private async parseResponseBody(response: Response): Promise<{ parsed: any; text: string }> {
+    const text = await response.text();
+    if (!text) {
+      return { parsed: {}, text };
+    }
+
+    try {
+      return { parsed: JSON.parse(text), text };
+    } catch {
+      return { parsed: null, text };
+    }
+  }
+
+  private buildFallbackBody(ok: boolean, text: string) {
+    const message = text?.trim() || 'Unexpected response from server';
+    return {
+      success: ok,
+      error: ok ? undefined : message,
+      message,
+    };
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -55,10 +77,11 @@ class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      const { parsed, text } = await this.parseResponseBody(response);
+      const data = parsed ?? this.buildFallbackBody(response.ok, text);
 
       // Handle token expiration
-      if (response.status === 401 && data.error === 'TOKEN_EXPIRED') {
+      if (response.status === 401 && data && data.error === 'TOKEN_EXPIRED') {
         const refreshToken = typeof window !== 'undefined' 
           ? localStorage.getItem('refresh_token') 
           : null;
@@ -73,8 +96,8 @@ class ApiClient {
                 ...options,
                 headers,
               });
-              const retryData = await retryResponse.json();
-              return retryData;
+              const retryParsed = await this.parseResponseBody(retryResponse);
+              return retryParsed.parsed ?? this.buildFallbackBody(retryResponse.ok, retryParsed.text);
             }
           } catch (refreshError) {
             console.error('Token refresh failed:', refreshError);
@@ -114,7 +137,8 @@ class ApiClient {
       body: JSON.stringify({ refreshToken }),
     });
 
-    const data = await response.json();
+    const { parsed, text } = await this.parseResponseBody(response);
+    const data = parsed ?? this.buildFallbackBody(response.ok, text);
 
     if (response.ok && data.success && data.data) {
       // Update stored tokens

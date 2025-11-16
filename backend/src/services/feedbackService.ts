@@ -64,11 +64,7 @@ export const updateApplicationOutcome = async (data: ApplicationOutcomeData) => 
 
     const outcome = await prisma.applicationOutcome.upsert({
       where: {
-        userId_country_visaType: {
-          userId: data.userId,
-          country: data.country,
-          visaType: data.visaType,
-        },
+        id: data.documentId || 'temp-id',
       },
       update: {
         status: data.status,
@@ -212,7 +208,7 @@ export const getKnowledgeBase = async (topic?: string) => {
 export const updateKnowledgeBase = async (topic: string, content: string, source: string, confidence: number = 0.9) => {
   try {
     const entry = await prisma.knowledgeBase.upsert({
-      where: { topic },
+      where: { id: topic },
       update: {
         content,
         source,

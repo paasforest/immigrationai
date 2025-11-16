@@ -1,11 +1,17 @@
 import rateLimit from 'express-rate-limit';
 import { Request } from 'express';
 
+const rateLimitResponse = (message: string) => ({
+  success: false,
+  error: 'RATE_LIMITED',
+  message,
+});
+
 // General API rate limiter
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  message: rateLimitResponse('Too many requests from this IP, please try again later.'),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -14,7 +20,7 @@ export const apiLimiter = rateLimit({
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
+  message: rateLimitResponse('Too many authentication attempts, please try again later.'),
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
@@ -24,7 +30,7 @@ export const authLimiter = rateLimit({
 export const documentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Limit each IP to 10 document generations per hour
-  message: 'Too many document generation requests, please try again later.',
+  message: rateLimitResponse('Too many document generation requests, please try again later.'),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -34,7 +40,7 @@ export const createUserRateLimiter = (maxRequests: number, windowMs: number) => 
   return rateLimit({
     windowMs,
     max: maxRequests,
-    message: `Rate limit exceeded. Maximum ${maxRequests} requests allowed.`,
+    message: rateLimitResponse(`Rate limit exceeded. Maximum ${maxRequests} requests allowed.`),
     keyGenerator: (req: Request) => {
       // Use user ID if authenticated, otherwise fall back to IP
       const authReq = req as any;

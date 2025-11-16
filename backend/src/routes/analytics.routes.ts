@@ -3,9 +3,39 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateJWT } from '../middleware/auth';
 import { AuthRequest } from '../types/request';
 import { logger } from '../utils/logger';
+import { recordSessionEvent } from '../services/sessionService';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Public: Record a landing session with UTM/referrer
+router.post('/analytics/session', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userAgent = req.headers['user-agent'];
+    const ip =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      req.socket.remoteAddress ||
+      '';
+
+    await recordSessionEvent({
+      sessionId: req.body.sessionId,
+      utm_source: req.body.utm_source,
+      utm_medium: req.body.utm_medium,
+      utm_campaign: req.body.utm_campaign,
+      utm_content: req.body.utm_content,
+      utm_term: req.body.utm_term,
+      referrer: req.body.referrer,
+      landingPage: req.body.landingPage,
+      userAgent: userAgent as string,
+      ipAddress: ip,
+    });
+
+    res.json({ success: true, message: 'Session recorded' });
+  } catch (error: any) {
+    logger.error('Record session error', { error: error.message });
+    res.status(500).json({ success: false, error: 'Failed to record session' });
+  }
+});
 
 // Get analytics data
 router.get('/analytics', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -14,7 +44,8 @@ router.get('/analytics', authenticateJWT, async (req: AuthRequest, res: Response
     const { timeRange = '30d' } = req.query;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     // Calculate date range

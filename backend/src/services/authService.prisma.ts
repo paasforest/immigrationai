@@ -11,9 +11,9 @@ export interface User {
   passwordHash: string;
   fullName: string | null;
   companyName: string | null;
+  role: string | null;
   subscriptionPlan: string;
   subscriptionStatus: string;
-  accountNumber: string | null;
   createdAt: Date;
   updatedAt: Date;
   isEmailVerified: boolean;
@@ -99,10 +99,11 @@ export class AuthService {
     const userWithRequiredFields = {
       ...userWithoutPassword,
       isEmailVerified: false,
+      role: (user as any).role || 'user',
     };
     
     return {
-      user: userWithRequiredFields,
+      user: userWithRequiredFields as UserPublic,
       token,
       refreshToken,
     };
@@ -142,10 +143,11 @@ export class AuthService {
     const userWithRequiredFields = {
       ...userWithoutPassword,
       isEmailVerified: false,
+      role: (user as any).role || 'user',
     };
     
     return {
-      user: userWithRequiredFields,
+      user: userWithRequiredFields as UserPublic,
       token,
       refreshToken,
     };

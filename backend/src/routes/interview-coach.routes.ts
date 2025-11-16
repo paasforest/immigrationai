@@ -25,7 +25,8 @@ router.post('/start-session', async (req, res): Promise<void> => {
     console.log('UserID being used:', userId, 'Length:', userId.length);
 
     if (!visaType) {
-      return res.status(400).json({ error: 'Visa type is required' });
+      res.status(400).json({ error: 'Visa type is required' });
+      return;
     }
 
     // Fetch a random question for the given visa type
@@ -36,7 +37,8 @@ router.post('/start-session', async (req, res): Promise<void> => {
     });
 
     if (questions.length === 0) {
-      return res.status(404).json({ error: 'No questions found for this visa type' });
+      res.status(404).json({ error: 'No questions found for this visa type' });
+      return;
     }
 
     const question = questions[0];
@@ -71,7 +73,8 @@ router.post('/analyze-answer', async (req, res): Promise<void> => {
     const userId = req.headers['x-user-id'] as string || '6d4faab5-d1c6-46da-ab34-c080509d64ac'; // Use our test user ID
 
     if (!questionId || !userAnswer) {
-      return res.status(400).json({ error: 'Question ID and user answer are required' });
+      res.status(400).json({ error: 'Question ID and user answer are required' });
+      return;
     }
 
     // Fetch the question details
@@ -80,7 +83,8 @@ router.post('/analyze-answer', async (req, res): Promise<void> => {
     });
 
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      res.status(404).json({ error: 'Question not found' });
+      return;
     }
 
     // Calculate duration (rough estimate based on answer length)
@@ -273,13 +277,15 @@ router.post('/transcribe-audio', authenticateJWT, upload.single('audio'), async 
     const file = req.file;
     
     if (!file) {
-      return res.status(400).json({ error: 'No audio file provided' });
+      res.status(400).json({ error: 'No audio file provided' });
+      return;
     }
 
     // Check file type
     const allowedTypes = ['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/m4a', 'audio/x-m4a', 'audio/mp4'];
     if (!allowedTypes.includes(file.mimetype)) {
-      return res.status(400).json({ error: 'Invalid audio format. Supported: webm, mp3, wav, m4a, mp4' });
+      res.status(400).json({ error: 'Invalid audio format. Supported: webm, mp3, wav, m4a, mp4' });
+      return;
     }
 
     // Create a File-like object for OpenAI API

@@ -42,23 +42,25 @@ router.use(authenticateJWT);
  * Upload profile image
  * POST /api/upload/profile-image
  */
-router.post('/profile-image', upload.single('image'), async (req: AuthRequest, res: Response) => {
+router.post('/profile-image', upload.single('image'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         error: 'No file uploaded' 
       });
+      return;
     }
 
     if (!userId) {
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false, 
         error: 'Unauthorized' 
       });
+      return;
     }
 
     const result = await supabaseStorageService.uploadFile(
@@ -89,24 +91,26 @@ router.post('/profile-image', upload.single('image'), async (req: AuthRequest, r
  * Upload document (SOP, letters, etc.)
  * POST /api/upload/document
  */
-router.post('/document', upload.single('document'), async (req: AuthRequest, res: Response) => {
+router.post('/document', upload.single('document'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const file = req.file;
     const { documentType } = req.body; // Optional: 'sop', 'cover_letter', etc.
 
     if (!file) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         error: 'No file uploaded' 
       });
+      return;
     }
 
     if (!userId) {
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false, 
         error: 'Unauthorized' 
       });
+      return;
     }
 
     const result = await supabaseStorageService.uploadFile(
@@ -138,23 +142,25 @@ router.post('/document', upload.single('document'), async (req: AuthRequest, res
  * Upload payment proof
  * POST /api/upload/payment-proof
  */
-router.post('/payment-proof', upload.single('proof'), async (req: AuthRequest, res: Response) => {
+router.post('/payment-proof', upload.single('proof'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         error: 'No file uploaded' 
       });
+      return;
     }
 
     if (!userId) {
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false, 
         error: 'Unauthorized' 
       });
+      return;
     }
 
     const result = await supabaseStorageService.uploadFile(
@@ -185,23 +191,25 @@ router.post('/payment-proof', upload.single('proof'), async (req: AuthRequest, r
  * Get user's uploaded files
  * GET /api/upload/files?bucket=user-uploads
  */
-router.get('/files', async (req: AuthRequest, res: Response) => {
+router.get('/files', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { bucket } = req.query;
 
     if (!userId) {
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false, 
         error: 'Unauthorized' 
       });
+      return;
     }
 
     if (!bucket || typeof bucket !== 'string') {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         error: 'Bucket parameter is required' 
       });
+      return;
     }
 
     const files = await supabaseStorageService.listUserFiles(bucket, userId);
@@ -223,31 +231,34 @@ router.get('/files', async (req: AuthRequest, res: Response) => {
  * Delete a file
  * DELETE /api/upload/file
  */
-router.delete('/file', async (req: AuthRequest, res: Response) => {
+router.delete('/file', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { bucket, path } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false, 
         error: 'Unauthorized' 
       });
+      return;
     }
 
     if (!bucket || !path) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         error: 'Bucket and path are required' 
       });
+      return;
     }
 
     // Verify the file belongs to the user
     if (!path.startsWith(userId + '/')) {
-      return res.status(403).json({ 
+      res.status(403).json({ 
         success: false, 
         error: 'Access denied' 
       });
+      return;
     }
 
     await supabaseStorageService.deleteFile(bucket, path);

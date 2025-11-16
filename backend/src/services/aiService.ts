@@ -754,24 +754,24 @@ APPLICANT PROFILE:
 - Dependents: ${profile.dependents || 'Not provided'}
 
 CERTIFICATE VERIFICATION (CRITICAL FOR STUDENT VISAS):
-- Verification Status: ${profile.certificateVerification || 'Not provided'}
-- Verification Body: ${profile.verificationBody || 'Not provided'}
-- Verification Timeline: ${profile.verificationTimeline || 'Not provided'}
-- Equivalency Level: ${profile.equivalencyLevel || 'Not provided'}
+- Verification Status: ${(profile as any).certificateVerification || 'Not provided'}
+- Verification Body: ${(profile as any).verificationBody || 'Not provided'}
+- Verification Timeline: ${(profile as any).verificationTimeline || 'Not provided'}
+- Equivalency Level: ${(profile as any).equivalencyLevel || 'Not provided'}
 
 HOME TIES AND STRONG CONNECTIONS (CRITICAL FOR VISITOR VISAS):
-- Property Ownership: ${profile.propertyOwnership || 'Not provided'}
-- Family in Home Country: ${profile.familyInHomeCountry || 'Not provided'}
-- Employment in Home Country: ${profile.employmentInHomeCountry || 'Not provided'}
-- Business in Home Country: ${profile.businessInHomeCountry || 'Not provided'}
-- Bank Accounts in Home Country: ${profile.bankAccountsHomeCountry || 'Not provided'}
-- Previous Travel History: ${profile.previousTravelHistory || 'Not provided'}
-- Return Ticket: ${profile.returnTicket || 'Not provided'}
-- Accommodation Proof: ${profile.accommodationProof || 'Not provided'}
-- Criminal Record: ${profile.criminalRecord || 'Not provided'}
-- Previous Visa Rejections: ${profile.previousVisaRejections || 'Not provided'}
-- Health Insurance: ${profile.healthInsurance || 'Not provided'}
-- Sponsor Relationship: ${profile.sponsorRelationship || 'Not provided'}
+- Property Ownership: ${(profile as any).propertyOwnership || 'Not provided'}
+- Family in Home Country: ${(profile as any).familyInHomeCountry || 'Not provided'}
+- Employment in Home Country: ${(profile as any).employmentInHomeCountry || 'Not provided'}
+- Business in Home Country: ${(profile as any).businessInHomeCountry || 'Not provided'}
+- Bank Accounts in Home Country: ${(profile as any).bankAccountsHomeCountry || 'Not provided'}
+- Previous Travel History: ${(profile as any).previousTravelHistory || 'Not provided'}
+- Return Ticket: ${(profile as any).returnTicket || 'Not provided'}
+- Accommodation Proof: ${(profile as any).accommodationProof || 'Not provided'}
+- Criminal Record: ${(profile as any).criminalRecord || 'Not provided'}
+- Previous Visa Rejections: ${(profile as any).previousVisaRejections || 'Not provided'}
+- Health Insurance: ${(profile as any).healthInsurance || 'Not provided'}
+- Sponsor Relationship: ${(profile as any).sponsorRelationship || 'Not provided'}
 
 ${profile.visaType.includes('family') || profile.visaType.includes('spouse') || profile.visaType.includes('reunion') || profile.visaType.includes('stamp_4') || profile.visaType.includes('stamp_3') ? `
 FAMILY-SPECIFIC DETAILS:

@@ -29,7 +29,12 @@ export default function LoginPage() {
     const result = await login(formData);
 
     if (result.success) {
-      router.push('/dashboard');
+      // Redirect admin users to admin dashboard
+      if (formData.email === 'admin@immigrationai.co.za' || formData.email === 'testadmin@immigrationai.co.za') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } else {
       setError(result.error || 'Login failed');
       setLoading(false);

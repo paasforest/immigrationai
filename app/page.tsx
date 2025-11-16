@@ -77,6 +77,53 @@ const visaOptionsByCountry: Record<string, { value: string; label: string }[]> =
   ],
 };
 
+const visaCategoryByType: Record<string, 'study' | 'work' | 'family' | 'visit' | 'business' | 'general'> = {
+  uk_skilled_worker: 'work',
+  uk_student: 'study',
+  uk_partner: 'family',
+  uk_family_reunion: 'family',
+  uk_business_visit: 'visit',
+  uk_startup_innovator: 'business',
+  uk_visit: 'visit',
+  uk_other: 'general',
+  usa_b1b2: 'visit',
+  usa_f1: 'study',
+  usa_h1b: 'work',
+  usa_k1: 'family',
+  usa_family_reunification: 'family',
+  usa_employment_based: 'work',
+  usa_other: 'general',
+  canada_study: 'study',
+  canada_express_entry: 'work',
+  canada_work_permit: 'work',
+  canada_spousal_sponsorship: 'family',
+  canada_visitor: 'visit',
+  canada_other: 'general',
+  germany_blue_card: 'work',
+  germany_job_seeker: 'work',
+  germany_student: 'study',
+  germany_family_reunion: 'family',
+  germany_business_visit: 'visit',
+  germany_other: 'general',
+  ireland_critical_skills: 'work',
+  ireland_general_employment: 'work',
+  ireland_student: 'study',
+  ireland_spouse_family: 'family',
+  ireland_business: 'business',
+  ireland_visit: 'visit',
+  ireland_other: 'general',
+  schengen_short_stay: 'visit',
+  schengen_business: 'visit',
+  schengen_family: 'family',
+  schengen_student: 'study',
+  schengen_other: 'general',
+  uae_employment: 'work',
+  uae_family: 'family',
+  uae_investor: 'business',
+  uae_visit: 'visit',
+  uae_other: 'general',
+};
+
 const ageRanges = [
   '18-24',
   '25-34',
@@ -136,6 +183,45 @@ const yesNoOptions = [
   { value: 'yes', label: 'Yes' },
 ];
 
+type SupplementalQuestion = {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'select';
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+};
+
+const supplementalQuestionSets: Record<string, SupplementalQuestion[]> = {
+  study: [
+    { id: 'acceptanceProof', label: 'Have you received an offer or acceptance letter?', type: 'select', options: yesNoOptions },
+    { id: 'tuitionPaidStatus', label: 'How much of your tuition/deposit is already paid?', type: 'text', placeholder: 'e.g., 50% deposit paid' },
+    { id: 'studyProgramDetail', label: 'Program name and institution details', type: 'textarea', placeholder: 'e.g., MSc Data Science at University of Toronto starting Sept 2025' },
+  ],
+  work: [
+    { id: 'jobOfferStatus', label: 'Do you have a signed job offer / COS / LMIA?', type: 'select', options: yesNoOptions },
+    { id: 'salaryOffered', label: 'Salary or hourly rate on the offer', type: 'text', placeholder: 'e.g., £32,000 gross per year' },
+    { id: 'occupationDetail', label: 'Occupation/NOC and shortages or licensing notes', type: 'textarea', placeholder: 'e.g., NOC 21231 Software Engineer, license not required' },
+  ],
+  family: [
+    { id: 'relationshipLength', label: 'How long have you been together / married?', type: 'text', placeholder: 'e.g., Married in 2021, dating since 2018' },
+    { id: 'sharedEvidence', label: 'Evidence of shared life (leases, children, travel)', type: 'textarea', placeholder: 'e.g., Joint lease since 2022, joint bank account, two visits to UK in 2023' },
+    { id: 'sponsorIncome', label: 'Sponsor income and employment details', type: 'text', placeholder: 'e.g., Sponsor earns €45k/year as nurse (permanent contract)' },
+  ],
+  visit: [
+    { id: 'visitPurpose', label: 'Purpose of visit (events, tourism, meetings)', type: 'text', placeholder: 'e.g., Attend cousin’s wedding and tourism for 2 weeks' },
+    { id: 'returnPlan', label: 'Planned return date and ticket status', type: 'text', placeholder: 'e.g., Return ticket booked for 15 Aug 2025' },
+    { id: 'travelHistory', label: 'Previous international travel history', type: 'textarea', placeholder: 'e.g., South Africa to UAE (2023), Kenya (2022), always exited on time' },
+  ],
+  business: [
+    { id: 'investmentAmount', label: 'Investment amount or funds available', type: 'text', placeholder: 'e.g., €150k confirmed for start-up' },
+    { id: 'businessPlan', label: 'Business/start-up or investor plan summary', type: 'textarea', placeholder: 'e.g., Opening fintech advisory with 3 local hires in Dublin' },
+    { id: 'compliancePrep', label: 'Licenses, incubator approvals, or support letters', type: 'textarea', placeholder: 'e.g., Approved by Enterprise Ireland, mentor assigned' },
+  ],
+  general: [
+    { id: 'extraDetails', label: 'Additional context we should know', type: 'textarea', placeholder: 'Add anything that does not fit above fields' },
+  ],
+};
+
 type EligibilityResult = {
   verdict: 'likely' | 'needs_more_info' | 'unlikely';
   summary: string;
@@ -170,10 +256,13 @@ export default function ImmigrationAILanding() {
   const [eligibilityResult, setEligibilityResult] = useState<EligibilityResult | null>(null);
   const [eligibilityLoading, setEligibilityLoading] = useState(false);
   const [eligibilityError, setEligibilityError] = useState('');
+  const [supplementalAnswers, setSupplementalAnswers] = useState<Record<string, string>>({});
 
   const currentVisaOptions = useMemo(() => {
     return visaOptionsByCountry[eligibilityForm.country] || [];
   }, [eligibilityForm.country]);
+  const currentVisaCategory = visaCategoryByType[eligibilityForm.visaType] || 'general';
+  const currentSupplementalQuestions = supplementalQuestionSets[currentVisaCategory] || supplementalQuestionSets.general;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -191,6 +280,10 @@ export default function ImmigrationAILanding() {
       }));
     }
   }, [currentVisaOptions, eligibilityForm.visaType]);
+
+  useEffect(() => {
+    setSupplementalAnswers({});
+  }, [eligibilityForm.visaType]);
 
   const verdictMeta = {
     likely: {
@@ -217,6 +310,13 @@ export default function ImmigrationAILanding() {
     }));
   };
 
+  const handleSupplementalChange = (id: string, value: string) => {
+    setSupplementalAnswers((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
   const handleEligibilitySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setEligibilityLoading(true);
@@ -224,6 +324,10 @@ export default function ImmigrationAILanding() {
 
     try {
       const tracking = getTrackingDataForConversion();
+      const supplementalNoteEntries = currentSupplementalQuestions
+        .map((question) => `${question.label}: ${supplementalAnswers[question.id] || 'Not provided'}`)
+        .join(' | ');
+      const mergedNotes = [eligibilityForm.notes, supplementalNoteEntries].filter(Boolean).join('\n');
       const response = await fetch(`${API_BASE_URL}/api/eligibility/check`, {
         method: 'POST',
         headers: {
@@ -231,7 +335,9 @@ export default function ImmigrationAILanding() {
         },
         body: JSON.stringify({
           ...eligibilityForm,
+          notes: mergedNotes,
           tracking,
+          supplementalAnswers,
         }),
       });
 
@@ -628,6 +734,59 @@ export default function ImmigrationAILanding() {
                   </select>
                 </div>
               </div>
+
+              {currentSupplementalQuestions.length > 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                      {currentVisaCategory === 'study' && 'Study-specific details'}
+                      {currentVisaCategory === 'work' && 'Work / permit details'}
+                      {currentVisaCategory === 'family' && 'Family & sponsorship details'}
+                      {currentVisaCategory === 'visit' && 'Visit / short-stay details'}
+                      {currentVisaCategory === 'business' && 'Business / investor details'}
+                      {currentVisaCategory === 'general' && 'Extra context'}
+                    </p>
+                    <span className="text-xs text-slate-500">Required for {currentVisaOptions.find(v => v.value === eligibilityForm.visaType)?.label}</span>
+                  </div>
+                  <div className="grid gap-4">
+                    {currentSupplementalQuestions.map((question) => (
+                      <div key={question.id}>
+                        <label className="text-sm font-medium text-slate-700">{question.label}</label>
+                        {question.type === 'select' ? (
+                          <select
+                            className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                            value={supplementalAnswers[question.id] || ''}
+                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
+                          >
+                            <option value="">Select option</option>
+                            {question.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : question.type === 'textarea' ? (
+                          <textarea
+                            className="mt-1 w-full rounded-2xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                            rows={3}
+                            placeholder={question.placeholder}
+                            value={supplementalAnswers[question.id] || ''}
+                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder={question.placeholder}
+                            value={supplementalAnswers[question.id] || ''}
+                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-sm font-medium text-slate-700">

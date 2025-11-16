@@ -20,6 +20,7 @@ export interface EligibilityInput {
   travelHistory?: string;
   sponsorIncome?: string;
   notes?: string;
+  supplementalAnswers?: Record<string, string>;
   tracking?: {
     utm_source?: string;
     utm_medium?: string;
@@ -156,8 +157,13 @@ class EligibilityService {
       notes: sanitizeText(input.notes, 600) || 'n/a',
     };
 
+    const supplementalSection = input.supplementalAnswers && Object.keys(input.supplementalAnswers).length > 0
+      ? `\nRoute-specific notes:\n${JSON.stringify(input.supplementalAnswers, null, 2)}`
+      : '';
+
     return `
-You are a senior immigration case officer with deep experience handling applications from African countries for ${countryLabel}.
+You are ImmigrationAI's senior immigration strategist. Speak directly to the applicant as "you" and reference ImmigrationAI's guidance.
+Assume you are reviewing this case inside ImmigrationAI's platform for ${countryLabel}.
 Assess the following profile for the ${visaTypeLabel}.
 
 Focus on: ${focusAreas.join(', ')}.
@@ -166,14 +172,15 @@ Return ONLY valid JSON with this schema:
 {
   "verdict": "likely" | "needs_more_info" | "unlikely",
   "confidence": 0.0-1.0,
-  "summary": "Professional tone overview referencing real policy",
-  "risk_factors": ["bullet list of professional risk notes"],
-  "recommended_steps": ["clear, actionable steps referencing embassy expectations"],
-  "recommended_documents": ["documents they should prepare as next step"]
+  "summary": "Professional tone overview referencing real policy, addressing the applicant as 'you'",
+  "risk_factors": ["bullet list of professional risk notes written to 'you'"],
+  "recommended_steps": ["clear, actionable steps ImmigrationAI suggests you take next"],
+  "recommended_documents": ["documents you should prepare next"]
 }
 
 Applicant Profile:
 ${JSON.stringify(applicantProfile, null, 2)}
+${supplementalSection}
 `;
   }
 

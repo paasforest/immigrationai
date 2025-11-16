@@ -23,6 +23,8 @@ router.get('/analytics/utm', adminController.getUTMAnalytics);
 router.get('/analytics/utm/sources', adminController.getUTMSources);
 router.get('/analytics/utm/campaigns', adminController.getUTMCampaigns);
 router.get('/analytics/utm/conversions', adminController.getUTMConversions);
+router.get('/analytics/utm/sessions', adminController.getRecentSessions);
+router.get('/analytics/utm/session-stats', adminController.getSessionStats);
 router.get('/analytics/eligibility', eligibilityController.getAnalytics);
 
 export default router;

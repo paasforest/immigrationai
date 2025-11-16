@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -277,6 +277,17 @@ const features = [
               <User className="w-5 h-5 text-gray-600" />
               <span className="text-gray-700">{user.email}</span>
             </div>
+            {user.email === 'admin@immigrationai.co.za' || user.email === 'testadmin@immigrationai.co.za' ? (
+              <Link href="/admin">
+                <Button
+                  variant="default"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 mr-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  <span>Admin Panel</span>
+                </Button>
+              </Link>
+            ) : null}
             <Button
               variant="outline"
               onClick={handleLogout}

@@ -13,7 +13,8 @@ router.get('/team/members', authenticateJWT, async (req: AuthRequest, res: Respo
     const userId = req.user?.userId;
     
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     // Get all users (for now - in production, implement proper team/organization logic)
@@ -68,11 +69,13 @@ router.post('/team/invite', authenticateJWT, async (req: AuthRequest, res: Respo
     const { email, role } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     if (!email || !role) {
-      return res.status(400).json({ error: 'Email and role are required' });
+      res.status(400).json({ error: 'Email and role are required' });
+      return;
     }
 
     // Check if user already exists
@@ -119,7 +122,8 @@ router.delete('/team/members/:memberId', authenticateJWT, async (req: AuthReques
     const { memberId } = req.params;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     // Check if user exists
@@ -128,7 +132,8 @@ router.delete('/team/members/:memberId', authenticateJWT, async (req: AuthReques
     });
 
     if (!member) {
-      return res.status(404).json({ error: 'Team member not found' });
+      res.status(404).json({ error: 'Team member not found' });
+      return;
     }
 
     // In production, you might want to soft-delete or archive instead
@@ -153,11 +158,13 @@ router.patch('/team/members/:memberId/role', authenticateJWT, async (req: AuthRe
     const { role } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     if (!role) {
-      return res.status(400).json({ error: 'Role is required' });
+      res.status(400).json({ error: 'Role is required' });
+      return;
     }
 
     // Note: User model doesn't have role field
@@ -167,7 +174,8 @@ router.patch('/team/members/:memberId/role', authenticateJWT, async (req: AuthRe
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
 
     logger.info('Team member role updated', { memberId, role, updatedBy: userId });

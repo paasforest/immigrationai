@@ -162,6 +162,23 @@ export function initializeTracking(): void {
     
     // Log for debugging
     console.log('🎯 New visitor tracked:', trackingData);
+
+    // Fire session event to backend
+    try {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      fetch(`${API_BASE_URL}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...trackingData,
+          // lightweight device hints
+          userAgent: navigator.userAgent,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (e) {
+      // ignore network errors
+    }
   } else {
     // Check if we have existing tracking data
     const existingData = getTrackingData();
