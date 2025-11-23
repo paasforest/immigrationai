@@ -7,7 +7,17 @@ import { query } from '../config/database';
 
 export class ChecklistService {
   // Get or generate checklist
-  async getChecklist(country: string, visaType: string): Promise<Checklist> {
+  async getChecklist(country: string, visaType: string, forceRefresh: boolean = false): Promise<Checklist> {
+    // If force refresh, skip cache and generate new
+    if (forceRefresh) {
+      // Delete old checklist if exists
+      await query(
+        'DELETE FROM checklists WHERE country = $1 AND visa_type = $2',
+        [country, visaType]
+      );
+      return await this.generateChecklist(country, visaType);
+    }
+
     // Try to get from database first
     const result = await query(
       'SELECT * FROM checklists WHERE country = $1 AND visa_type = $2',
@@ -42,10 +52,12 @@ export class ChecklistService {
       throw new AppError('Failed to parse checklist data', 500);
     }
 
-    // Save to database
+    // Save to database (upsert - update if exists, insert if not)
     const saveResult = await query(
-      `INSERT INTO checklists (country, visa_type, requirements)
-       VALUES ($1, $2, $3)
+      `INSERT INTO checklists (country, visa_type, requirements, last_updated)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (country, visa_type)
+       DO UPDATE SET requirements = $3, last_updated = NOW()
        RETURNING *`,
       [country, visaType, JSON.stringify(checklistData.requirements)]
     );

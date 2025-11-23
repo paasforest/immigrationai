@@ -4,9 +4,9 @@ import { sendSuccess, sendError } from '../utils/helpers';
 import { asyncHandler } from '../middleware/errorHandler';
 
 export class ChecklistController {
-  // GET /api/checklists?country=X&visa_type=Y
+  // GET /api/checklists?country=X&visa_type=Y&refresh=true
   getChecklist = asyncHandler(async (req: Request, res: Response) => {
-    const { country, visa_type } = req.query;
+    const { country, visa_type, refresh } = req.query;
 
     if (!country || !visa_type) {
       return sendError(
@@ -17,9 +17,11 @@ export class ChecklistController {
       );
     }
 
+    const forceRefresh = refresh === 'true' || refresh === '1';
     const checklist = await checklistService.getChecklist(
       country as string,
-      visa_type as string
+      visa_type as string,
+      forceRefresh
     );
 
     return sendSuccess(res, { checklist }, 'Checklist retrieved successfully');

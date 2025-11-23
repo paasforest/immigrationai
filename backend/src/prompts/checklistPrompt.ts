@@ -1,9 +1,11 @@
 export const generateChecklistPrompt = (country: string, visaType: string): string => {
-  return `You are an expert immigration consultant with comprehensive knowledge of visa requirements worldwide.
+  return `You are an expert immigration consultant with comprehensive knowledge of visa requirements worldwide. You have access to the most current visa requirements and regulations as of 2024-2025.
 
 Generate a complete, accurate, and up-to-date visa document checklist for:
 - Country: ${country}
 - Visa Type: ${visaType}
+
+IMPORTANT: Use the most current requirements available. Include recent changes in visa policies, updated fee structures, and current processing times. If you're unsure about recent changes, indicate that users should verify with official sources.
 
 Provide a comprehensive list of required documents in the following JSON format:
 

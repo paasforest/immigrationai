@@ -170,7 +170,7 @@ export default function ChecklistPage() {
     }
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (forceRefresh: boolean = false) => {
     if (!formData.targetCountry || !formData.visaType) {
       alert('Please select both country and visa type');
       return;
@@ -178,8 +178,9 @@ export default function ChecklistPage() {
 
     setIsLoading(true);
     try {
+      const refreshParam = forceRefresh ? '&refresh=true' : '';
       const response = await fetch(
-        `${API_BASE_URL}/api/checklists?country=${encodeURIComponent(formData.targetCountry)}&visa_type=${encodeURIComponent(formData.visaType)}`,
+        `${API_BASE_URL}/api/checklists?country=${encodeURIComponent(formData.targetCountry)}&visa_type=${encodeURIComponent(formData.visaType)}${refreshParam}`,
         {
           method: 'GET',
           headers: {
@@ -201,6 +202,23 @@ export default function ChecklistPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isChecklistOld = (lastUpdated: string | Date): boolean => {
+    if (!lastUpdated) return false;
+    const updatedDate = new Date(lastUpdated);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    return updatedDate < sixMonthsAgo;
+  };
+
+  const formatDate = (date: string | Date): string => {
+    if (!date) return 'Unknown';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   const copyToClipboard = () => {
@@ -387,7 +405,7 @@ export default function ChecklistPage() {
               </div>
 
               <Button
-                onClick={handleGenerate}
+                onClick={() => handleGenerate(false)}
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
               >
@@ -404,9 +422,24 @@ export default function ChecklistPage() {
                 )}
               </Button>
 
+              {checklist && (
+                <Button
+                  onClick={() => handleGenerate(true)}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Regenerate with Latest Info
+                </Button>
+              )}
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+                <p className="text-sm text-blue-900 mb-2">
                   <strong>💡 Tip:</strong> This checklist is AI-generated and includes all mandatory documents, optional supporting documents, processing times, fees, and country-specific requirements.
+                </p>
+                <p className="text-xs text-blue-800">
+                  <strong>⚠️ Important:</strong> Visa requirements change frequently. Always verify with the official embassy/consulate website before submitting your application.
                 </p>
               </div>
             </CardContent>
@@ -437,6 +470,15 @@ export default function ChecklistPage() {
                     <h3 className="font-bold text-lg text-gray-900 mb-2">
                       {checklist.country || formData.targetCountry} - {checklist.visaType || formData.visaType}
                     </h3>
+                    {checklist.last_updated && (
+                      <div className="flex items-center space-x-2 text-xs text-gray-600 mb-2 pb-2 border-b border-blue-200">
+                        <Calendar className="w-3 h-3" />
+                        <span><strong>Last Updated:</strong> {formatDate(checklist.last_updated)}</span>
+                        {isChecklistOld(checklist.last_updated) && (
+                          <span className="text-amber-600 font-semibold">(May be outdated - consider regenerating)</span>
+                        )}
+                      </div>
+                    )}
                     {checklist.processing_time && (
                       <div className="flex items-center space-x-2 text-sm text-gray-700 mb-1">
                         <Clock className="w-4 h-4" />
@@ -455,6 +497,36 @@ export default function ChecklistPage() {
                         <span><strong>Validity:</strong> {checklist.validity}</span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Outdated Warning */}
+                  {checklist.last_updated && isChecklistOld(checklist.last_updated) && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4">
+                      <div className="flex items-start space-x-2">
+                        <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-amber-900 mb-1">Checklist May Be Outdated</h4>
+                          <p className="text-sm text-amber-800 mb-2">
+                            This checklist was last updated {formatDate(checklist.last_updated)}. Visa requirements change frequently, so we recommend regenerating to get the latest information.
+                          </p>
+                          <Button
+                            onClick={() => handleGenerate(true)}
+                            disabled={isLoading}
+                            size="sm"
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                          >
+                            Regenerate Now
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Disclaimer */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-xs text-yellow-900">
+                      <strong>⚠️ Disclaimer:</strong> This checklist is AI-generated for reference only. Always verify requirements with the official embassy/consulate website before submitting your application. Requirements may vary based on your nationality and specific circumstances.
+                    </p>
                   </div>
 
                   {/* Mandatory Documents */}
