@@ -397,12 +397,7 @@ const features = [
                               : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600'
                             : ''
                         }`}>
-                          {feature.premium 
-                            ? feature.enterprise 
-                              ? 'Enterprise Plan Required →' 
-                              : 'Get Started →'
-                            : 'Get Started →'
-                          }
+                          Get Started →
                         </Button>
                       </CardContent>
                     </Card>
