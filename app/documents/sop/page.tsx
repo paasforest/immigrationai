@@ -237,6 +237,7 @@ export default function SOPGeneratorPage() {
                     <option value="UK">UK</option>
                     <option value="Germany">Germany</option>
                     <option value="Australia">Australia</option>
+                    <option value="Schengen">Schengen</option>
                   </select>
                 </div>
                 <div>
@@ -250,13 +251,14 @@ export default function SOPGeneratorPage() {
                     <option value="study">Study</option>
                     <option value="work">Work</option>
                     <option value="immigration">Immigration</option>
+                    <option value="tourism">Tourism/Vacation</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.purpose === 'work' ? 'Company Name *' : formData.purpose === 'immigration' ? 'Company/Institution *' : 'Institution/University *'}
+                  {formData.purpose === 'work' ? 'Company Name *' : formData.purpose === 'immigration' ? 'Company/Institution *' : formData.purpose === 'tourism' ? 'Travel Destination/Countries *' : 'Institution/University *'}
                 </label>
                 <Input
                   name="institution"
@@ -267,6 +269,8 @@ export default function SOPGeneratorPage() {
                       ? 'Google Inc.' 
                       : formData.purpose === 'immigration'
                       ? 'ABC Corporation or University Name'
+                      : formData.purpose === 'tourism'
+                      ? 'Netherlands, France, etc.'
                       : 'Massachusetts Institute of Technology'
                   }
                 />
@@ -274,7 +278,7 @@ export default function SOPGeneratorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.purpose === 'work' ? 'Job Title/Position' : formData.purpose === 'immigration' ? 'Position/Role' : 'Program/Degree'}
+                  {formData.purpose === 'work' ? 'Job Title/Position' : formData.purpose === 'immigration' ? 'Position/Role' : formData.purpose === 'tourism' ? 'Travel Duration' : 'Program/Degree'}
                 </label>
                 <Input
                   name="program"
@@ -285,6 +289,8 @@ export default function SOPGeneratorPage() {
                       ? 'Software Engineer'
                       : formData.purpose === 'immigration'
                       ? 'Product Manager'
+                      : formData.purpose === 'tourism'
+                      ? '10 days, 2 weeks, etc.'
                       : 'Masters Degree in Computer Science'
                   }
                 />
@@ -292,7 +298,7 @@ export default function SOPGeneratorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.purpose === 'work' ? 'Professional Background' : formData.purpose === 'immigration' ? 'Personal & Professional Background' : 'Academic Background'}
+                  {formData.purpose === 'work' ? 'Professional Background' : formData.purpose === 'immigration' ? 'Personal & Professional Background' : formData.purpose === 'tourism' ? 'Personal Background & Travel History' : 'Academic Background'}
                 </label>
                 <Textarea
                   name="background"
@@ -303,6 +309,8 @@ export default function SOPGeneratorPage() {
                       ? 'Describe your education, work experience, technical skills, achievements...'
                       : formData.purpose === 'immigration'
                       ? 'Describe your personal journey, education, work experience, skills, and achievements...'
+                      : formData.purpose === 'tourism'
+                      ? 'Describe your personal background, employment status, previous travel history, ties to home country...'
                       : 'Describe your education, academic achievements, research experience...'
                   }
                   rows={3}
@@ -311,7 +319,7 @@ export default function SOPGeneratorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.purpose === 'work' ? 'Why This Role' : formData.purpose === 'immigration' ? 'Immigration Motivation' : 'Why This Program'}
+                  {formData.purpose === 'work' ? 'Why This Role' : formData.purpose === 'immigration' ? 'Immigration Motivation' : formData.purpose === 'tourism' ? 'Travel Purpose & Itinerary' : 'Why This Program'}
                 </label>
                 <Textarea
                   name="motivation"
@@ -322,6 +330,8 @@ export default function SOPGeneratorPage() {
                       ? 'Why this company? What attracts you to this role?'
                       : formData.purpose === 'immigration'
                       ? 'Why are you immigrating? What motivates this move?'
+                      : formData.purpose === 'tourism'
+                      ? 'Why are you visiting? What places do you want to see? Describe your planned itinerary...'
                       : 'Why this program? What attracts you?'
                   }
                   rows={3}
@@ -330,7 +340,7 @@ export default function SOPGeneratorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.purpose === 'work' ? 'Future Plans' : formData.purpose === 'immigration' ? 'Future Goals' : 'Career Goals'}
+                  {formData.purpose === 'work' ? 'Future Plans' : formData.purpose === 'immigration' ? 'Future Goals' : formData.purpose === 'tourism' ? 'Return Plans & Ties to Home Country' : 'Career Goals'}
                 </label>
                 <Textarea
                   name="careerGoals"
@@ -341,6 +351,8 @@ export default function SOPGeneratorPage() {
                       ? 'How this role aligns with your career aspirations and future plans'
                       : formData.purpose === 'immigration'
                       ? 'What are your goals after immigration? How will this move help you achieve them?'
+                      : formData.purpose === 'tourism'
+                      ? 'What will you do after returning? Job, studies, family responsibilities, property ownership...'
                       : 'Short-term and long-term objectives'
                   }
                   rows={3}

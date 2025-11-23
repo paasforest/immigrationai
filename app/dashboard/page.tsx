@@ -177,6 +177,14 @@ const features = [
       color: "from-rose-500 to-pink-500",
       premium: true
     },
+    {
+      icon: <FileText className="w-8 h-8" />,
+      title: "Cover Letter",
+      description: "Professional cover letter for embassy applications",
+      href: "/documents/cover-letter",
+      color: "from-indigo-500 to-purple-500",
+      premium: true
+    },
     
     // PROFESSIONAL PLAN & ABOVE (premium features)
     {

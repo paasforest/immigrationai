@@ -20,7 +20,8 @@ export default function ProofKitPage() {
     { id: 'ireland_type_d_de_facto', name: 'Ireland Type D De Facto', country: 'Ireland' },
     { id: 'canada_family_sponsorship', name: 'Canada Family Sponsorship', country: 'Canada' },
     { id: 'uk_family_visa', name: 'UK Family Visa', country: 'UK' },
-    { id: 'australia_partner_visa', name: 'Australia Partner Visa', country: 'Australia' }
+    { id: 'australia_partner_visa', name: 'Australia Partner Visa', country: 'Australia' },
+    { id: 'schengen_type_c_family', name: 'Schengen Type C Family Visit', country: 'Schengen' }
   ];
 
   const steps = [
