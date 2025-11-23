@@ -35,9 +35,32 @@ export class PaymentService {
     );
   }
 
-  // Get user account number
+  // Get user account number (generate if doesn't exist)
   async getUserAccountNumber(userId: string): Promise<string | null> {
-    return await accountNumberService.getAccountNumber(userId);
+    let accountNumber = await accountNumberService.getAccountNumber(userId);
+    
+    // If account number doesn't exist, generate it
+    if (!accountNumber) {
+      try {
+        // Get user's full name to generate account number
+        const { query } = await import('../config/database');
+        const userResult = await query(
+          'SELECT full_name FROM users WHERE id = $1',
+          [userId]
+        );
+        
+        if (userResult.rows.length > 0) {
+          const firstName = userResult.rows[0].full_name?.split(' ')[0] || 'User';
+          accountNumber = await accountNumberService.generateAccountNumber(userId, firstName);
+          console.log(`✅ Generated missing account number for user ${userId}: ${accountNumber}`);
+        }
+      } catch (error) {
+        console.error(`❌ Failed to generate account number for user ${userId}:`, error);
+        return null;
+      }
+    }
+    
+    return accountNumber;
   }
 
   // Get available payment methods

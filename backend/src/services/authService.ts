@@ -38,10 +38,17 @@ export class AuthService {
     
     const user = result.rows[0];
     
-    // Generate account number for the new user
-    const { accountNumberService } = await import('./accountNumberService');
-    const firstName = fullName?.split(' ')[0] || 'User';
-    await accountNumberService.generateAccountNumber(user.id, firstName);
+    // Generate account number for the new user (with error handling)
+    try {
+      const { accountNumberService } = await import('./accountNumberService');
+      const firstName = fullName?.split(' ')[0] || 'User';
+      const accountNumber = await accountNumberService.generateAccountNumber(user.id, firstName);
+      console.log(`✅ Account number generated for user ${user.id}: ${accountNumber}`);
+    } catch (error) {
+      console.error('❌ Failed to generate account number during signup:', error);
+      // Don't fail signup if account number generation fails - it can be generated later
+      // But log it for debugging
+    }
 
     // Save UTM/Tracking data if present
     if (tracking && typeof tracking === 'object' && Object.keys(tracking).length > 0) {

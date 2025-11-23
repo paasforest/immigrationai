@@ -25,6 +25,7 @@ export default function AccountNumberCard() {
   const fetchAccountNumber = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${API_BASE_URL}/api/payments/account-number`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -32,14 +33,29 @@ export default function AccountNumberCard() {
       });
       
       if (response.ok) {
-        const data = await response.json();
-        setAccountNumber(data.accountNumber);
-        setError(null);
+        const responseData = await response.json();
+        // API returns: { success: true, data: { accountNumber: "..." }, message: "..." }
+        const accountNum = responseData.data?.accountNumber || responseData.accountNumber;
+        if (accountNum) {
+          setAccountNumber(accountNum);
+          setError(null);
+        } else {
+          // If account number is null, retry once after a short delay (backend will generate it)
+          if (!accountNumber) {
+            setTimeout(() => {
+              fetchAccountNumber();
+            }, 1000);
+          } else {
+            setError('Account number not available. Please refresh the page.');
+          }
+        }
       } else {
-        setError('Failed to fetch account number');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Failed to fetch account number');
       }
     } catch (error) {
-      setError('Error fetching account number');
+      console.error('Error fetching account number:', error);
+      setError('Error fetching account number. Please try again.');
     } finally {
       setLoading(false);
     }
