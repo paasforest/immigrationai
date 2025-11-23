@@ -138,6 +138,14 @@ const features = [
       entryRequired: true
     },
     {
+      icon: <CheckCircle className="w-8 h-8" />,
+      title: "Document Checklist",
+      description: "Get comprehensive document requirements for your visa",
+      href: "/documents/checklist",
+      color: "from-green-500 to-emerald-500",
+      entryRequired: true
+    },
+    {
       icon: <Mail className="w-8 h-8" />,
       title: "Email Generator",
       description: "Professional emails for embassies",
