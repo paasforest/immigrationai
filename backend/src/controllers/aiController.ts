@@ -8,7 +8,9 @@ import {
   generateSupportLetter,
   formatTravelHistory,
   generateFinancialLetter,
-  generatePurposeOfVisit
+  generatePurposeOfVisit,
+  generateTiesToHomeCountry,
+  generateTravelItinerary
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -332,6 +334,48 @@ export const createPurposeOfVisit = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Purpose of visit endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to generate purpose of visit', 500);
+  }
+};
+
+// Generate Ties to Home Country Endpoint
+export const createTiesToHomeCountry = async (req: Request, res: Response) => {
+  try {
+    const { applicantName, targetCountry, visaType, homeCountry } = req.body;
+
+    if (!applicantName || !targetCountry || !homeCountry) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, homeCountry', 400);
+    }
+
+    const result = await generateTiesToHomeCountry(req.body);
+
+    return sendSuccess(res, {
+      document: result.document,
+      tokensUsed: result.tokensUsed,
+    }, 'Ties to home country document generated');
+  } catch (error: any) {
+    logger.error('Ties to home country endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate ties to home country document', 500);
+  }
+};
+
+// Generate Travel Itinerary Endpoint
+export const createTravelItinerary = async (req: Request, res: Response) => {
+  try {
+    const { applicantName, targetCountry, visaType, travelDates, cities, purpose } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType || !travelDates || !cities || !purpose) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType, travelDates, cities, purpose', 400);
+    }
+
+    const result = await generateTravelItinerary(req.body);
+
+    return sendSuccess(res, {
+      itinerary: result.itinerary,
+      tokensUsed: result.tokensUsed,
+    }, 'Travel itinerary generated');
+  } catch (error: any) {
+    logger.error('Travel itinerary endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate travel itinerary', 500);
   }
 };
 

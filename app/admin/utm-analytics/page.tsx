@@ -84,6 +84,9 @@ export default function UTMAnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
+  const [selectedSource, setSelectedSource] = useState<string>('all');
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const [range, setRange] = useState<'7d' | '30d'>('7d');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -150,6 +153,63 @@ export default function UTMAnalyticsPage() {
     });
   };
 
+  const filteredSessions = sessions.filter((s) => {
+    const bySource = selectedSource === 'all' || (s.utm_source || 'direct') === selectedSource;
+    const byCampaign = selectedCampaign === 'all' || (s.utm_campaign || 'none') === selectedCampaign;
+    return bySource && byCampaign;
+  });
+
+  const sparklinePoints = (() => {
+    if (filteredSessions.length === 0) return [] as { x: number; y: number }[];
+    const days = range === '7d' ? 7 : 30;
+    const counts: Record<string, number> = {};
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      counts[key] = 0;
+    }
+    filteredSessions.forEach((s) => {
+      const key = new Date(s.created_at).toISOString().slice(0, 10);
+      if (counts[key] !== undefined) counts[key] += 1;
+    });
+    const values = Object.values(counts);
+    const max = Math.max(1, ...values);
+    const width = 160;
+    const height = 40;
+    const step = width / (days - 1);
+    return values.map((v, i) => ({
+      x: i * step,
+      y: height - (v / max) * (height - 4) - 2,
+    }));
+  })();
+
+  const exportSessionsCSV = () => {
+    const rows = [
+      ['created_at', 'session_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'landing_page', 'referrer', 'ip_address'],
+      ...filteredSessions.map((s) => [
+        s.created_at,
+        s.session_id || '',
+        s.utm_source || '',
+        s.utm_medium || '',
+        s.utm_campaign || '',
+        s.utm_content || '',
+        s.utm_term || '',
+        s.landing_page || '',
+        s.referrer || '',
+        s.ip_address || '',
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sessions_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
@@ -192,6 +252,56 @@ export default function UTMAnalyticsPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Source</label>
+            <select
+              className="w-full rounded-lg border border-gray-200 p-2 bg-white"
+              value={selectedSource}
+              onChange={(e) => setSelectedSource(e.target.value)}
+            >
+              <option value="all">All</option>
+              {analytics?.bySource.map((s, i) => (
+                <option key={i} value={s.source || 'direct'}>
+                  {s.source || 'direct'}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Campaign</label>
+            <select
+              className="w-full rounded-lg border border-gray-200 p-2 bg-white"
+              value={selectedCampaign}
+              onChange={(e) => setSelectedCampaign(e.target.value)}
+            >
+              <option value="all">All</option>
+              {analytics?.byCampaign.map((c, i) => (
+                <option key={i} value={c.campaign || 'none'}>
+                  {c.campaign || 'none'}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Range</label>
+            <select
+              className="w-full rounded-lg border border-gray-200 p-2 bg-white"
+              value={range}
+              onChange={(e) => setRange(e.target.value as '7d' | '30d')}
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+            </select>
+          </div>
+          <div className="flex items-end justify-end">
+            <Button variant="outline" onClick={exportSessionsCSV}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
+        </div>
         {/* Error Message */}
         {error && (
           <Card className="mb-6 border-l-4 border-l-red-600">
@@ -278,7 +388,16 @@ export default function UTMAnalyticsPage() {
                         </span>
                       </p>
                     </div>
-                    <ExternalLink className="w-6 h-6 text-gray-400" />
+                    <svg width="160" height="40" className="text-purple-600">
+                      {sparklinePoints.length > 1 && (
+                        <polyline
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          points={sparklinePoints.map(p => `${p.x},${p.y}`).join(' ')}
+                        />
+                      )}
+                    </svg>
                   </div>
                 ) : (
                   <div>
@@ -299,7 +418,9 @@ export default function UTMAnalyticsPage() {
               <CardContent>
                 {analytics.bySource.length > 0 ? (
                   <div className="space-y-4">
-                    {analytics.bySource.map((item, index) => (
+                    {analytics.bySource
+                      .filter((item) => selectedSource === 'all' || (item.source || 'direct') === selectedSource)
+                      .map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">
@@ -424,7 +545,9 @@ export default function UTMAnalyticsPage() {
               <CardContent>
                 {analytics.byCampaign.length > 0 ? (
                   <div className="space-y-4">
-                    {analytics.byCampaign.map((item, index) => (
+                    {analytics.byCampaign
+                      .filter((item) => selectedCampaign === 'all' || (item.campaign || 'none') === selectedCampaign)
+                      .map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <p className="font-semibold text-gray-900">{item.campaign || 'No Campaign'}</p>

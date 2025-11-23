@@ -8,7 +8,9 @@ import {
   createSupportLetter,
   createTravelHistory,
   createFinancialLetter,
-  createPurposeOfVisit
+  createPurposeOfVisit,
+  createTiesToHomeCountry,
+  createTravelItinerary
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 
@@ -41,6 +43,12 @@ router.post('/ai/generate-financial-letter', authenticateJWT, requirePlan('profe
 
 // Purpose of Visit Explanation (Professional+ required)
 router.post('/ai/generate-purpose-of-visit', authenticateJWT, requirePlan('professional', 'enterprise'), createPurposeOfVisit);
+
+// Ties to Home Country Demonstrator (Professional+ required)
+router.post('/ai/generate-ties-to-home-country', authenticateJWT, requirePlan('professional', 'enterprise'), createTiesToHomeCountry);
+
+// Travel Itinerary Builder (Entry+ required)
+router.post('/ai/generate-travel-itinerary', authenticateJWT, requirePlan('entry', 'professional', 'enterprise'), createTravelItinerary);
 
 export default router;
 

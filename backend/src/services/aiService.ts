@@ -1303,4 +1303,225 @@ Length: 250-350 words. Sincere, specific, credible.`;
   }
 };
 
+// Generate Ties to Home Country Demonstrator
+export const generateTiesToHomeCountry = async (data: {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  homeCountry: string;
+  // Financial Ties
+  bankAccounts?: string;
+  investments?: string;
+  propertyOwnership?: string;
+  incomeSources?: string;
+  // Employment Ties
+  employmentStatus?: string;
+  jobDetails?: string;
+  businessOwnership?: string;
+  businessDetails?: string;
+  // Family Ties
+  spouseInHomeCountry?: string;
+  childrenInHomeCountry?: string;
+  dependentsInHomeCountry?: string;
+  parentsInHomeCountry?: string;
+  familyDetails?: string;
+  // Property Ties
+  landOwnership?: string;
+  houseOwnership?: string;
+  vehicleOwnership?: string;
+  propertyDetails?: string;
+  // Social Ties
+  communityInvolvement?: string;
+  memberships?: string;
+  socialConnections?: string;
+  // Educational Ties
+  ongoingStudies?: string;
+  enrolledCourses?: string;
+  educationalCommitments?: string;
+  // Additional
+  previousTravelHistory?: string;
+  returnTicket?: string;
+  accommodationProof?: string;
+  otherTies?: string;
+}): Promise<{ document: string; tokensUsed: number }> => {
+  try {
+    logger.info('Ties to Home Country Generation', { country: data.targetCountry, visaType: data.visaType });
+
+    const systemPrompt = `You are an expert in writing comprehensive documents that demonstrate strong ties to home country for visa applications.
+
+Your documents:
+- Clearly demonstrate genuine intent to return home
+- Provide specific, verifiable evidence across all tie categories
+- Address visa officer concerns about immigration intent
+- Are credible, well-structured, and comprehensive
+- Follow immigration documentation standards
+- Emphasize strong connections to home country across multiple dimensions
+- Organize information into clear sections by tie category`;
+
+    const prompt = `Generate a comprehensive TIES TO HOME COUNTRY DEMONSTRATION document for ${data.targetCountry} ${data.visaType} visa application.
+
+APPLICANT DETAILS:
+- Name: ${data.applicantName}
+- Home Country: ${data.homeCountry}
+- Target Country: ${data.targetCountry}
+- Visa Type: ${data.visaType}
+
+FINANCIAL TIES:
+- Bank Accounts: ${data.bankAccounts || 'Not provided'}
+- Investments: ${data.investments || 'Not provided'}
+- Property Ownership: ${data.propertyOwnership || 'Not provided'}
+- Income Sources: ${data.incomeSources || 'Not provided'}
+
+EMPLOYMENT TIES:
+- Employment Status: ${data.employmentStatus || 'Not provided'}
+- Job Details: ${data.jobDetails || 'Not provided'}
+- Business Ownership: ${data.businessOwnership || 'Not provided'}
+- Business Details: ${data.businessDetails || 'Not provided'}
+
+FAMILY TIES:
+- Spouse in Home Country: ${data.spouseInHomeCountry || 'Not provided'}
+- Children in Home Country: ${data.childrenInHomeCountry || 'Not provided'}
+- Dependents in Home Country: ${data.dependentsInHomeCountry || 'Not provided'}
+- Parents in Home Country: ${data.parentsInHomeCountry || 'Not provided'}
+- Family Details: ${data.familyDetails || 'Not provided'}
+
+PROPERTY TIES:
+- Land Ownership: ${data.landOwnership || 'Not provided'}
+- House Ownership: ${data.houseOwnership || 'Not provided'}
+- Vehicle Ownership: ${data.vehicleOwnership || 'Not provided'}
+- Property Details: ${data.propertyDetails || 'Not provided'}
+
+SOCIAL TIES:
+- Community Involvement: ${data.communityInvolvement || 'Not provided'}
+- Memberships: ${data.memberships || 'Not provided'}
+- Social Connections: ${data.socialConnections || 'Not provided'}
+
+EDUCATIONAL TIES:
+- Ongoing Studies: ${data.ongoingStudies || 'Not provided'}
+- Enrolled Courses: ${data.enrolledCourses || 'Not provided'}
+- Educational Commitments: ${data.educationalCommitments || 'Not provided'}
+
+ADDITIONAL INFORMATION:
+- Previous Travel History: ${data.previousTravelHistory || 'Not provided'}
+- Return Ticket: ${data.returnTicket || 'Not provided'}
+- Accommodation Proof: ${data.accommodationProof || 'Not provided'}
+- Other Ties: ${data.otherTies || 'Not provided'}
+
+The document should be structured with clear sections:
+1. Introduction - Statement of intent to return
+2. Financial Ties - Bank accounts, investments, property, income
+3. Employment Ties - Job, business ownership, career commitments
+4. Family Ties - Spouse, children, dependents, parents
+5. Property Ties - Land, house, vehicle ownership
+6. Social Ties - Community involvement, memberships
+7. Educational Ties - Ongoing studies, enrolled courses
+8. Additional Evidence - Travel history, return plans
+9. Conclusion - Summary of strong ties and commitment to return
+
+For each section, provide specific, verifiable evidence. Address common concerns about immigration intent. Be professional, credible, specific, and compelling.
+
+Length: 600-700 words. Comprehensive and well-organized.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 800,
+    });
+
+    const document = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    logger.info('Ties to Home Country document generated', { tokensUsed, length: document.length });
+
+    return { document, tokensUsed };
+  } catch (error: any) {
+    logger.error('Ties to home country generation error', { error: error.message });
+    throw new Error('Failed to generate ties to home country document. Please try again.');
+  }
+};
+
+// Generate Travel Itinerary Builder
+export const generateTravelItinerary = async (data: {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  travelDates: string;
+  cities: string;
+  purpose: string;
+  accommodation?: string;
+  activities?: string;
+  transportation?: string;
+  budget?: string;
+  travelCompanions?: string;
+}): Promise<{ itinerary: string; tokensUsed: number }> => {
+  try {
+    logger.info('Travel Itinerary Generation', { country: data.targetCountry, visaType: data.visaType });
+
+    const systemPrompt = `You are an expert in creating detailed travel itineraries for visa applications.
+
+Your itineraries:
+- Are detailed and specific
+- Show clear travel plans
+- Include dates, locations, and activities
+- Are realistic and credible
+- Follow embassy requirements
+- Are professionally formatted
+- Include budget breakdowns
+- Show accommodation arrangements`;
+
+    const prompt = `Generate a DETAILED TRAVEL ITINERARY for ${data.targetCountry} ${data.visaType} visa application.
+
+APPLICANT DETAILS:
+- Name: ${data.applicantName}
+- Target Country: ${data.targetCountry}
+- Visa Type: ${data.visaType}
+- Travel Dates: ${data.travelDates}
+- Cities to Visit: ${data.cities}
+- Purpose of Visit: ${data.purpose}
+
+TRAVEL DETAILS:
+- Accommodation: ${data.accommodation || 'To be arranged'}
+- Planned Activities: ${data.activities || 'Not specified'}
+- Transportation: ${data.transportation || 'Not specified'}
+- Budget: ${data.budget || 'Not specified'}
+- Travel Companions: ${data.travelCompanions || 'Solo travel'}
+
+The itinerary should include:
+1. Day-by-day breakdown with dates
+2. Cities and locations to visit
+3. Specific activities and attractions
+4. Accommodation details for each location
+5. Transportation between cities
+6. Budget breakdown (if provided)
+7. Return travel plans
+8. Professional format suitable for embassy submission
+
+Format as a structured document with clear sections. Length: 500-600 words. Be specific, realistic, and detailed.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
+    });
+
+    const itinerary = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    logger.info('Travel Itinerary generated', { tokensUsed, length: itinerary.length });
+
+    return { itinerary, tokensUsed };
+  } catch (error: any) {
+    logger.error('Travel itinerary generation error', { error: error.message });
+    throw new Error('Failed to generate travel itinerary. Please try again.');
+  }
+};
+
 

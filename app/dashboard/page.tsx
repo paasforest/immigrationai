@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -146,6 +146,14 @@ const features = [
       entryRequired: true
     },
     {
+      icon: <MapPin className="w-8 h-8" />,
+      title: "Itinerary Builder",
+      description: "Create detailed travel itinerary for visa applications",
+      href: "/documents/itinerary-builder",
+      color: "from-teal-500 to-cyan-500",
+      entryRequired: true
+    },
+    {
       icon: <Mail className="w-8 h-8" />,
       title: "Email Generator",
       description: "Professional emails for embassies",
@@ -195,6 +203,15 @@ const features = [
     },
     
     // PROFESSIONAL PLAN & ABOVE (premium features)
+    {
+      icon: <Home className="w-8 h-8" />,
+      title: "Ties to Home Country",
+      description: "Demonstrate strong connections to your home country",
+      href: "/documents/ties-to-home-country",
+      color: "from-amber-500 to-orange-500",
+      badge: "NEW",
+      premium: true
+    },
     {
       icon: <Heart className="w-8 h-8" />,
       title: "Relationship Proof Kit",
