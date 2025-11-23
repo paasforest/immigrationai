@@ -400,7 +400,7 @@ const features = [
                           {feature.premium 
                             ? feature.enterprise 
                               ? 'Enterprise Plan Required →' 
-                              : 'Upgrade to Access →'
+                              : 'Get Started →'
                             : 'Get Started →'
                           }
                         </Button>
