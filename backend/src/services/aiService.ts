@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
+import { TiesAssessment, DocumentAuthenticityInput, DocumentAuthenticityReport, ApplicationFormInput, ApplicationFormReport, VisaRejectionInput, VisaRejectionReport, ReapplicationStrategyInput, ReapplicationStrategyReport } from '../types';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is not set');
@@ -1343,84 +1344,87 @@ export const generateTiesToHomeCountry = async (data: {
   returnTicket?: string;
   accommodationProof?: string;
   otherTies?: string;
-}): Promise<{ document: string; tokensUsed: number }> => {
+}): Promise<{ assessment: TiesAssessment; tokensUsed: number }> => {
   try {
     logger.info('Ties to Home Country Generation', { country: data.targetCountry, visaType: data.visaType });
 
-    const systemPrompt = `You are an expert in writing comprehensive documents that demonstrate strong ties to home country for visa applications.
+    const systemPrompt = `You are Immigration AI's senior visa risk strategist. You evaluate applicants' ties to their home country the same way consular officers do.
 
-Your documents:
-- Clearly demonstrate genuine intent to return home
-- Provide specific, verifiable evidence across all tie categories
-- Address visa officer concerns about immigration intent
-- Are credible, well-structured, and comprehensive
-- Follow immigration documentation standards
-- Emphasize strong connections to home country across multiple dimensions
-- Organize information into clear sections by tie category`;
+Always:
+- Speak directly to the applicant as "you"
+- Score each tie category (financial, employment, family, property, social, educational)
+- Identify strengths and risk areas
+- Recommend concrete steps to strengthen ties
+- Address intent-to-return concerns with professional tone
 
-    const prompt = `Generate a comprehensive TIES TO HOME COUNTRY DEMONSTRATION document for ${data.targetCountry} ${data.visaType} visa application.
+Return ONLY valid JSON with the schema provided.`;
 
-APPLICANT DETAILS:
+    const prompt = `Evaluate this applicant's ties to home country for a ${data.targetCountry} ${data.visaType} visa.
+
+APPLICANT:
 - Name: ${data.applicantName}
 - Home Country: ${data.homeCountry}
-- Target Country: ${data.targetCountry}
-- Visa Type: ${data.visaType}
 
-FINANCIAL TIES:
+FINANCIAL: ${data.bankAccounts || data.investments || data.propertyOwnership || data.incomeSources ? '' : 'None provided'}
 - Bank Accounts: ${data.bankAccounts || 'Not provided'}
 - Investments: ${data.investments || 'Not provided'}
 - Property Ownership: ${data.propertyOwnership || 'Not provided'}
 - Income Sources: ${data.incomeSources || 'Not provided'}
 
-EMPLOYMENT TIES:
-- Employment Status: ${data.employmentStatus || 'Not provided'}
+EMPLOYMENT:
+- Status: ${data.employmentStatus || 'Not provided'}
 - Job Details: ${data.jobDetails || 'Not provided'}
 - Business Ownership: ${data.businessOwnership || 'Not provided'}
 - Business Details: ${data.businessDetails || 'Not provided'}
 
-FAMILY TIES:
-- Spouse in Home Country: ${data.spouseInHomeCountry || 'Not provided'}
-- Children in Home Country: ${data.childrenInHomeCountry || 'Not provided'}
-- Dependents in Home Country: ${data.dependentsInHomeCountry || 'Not provided'}
-- Parents in Home Country: ${data.parentsInHomeCountry || 'Not provided'}
+FAMILY:
+- Spouse: ${data.spouseInHomeCountry || 'Not provided'}
+- Children: ${data.childrenInHomeCountry || 'Not provided'}
+- Dependents: ${data.dependentsInHomeCountry || 'Not provided'}
+- Parents: ${data.parentsInHomeCountry || 'Not provided'}
 - Family Details: ${data.familyDetails || 'Not provided'}
 
-PROPERTY TIES:
-- Land Ownership: ${data.landOwnership || 'Not provided'}
-- House Ownership: ${data.houseOwnership || 'Not provided'}
-- Vehicle Ownership: ${data.vehicleOwnership || 'Not provided'}
+PROPERTY:
+- Land: ${data.landOwnership || 'Not provided'}
+- Houses: ${data.houseOwnership || 'Not provided'}
+- Vehicles: ${data.vehicleOwnership || 'Not provided'}
 - Property Details: ${data.propertyDetails || 'Not provided'}
 
-SOCIAL TIES:
+SOCIAL:
 - Community Involvement: ${data.communityInvolvement || 'Not provided'}
 - Memberships: ${data.memberships || 'Not provided'}
 - Social Connections: ${data.socialConnections || 'Not provided'}
 
-EDUCATIONAL TIES:
+EDUCATIONAL:
 - Ongoing Studies: ${data.ongoingStudies || 'Not provided'}
 - Enrolled Courses: ${data.enrolledCourses || 'Not provided'}
-- Educational Commitments: ${data.educationalCommitments || 'Not provided'}
+- Commitments: ${data.educationalCommitments || 'Not provided'}
 
-ADDITIONAL INFORMATION:
-- Previous Travel History: ${data.previousTravelHistory || 'Not provided'}
+ADDITIONAL:
+- Previous Travel: ${data.previousTravelHistory || 'Not provided'}
 - Return Ticket: ${data.returnTicket || 'Not provided'}
 - Accommodation Proof: ${data.accommodationProof || 'Not provided'}
 - Other Ties: ${data.otherTies || 'Not provided'}
 
-The document should be structured with clear sections:
-1. Introduction - Statement of intent to return
-2. Financial Ties - Bank accounts, investments, property, income
-3. Employment Ties - Job, business ownership, career commitments
-4. Family Ties - Spouse, children, dependents, parents
-5. Property Ties - Land, house, vehicle ownership
-6. Social Ties - Community involvement, memberships
-7. Educational Ties - Ongoing studies, enrolled courses
-8. Additional Evidence - Travel history, return plans
-9. Conclusion - Summary of strong ties and commitment to return
-
-For each section, provide specific, verifiable evidence. Address common concerns about immigration intent. Be professional, credible, specific, and compelling.
-
-Length: 600-700 words. Comprehensive and well-organized.`;
+Return EXACT JSON:
+{
+  "overallScore": 0-100,
+  "strengthLabel": "weak"|"moderate"|"strong"|"excellent",
+  "summary": "short overview (speak directly to applicant)",
+  "strengths": ["bullet"],
+  "gaps": ["bullet"],
+  "recommendations": ["bullet action steps"],
+  "nextSteps": ["immediate steps to strengthen ties"],
+  "categories": {
+    "financial": { "score": 0-100, "status": "weak/moderate/strong/excellent", "notes": ["..."] },
+    "employment": {...},
+    "family": {...},
+    "property": {...},
+    "social": {...},
+    "educational": {...}
+  },
+  "document": "Full narrative ties-to-home-country document (600-700 words) speaking directly to the applicant as 'you'"
+}`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -1428,19 +1432,49 @@ Length: 600-700 words. Comprehensive and well-organized.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.3,
-      max_tokens: 800,
+      temperature: 0.25,
+      max_tokens: 1100,
     });
 
-    const document = response.choices[0]?.message?.content || '';
+    const responseText = response.choices[0]?.message?.content || '';
     const tokensUsed = response.usage?.total_tokens || 0;
 
-    logger.info('Ties to Home Country document generated', { tokensUsed, length: document.length });
+    let assessment: TiesAssessment;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        assessment = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (parseError) {
+      logger.error('Failed to parse ties assessment', { parseError, responseText });
+      assessment = {
+        overallScore: 55,
+        strengthLabel: 'moderate',
+        summary: 'We generated your ties document, but scoring information could not be parsed. Review each tie category and add more evidence where possible.',
+        strengths: [],
+        gaps: ['Unable to calculate scoring due to formatting issue.'],
+        recommendations: ['Try generating again with more detailed inputs.'],
+        nextSteps: ['Add more specifics for bank statements, employment letters, and community roles.'],
+        categories: {
+          financial: { score: 50, status: 'moderate', notes: [] },
+          employment: { score: 50, status: 'moderate', notes: [] },
+          family: { score: 50, status: 'moderate', notes: [] },
+          property: { score: 50, status: 'moderate', notes: [] },
+          social: { score: 50, status: 'moderate', notes: [] },
+          educational: { score: 50, status: 'moderate', notes: [] },
+        },
+        document: 'Your ties to home country document could not be generated. Please try again with more detail.',
+      };
+    }
 
-    return { document, tokensUsed };
+    logger.info('Ties to Home Country assessment generated', { tokensUsed, overallScore: assessment.overallScore });
+
+    return { assessment, tokensUsed };
   } catch (error: any) {
     logger.error('Ties to home country generation error', { error: error.message });
-    throw new Error('Failed to generate ties to home country document. Please try again.');
+    throw new Error('Failed to generate ties to home country assessment. Please try again.');
   }
 };
 
@@ -1711,6 +1745,282 @@ Always provide accurate, detailed analysis to help applicants strengthen their f
   } catch (error: any) {
     logger.error('Bank statement analysis error', { error: error.message });
     throw new Error('Failed to analyze bank statement. Please try again.');
+  }
+};
+
+// Document Authenticity Checklist
+export const analyzeDocumentAuthenticity = async (
+  data: DocumentAuthenticityInput
+): Promise<{ report: DocumentAuthenticityReport; tokensUsed: number }> => {
+  try {
+    logger.info('Document authenticity analysis', {
+      targetCountry: data.targetCountry,
+      visaType: data.visaType,
+      documentCount: data.documents.length,
+    });
+
+    const { generateDocumentAuthenticityPrompt } = await import('../prompts/documentAuthenticityPrompt');
+    const prompt = generateDocumentAuthenticityPrompt(data);
+
+    const systemPrompt = `You are Immigration AI's document authenticity specialist.
+You review immigration evidence using the same standards as embassy fraud prevention units.
+Always provide precise, actionable guidance and speak directly to the applicant as "you".`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.25,
+      max_tokens: 1100,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let report: DocumentAuthenticityReport;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        report = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (error) {
+      logger.error('Failed to parse document authenticity report', { responseText, error });
+      report = {
+        overallScore: 50,
+        riskLevel: 'medium',
+        summary: 'We generated your checklist, but some authenticity details could not be parsed. Review each document carefully.',
+        redFlags: ['Unable to parse authenticity data.'],
+        requiredVerifications: ['Re-upload with clearer details or consult your immigration advisor.'],
+        recommendations: ['Provide notarized copies and include issuing authority contact information.'],
+        nextSteps: ['Regenerate the checklist with full document details.'],
+        documentChecks: data.documents.map(doc => ({
+          type: doc.type,
+          score: 50,
+          status: 'review',
+          issues: ['Not enough information to verify authenticity.'],
+          verificationGuidance: ['Provide certified copies and clear scans.'],
+        })),
+      };
+    }
+
+    logger.info('Document authenticity report generated', {
+      tokensUsed,
+      riskLevel: report.riskLevel,
+    });
+
+    return { report, tokensUsed };
+  } catch (error: any) {
+    logger.error('Document authenticity analysis error', { error: error.message });
+    throw new Error('Failed to generate document authenticity checklist. Please try again.');
+  }
+};
+
+// Application Form Pre-Checker
+export const analyzeApplicationForm = async (
+  data: ApplicationFormInput
+): Promise<{ report: ApplicationFormReport; tokensUsed: number }> => {
+  try {
+    logger.info('Application form analysis', {
+      targetCountry: data.targetCountry,
+      visaType: data.visaType,
+      sections: data.sections.length,
+    });
+
+    const { generateApplicationFormPrompt } = await import('../prompts/applicationFormPrompt');
+    const prompt = generateApplicationFormPrompt(data);
+
+    const systemPrompt = `You are Immigration AI's application quality lead.
+You audit visa application forms for completeness, consistency, and risk.
+Always speak directly to the applicant as "you".`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.25,
+      max_tokens: 1100,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let report: ApplicationFormReport;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        report = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (error) {
+      logger.error('Failed to parse application form report', { responseText, error });
+      report = {
+        overallScore: 60,
+        completenessStatus: 'partial',
+        summary: 'We attempted to review your form, but could not parse all details. Please provide clearer sections and try again.',
+        missingSections: ['Form data not fully parsed'],
+        inconsistencies: [],
+        riskFactors: ['Incomplete data prevented a full review'],
+        recommendations: ['Provide detailed form sections with field names and values.'],
+        nextSteps: ['Re-run the checker after including all sections.'],
+        formChecks: data.sections.flatMap(section =>
+          section.fields.map(field => ({
+            field: `${section.title || 'Section'} - ${field.label}`,
+            status: 'needs_review' as const,
+            details: 'Could not verify due to parsing issue.',
+            recommendation: 'Confirm this field is complete and matches other sections.',
+          }))
+        ),
+      };
+    }
+
+    logger.info('Application form report generated', {
+      tokensUsed,
+      completenessStatus: report.completenessStatus,
+    });
+
+    return { report, tokensUsed };
+  } catch (error: any) {
+    logger.error('Application form analysis error', { error: error.message });
+    throw new Error('Failed to analyze application form. Please try again.');
+  }
+};
+
+// Visa Rejection Analyzer
+export const analyzeVisaRejection = async (
+  data: VisaRejectionInput
+): Promise<{ report: VisaRejectionReport; tokensUsed: number }> => {
+  try {
+    logger.info('Visa rejection analysis', {
+      targetCountry: data.targetCountry,
+      visaType: data.visaType,
+      previousAttempts: data.previousAttempts,
+    });
+
+    const { generateVisaRejectionPrompt } = await import('../prompts/visaRejectionPrompt');
+    const prompt = generateVisaRejectionPrompt(data);
+
+    const systemPrompt = `You are Immigration AI's visa refusal strategist.
+You specialize in turning rejection letters into approval plans.
+Always speak directly to the applicant as "you".`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.25,
+      max_tokens: 1100,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let report: VisaRejectionReport;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        report = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (error) {
+      logger.error('Failed to parse visa rejection report', { responseText, error });
+      report = {
+        rootCauseSummary: 'We could not read your refusal letter clearly. Please provide more detail and try again.',
+        severity: 'medium',
+        confidence: 0.5,
+        officerConcerns: ['Parsing issue prevented detailed analysis.'],
+        missingEvidence: [],
+        riskFactors: [],
+        recommendedFixes: ['Try uploading the full refusal letter text.'],
+        nextSteps: ['Gather all refusal notes and regenerate the analysis.'],
+        timeline: [],
+        reapplicationChecklist: [],
+      };
+    }
+
+    logger.info('Visa rejection report generated', {
+      tokensUsed,
+      severity: report.severity,
+    });
+
+    return { report, tokensUsed };
+  } catch (error: any) {
+    logger.error('Visa rejection analysis error', { error: error.message });
+    throw new Error('Failed to analyze visa rejection. Please try again.');
+  }
+};
+
+// Reapplication Strategy Builder
+export const buildReapplicationStrategy = async (
+  data: ReapplicationStrategyInput
+): Promise<{ report: ReapplicationStrategyReport; tokensUsed: number }> => {
+  try {
+    logger.info('Reapplication strategy build', {
+      targetCountry: data.targetCountry,
+      visaType: data.visaType,
+      desiredSubmissionDate: data.desiredSubmissionDate,
+    });
+
+    const { generateReapplicationStrategyPrompt } = await import('../prompts/reapplicationStrategyPrompt');
+    const prompt = generateReapplicationStrategyPrompt(data);
+
+    const systemPrompt = `You are Immigration AI's reapplication program director.
+You convert refusal fixes into phased execution plans.
+Always speak directly to the applicant and give tactical steps.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.25,
+      max_tokens: 1100,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let report: ReapplicationStrategyReport;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        report = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (error) {
+      logger.error('Failed to parse reapplication strategy report', { responseText, error });
+      report = {
+        readinessScore: 60,
+        urgency: 'medium',
+        keyMilestones: ['Improve refusal details and regenerate strategy'],
+        checklist: [],
+        strategyPillars: [],
+        timeline: [],
+        riskMitigation: ['Unable to parse strategy data. Provide clearer inputs and try again.'],
+        submissionPlan: ['Gather all new evidence before re-running this tool.'],
+      };
+    }
+
+    logger.info('Reapplication strategy report generated', {
+      tokensUsed,
+      readinessScore: report.readinessScore,
+    });
+
+    return { report, tokensUsed };
+  } catch (error: any) {
+    logger.error('Reapplication strategy build error', { error: error.message });
+    throw new Error('Failed to build reapplication strategy. Please try again.');
   }
 };
 

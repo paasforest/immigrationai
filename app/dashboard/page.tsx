@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt, ClipboardCheck, ClipboardList, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -146,6 +146,15 @@ const features = [
       entryRequired: true
     },
     {
+      icon: <ClipboardList className="w-8 h-8" />,
+      title: "Application Form Pre-Checker",
+      description: "Scan your application form for missing answers and inconsistencies",
+      href: "/documents/application-form-checker",
+      color: "from-indigo-500 to-blue-500",
+      entryRequired: true,
+      badge: "NEW"
+    },
+    {
       icon: <MapPin className="w-8 h-8" />,
       title: "Itinerary Builder",
       description: "Create detailed travel itinerary for visa applications",
@@ -201,6 +210,33 @@ const features = [
       href: "/documents/bank-analyzer",
       color: "from-indigo-500 to-purple-500",
       badge: "CRITICAL",
+      premium: true
+    },
+    {
+      icon: <ClipboardCheck className="w-8 h-8" />,
+      title: "Document Authenticity Checklist",
+      description: "Spot forgery risks and missing verifications before submission",
+      href: "/documents/document-authenticity",
+      color: "from-rose-500 to-red-500",
+      badge: "CRITICAL",
+      premium: true
+    },
+    {
+      icon: <AlertTriangle className="w-8 h-8" />,
+      title: "Visa Rejection Analyzer",
+      description: "Decode your refusal letter and get a winning reapplication plan",
+      href: "/documents/visa-rejection",
+      color: "from-orange-500 to-red-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <Target className="w-8 h-8" />,
+      title: "Reapplication Strategy",
+      description: "Build a phased execution plan after a refusal",
+      href: "/documents/reapplication-strategy",
+      color: "from-purple-500 to-pink-500",
+      badge: "NEW",
       premium: true
     },
     {

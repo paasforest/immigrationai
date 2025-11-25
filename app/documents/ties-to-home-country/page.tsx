@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Home, Loader, Copy, Download } from 'lucide-react';
+import { ArrowLeft, Home, Loader, Copy, Download, ShieldCheck, AlertTriangle, CheckCircle } from 'lucide-react';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import SuccessTracker from '@/components/SuccessTracker';
 import PDFDownload from '@/components/PDFDownload';
@@ -16,6 +16,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 export default function TiesToHomeCountryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedDocument, setGeneratedDocument] = useState('');
+  const [assessment, setAssessment] = useState<any>(null);
   
   const [formData, setFormData] = useState({
     applicantName: '',
@@ -69,6 +70,8 @@ export default function TiesToHomeCountryPage() {
     }
 
     setIsLoading(true);
+    setAssessment(null);
+    setGeneratedDocument('');
     try {
       const response = await fetch(`${API_BASE_URL}/api/ai/generate-ties-to-home-country`, {
         method: 'POST',
@@ -81,7 +84,12 @@ export default function TiesToHomeCountryPage() {
 
       const data = await response.json();
       
-      if (data.success) {
+      if (data.success && data.data?.assessment) {
+        setAssessment(data.data.assessment);
+        setGeneratedDocument(data.data.assessment?.document || '');
+      } else if (data.success && data.data?.document) {
+        // fallback compatibility
+        setAssessment(null);
         setGeneratedDocument(data.data.document);
       } else {
         alert(data.message || 'Failed to generate document');
@@ -94,14 +102,18 @@ export default function TiesToHomeCountryPage() {
     }
   };
 
+  const documentContent = assessment?.document || generatedDocument;
+
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedDocument);
+    if (!documentContent) return;
+    navigator.clipboard.writeText(documentContent);
     alert('Document copied!');
   };
 
   const downloadDocument = () => {
+    if (!documentContent) return;
     const element = document.createElement('a');
-    const file = new Blob([generatedDocument], { type: 'text/plain' });
+    const file = new Blob([documentContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `ties_to_home_country_${Date.now()}.txt`;
     element.click();
@@ -434,8 +446,8 @@ export default function TiesToHomeCountryPage() {
           <Card className="lg:sticky lg:top-8 h-fit">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Generated Document</CardTitle>
-                {generatedDocument && (
+                <CardTitle>Ties Assessment & Document</CardTitle>
+                {documentContent && (
                   <div className="flex space-x-2">
                     <button onClick={copyToClipboard} className="p-2 hover:bg-gray-100 rounded-lg" title="Copy">
                       <Copy className="w-5 h-5 text-gray-600" />
@@ -448,31 +460,161 @@ export default function TiesToHomeCountryPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {generatedDocument ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-6 max-h-[600px] overflow-y-auto border border-gray-200">
-                    <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed font-sans text-sm">
-                      {generatedDocument}
-                    </pre>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                    <PDFDownload
-                      content={generatedDocument}
-                      filename={`Ties_to_Home_Country_${formData.targetCountry || 'general'}_${formData.visaType || 'visa'}_${new Date().toISOString().split('T')[0]}.pdf`}
-                      title="Ties to Home Country Document"
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={downloadDocument}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download TXT
-                    </Button>
-                  </div>
-                  
+              {assessment || documentContent ? (
+                <div className="space-y-6">
+                  {assessment && (
+                    <div className="space-y-4">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl border bg-gradient-to-br from-blue-50 via-white to-blue-100">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Overall Score</p>
+                              <div className="text-4xl font-bold text-gray-900">{assessment.overallScore ?? 0}/100</div>
+                            </div>
+                            <ShieldCheck className="w-10 h-10 text-blue-600" />
+                          </div>
+                          <span className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full ${
+                            assessment.strengthLabel === 'excellent'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : assessment.strengthLabel === 'strong'
+                                ? 'bg-green-100 text-green-700'
+                                : assessment.strengthLabel === 'moderate'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-rose-100 text-rose-700'
+                          }`}>
+                            {assessment.strengthLabel ? assessment.strengthLabel.toUpperCase() : 'NEEDS REVIEW'}
+                          </span>
+                          <p className="text-sm text-gray-600 mt-3">{assessment.summary}</p>
+                        </div>
+                        <div className="p-4 rounded-xl border bg-white">
+                          <h4 className="font-semibold text-gray-900 mb-3">Next Steps</h4>
+                          <ul className="space-y-2 text-sm text-gray-700">
+                            {assessment.nextSteps?.length ? assessment.nextSteps.map((step: string, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <CheckCircle className="w-4 h-4 text-blue-600 mr-2 mt-0.5" />
+                                <span>{step}</span>
+                              </li>
+                            )) : <li className="text-gray-500">No next steps provided. Review your details and try again.</li>}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl border bg-green-50">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                            Strengths
+                          </h4>
+                          <ul className="space-y-2 text-sm text-green-800">
+                            {assessment.strengths?.length ? assessment.strengths.map((item: string, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{item}</span>
+                              </li>
+                            )) : <li className="text-green-700">No standout strengths detected yet.</li>}
+                          </ul>
+                        </div>
+                        <div className="p-4 rounded-xl border bg-rose-50">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <AlertTriangle className="w-4 h-4 text-rose-600 mr-2" />
+                            Gaps & Risks
+                          </h4>
+                          <ul className="space-y-2 text-sm text-rose-800">
+                            {assessment.gaps?.length ? assessment.gaps.map((item: string, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{item}</span>
+                              </li>
+                            )) : <li className="text-rose-700">No major gaps detected.</li>}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {assessment.categories && (
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-gray-900">Category Breakdown</h4>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            {Object.entries(assessment.categories).map(([key, value]: any) => (
+                              <div key={key} className="border rounded-xl p-4 bg-white">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="font-semibold text-gray-900 capitalize">{key} ties</span>
+                                  <span className="text-sm font-semibold text-gray-700">{value?.score ?? 0}/100</span>
+                                </div>
+                                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                                  <div
+                                    className={`h-full ${
+                                      value?.status === 'excellent'
+                                        ? 'bg-emerald-500'
+                                        : value?.status === 'strong'
+                                          ? 'bg-green-500'
+                                          : value?.status === 'moderate'
+                                            ? 'bg-amber-500'
+                                            : 'bg-rose-500'
+                                    }`}
+                                    style={{ width: `${Math.min(value?.score || 0, 100)}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">{value?.status || 'unknown'} strength</p>
+                                <ul className="space-y-1 text-sm text-gray-600">
+                                  {value?.notes?.length ? value.notes.map((note: string, idx: number) => (
+                                    <li key={idx} className="flex items-start">
+                                      <span className="mr-2">•</span>
+                                      <span>{note}</span>
+                                    </li>
+                                  )) : <li className="text-gray-500">No notes provided.</li>}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {assessment.recommendations?.length > 0 && (
+                        <div className="p-4 border rounded-xl bg-amber-50">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 mr-2" />
+                            Recommendations to Strengthen Ties
+                          </h4>
+                          <ul className="space-y-2 text-sm text-amber-900">
+                            {assessment.recommendations.map((rec: string, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {documentContent && (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 rounded-lg p-6 max-h-[500px] overflow-y-auto border border-gray-200">
+                        <pre className="whitespace-pre-wrap text-gray-800 leading-relaxed font-sans text-sm">
+                          {documentContent}
+                        </pre>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                        <PDFDownload
+                          content={documentContent}
+                          filename={`Ties_to_Home_Country_${formData.targetCountry || 'general'}_${formData.visaType || 'visa'}_${new Date().toISOString().split('T')[0]}.pdf`}
+                          title="Ties to Home Country Document"
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={downloadDocument}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download TXT
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <FeedbackWidget
                     documentId={`ties_to_home_country_${Date.now()}`}
                     documentType="ties_to_home_country"
@@ -489,8 +631,8 @@ export default function TiesToHomeCountryPage() {
               ) : (
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No Document Generated Yet</h4>
-                  <p className="text-gray-600 text-sm">Fill in your ties to home country and generate the document</p>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No Assessment Yet</h4>
+                  <p className="text-gray-600 text-sm">Fill in your ties to home country and generate the assessment + document</p>
                 </div>
               )}
             </CardContent>

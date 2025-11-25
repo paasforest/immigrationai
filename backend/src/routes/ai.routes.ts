@@ -12,7 +12,11 @@ import {
   createTiesToHomeCountry,
   createTravelItinerary,
   calculateFinancialCapacityController,
-  analyzeBankStatementController
+  analyzeBankStatementController,
+  analyzeDocumentAuthenticityController,
+  analyzeApplicationFormController,
+  analyzeVisaRejectionController,
+  buildReapplicationStrategyController
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 
@@ -57,6 +61,18 @@ router.post('/ai/calculate-financial-capacity', authenticateJWT, requirePlan('pr
 
 // Bank Statement Analyzer (Professional+ required - CRITICAL feature)
 router.post('/ai/analyze-bank-statement', authenticateJWT, requirePlan('professional', 'enterprise'), analyzeBankStatementController);
+
+// Document Authenticity Checklist (Professional+ required)
+router.post('/ai/document-authenticity', authenticateJWT, requirePlan('professional', 'enterprise'), analyzeDocumentAuthenticityController);
+
+// Application Form Pre-Checker (Entry+ required)
+router.post('/ai/application-form-checker', authenticateJWT, requirePlan('entry', 'professional', 'enterprise'), analyzeApplicationFormController);
+
+// Visa Rejection Analyzer (Professional+ required)
+router.post('/ai/visa-rejection', authenticateJWT, requirePlan('professional', 'enterprise'), analyzeVisaRejectionController);
+
+// Reapplication Strategy Builder (Professional+ required)
+router.post('/ai/reapplication-strategy', authenticateJWT, requirePlan('professional', 'enterprise'), buildReapplicationStrategyController);
 
 export default router;
 

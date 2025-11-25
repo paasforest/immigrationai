@@ -12,7 +12,11 @@ import {
   generateTiesToHomeCountry,
   generateTravelItinerary,
   calculateFinancialCapacity,
-  analyzeBankStatement
+  analyzeBankStatement,
+  analyzeDocumentAuthenticity,
+  analyzeApplicationForm,
+  analyzeVisaRejection,
+  buildReapplicationStrategy
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -351,9 +355,9 @@ export const createTiesToHomeCountry = async (req: Request, res: Response) => {
     const result = await generateTiesToHomeCountry(req.body);
 
     return sendSuccess(res, {
-      document: result.document,
+      assessment: result.assessment,
       tokensUsed: result.tokensUsed,
-    }, 'Ties to home country document generated');
+    }, 'Ties to home country assessment generated');
   } catch (error: any) {
     logger.error('Ties to home country endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to generate ties to home country document', 500);
@@ -510,6 +514,188 @@ export const analyzeBankStatementController = async (req: AuthRequest, res: Resp
   } catch (error: any) {
     logger.error('Bank statement analysis endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to analyze bank statement', 500);
+  }
+};
+
+// Document Authenticity Checklist Endpoint
+export const analyzeDocumentAuthenticityController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'document_authenticity');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const { applicantName, targetCountry, visaType, documents, riskConcerns, notes } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    if (!Array.isArray(documents) || documents.length === 0) {
+      return sendError(res, 'validation_error', 'Please provide at least one document to analyze', 400);
+    }
+
+    const result = await analyzeDocumentAuthenticity({
+      applicantName,
+      targetCountry,
+      visaType,
+      documents,
+      riskConcerns,
+      notes,
+    });
+
+    return sendSuccess(res, {
+      report: result.report,
+      tokensUsed: result.tokensUsed,
+    }, 'Document authenticity checklist generated');
+  } catch (error: any) {
+    logger.error('Document authenticity endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate document authenticity checklist', 500);
+  }
+};
+
+// Application Form Pre-Checker Endpoint
+export const analyzeApplicationFormController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'application_form_checker');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const { applicantName, targetCountry, visaType, submissionType, formVersion, sections, attachments, concerns } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    if (!Array.isArray(sections) || sections.length === 0) {
+      return sendError(res, 'validation_error', 'Please provide at least one form section with fields', 400);
+    }
+
+    const result = await analyzeApplicationForm({
+      applicantName,
+      targetCountry,
+      visaType,
+      submissionType,
+      formVersion,
+      sections,
+      attachments,
+      concerns,
+    });
+
+    return sendSuccess(res, {
+      report: result.report,
+      tokensUsed: result.tokensUsed,
+    }, 'Application form checklist generated');
+  } catch (error: any) {
+    logger.error('Application form checker endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to analyze application form', 500);
+  }
+};
+
+// Visa Rejection Analyzer Endpoint
+export const analyzeVisaRejectionController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'visa_rejection_analyzer');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const { applicantName, targetCountry, visaType, rejectionDate, rejectionReason, rejectionLetter, previousAttempts, documentsSubmitted, concerns } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    if (!rejectionLetter && !rejectionReason) {
+      return sendError(res, 'validation_error', 'Please include either the rejection letter text or the stated reason.', 400);
+    }
+
+    const result = await analyzeVisaRejection({
+      applicantName,
+      targetCountry,
+      visaType,
+      rejectionDate,
+      rejectionReason,
+      rejectionLetter,
+      previousAttempts,
+      documentsSubmitted,
+      concerns,
+    });
+
+    return sendSuccess(res, {
+      report: result.report,
+      tokensUsed: result.tokensUsed,
+    }, 'Visa rejection analysis generated');
+  } catch (error: any) {
+    logger.error('Visa rejection analyzer endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to analyze visa rejection', 500);
+  }
+};
+
+// Reapplication Strategy Builder Endpoint
+export const buildReapplicationStrategyController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'reapplication_strategy');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const {
+      applicantName,
+      targetCountry,
+      visaType,
+      desiredSubmissionDate,
+      priorityLevel,
+      correctedConcerns,
+      improvementsSinceRefusal,
+      strategyFocus,
+      previousReport,
+    } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    const result = await buildReapplicationStrategy({
+      applicantName,
+      targetCountry,
+      visaType,
+      desiredSubmissionDate,
+      priorityLevel,
+      correctedConcerns,
+      improvementsSinceRefusal,
+      strategyFocus,
+      previousReport,
+    });
+
+    return sendSuccess(res, {
+      report: result.report,
+      tokensUsed: result.tokensUsed,
+    }, 'Reapplication strategy generated');
+  } catch (error: any) {
+    logger.error('Reapplication strategy endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to build reapplication strategy', 500);
   }
 };
 

@@ -27,7 +27,7 @@ export const TIER_LIMITS: Record<string, TierLimits> = {
     documentTypesAllowed: ['sop', 'cover_letter', 'review', 'checklist'],
     interviewSessionsPerMonth: 5,
     englishTestSessionsPerMonth: 5,
-    featuresAllowed: ['sop_generation', 'cover_letter', 'sop_reviewer', 'ielts_practice', 'interview_practice', 'pdf_export'],
+    featuresAllowed: ['sop_generation', 'cover_letter', 'sop_reviewer', 'application_form_checker', 'ielts_practice', 'interview_practice', 'pdf_export'],
   },
   professional: {
     visaChecksPerMonth: -1, // unlimited
@@ -35,7 +35,7 @@ export const TIER_LIMITS: Record<string, TierLimits> = {
     documentTypesAllowed: ['sop', 'cover_letter', 'review', 'checklist', 'email', 'support_letter', 'travel_history', 'financial_letter', 'purpose_of_visit'],
     interviewSessionsPerMonth: -1, // unlimited
     englishTestSessionsPerMonth: -1, // unlimited
-    featuresAllowed: ['sop_generation', 'cover_letter', 'sop_reviewer', 'checklist', 'email_template', 'support_letter', 'travel_history', 'financial_letter', 'purpose_of_visit', 'financial_calculator', 'bank_analyzer', 'interview_practice', 'all_english_tests', 'pdf_export', 'document_history', 'custom_templates', 'ai_analysis', 'mock_interviews', 'analytics'],
+    featuresAllowed: ['sop_generation', 'cover_letter', 'sop_reviewer', 'checklist', 'email_template', 'support_letter', 'travel_history', 'financial_letter', 'purpose_of_visit', 'financial_calculator', 'bank_analyzer', 'document_authenticity', 'application_form_checker', 'visa_rejection_analyzer', 'reapplication_strategy', 'interview_practice', 'all_english_tests', 'pdf_export', 'document_history', 'custom_templates', 'ai_analysis', 'mock_interviews', 'analytics'],
   },
   enterprise: {
     visaChecksPerMonth: -1, // unlimited

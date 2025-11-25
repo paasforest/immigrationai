@@ -137,4 +137,174 @@ export interface BankAnalyzerInput {
   homeCountry?: string;
 }
 
+export interface TiesAssessmentCategory {
+  score: number;
+  status: 'weak' | 'moderate' | 'strong' | 'excellent';
+  notes: string[];
+}
+
+export interface TiesAssessment {
+  overallScore: number;
+  strengthLabel: 'weak' | 'moderate' | 'strong' | 'excellent';
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+  recommendations: string[];
+  nextSteps: string[];
+  categories: {
+    financial: TiesAssessmentCategory;
+    employment: TiesAssessmentCategory;
+    family: TiesAssessmentCategory;
+    property: TiesAssessmentCategory;
+    social: TiesAssessmentCategory;
+    educational: TiesAssessmentCategory;
+  };
+  document: string;
+}
+
+export interface DocumentAuthenticityDocument {
+  type: string;
+  issuingCountry?: string;
+  issuingAuthority?: string;
+  issueDate?: string;
+  expirationDate?: string;
+  referenceNumber?: string;
+  verificationDetails?: string;
+  concerns?: string;
+}
+
+export interface DocumentAuthenticityInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  documents: DocumentAuthenticityDocument[];
+  riskConcerns?: string;
+  notes?: string;
+}
+
+export interface DocumentAuthenticityReport {
+  overallScore: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  summary: string;
+  redFlags: string[];
+  requiredVerifications: string[];
+  recommendations: string[];
+  nextSteps: string[];
+  documentChecks: Array<{
+    type: string;
+    score: number;
+    status: 'pass' | 'review' | 'fail';
+    issues: string[];
+    verificationGuidance: string[];
+  }>;
+}
+
+export interface ApplicationFormSection {
+  title: string;
+  fields: Array<{
+    label: string;
+    value: string;
+  }>;
+}
+
+export interface ApplicationFormInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  submissionType?: 'online' | 'paper' | 'portal' | 'unknown';
+  formVersion?: string;
+  sections: ApplicationFormSection[];
+  attachments?: string[];
+  concerns?: string;
+}
+
+export interface ApplicationFormCheck {
+  field: string;
+  status: 'complete' | 'missing' | 'inconsistent' | 'needs_review';
+  details: string;
+  recommendation: string;
+}
+
+export interface ApplicationFormReport {
+  overallScore: number;
+  completenessStatus: 'complete' | 'partial' | 'incomplete';
+  summary: string;
+  missingSections: string[];
+  inconsistencies: string[];
+  riskFactors: string[];
+  recommendations: string[];
+  nextSteps: string[];
+  formChecks: ApplicationFormCheck[];
+}
+
+export interface VisaRejectionInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  rejectionDate?: string;
+  rejectionReason?: string;
+  rejectionLetter?: string;
+  previousAttempts?: number;
+  documentsSubmitted?: string[];
+  concerns?: string;
+}
+
+export interface VisaRejectionReport {
+  rootCauseSummary: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number;
+  officerConcerns: string[];
+  missingEvidence: string[];
+  riskFactors: string[];
+  recommendedFixes: string[];
+  nextSteps: string[];
+  timeline: Array<{
+    step: string;
+    dueBy?: string;
+  }>;
+  reapplicationChecklist: Array<{
+    item: string;
+    status: 'required' | 'recommended';
+    details: string;
+  }>;
+}
+
+export interface ReapplicationStrategyInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  desiredSubmissionDate?: string;
+  priorityLevel?: 'normal' | 'urgent';
+  correctedConcerns?: string[];
+  improvementsSinceRefusal?: string;
+  strategyFocus?: string;
+  previousReport?: VisaRejectionReport;
+}
+
+export interface ReapplicationStrategyTimelineItem {
+  phase: string;
+  tasks: string[];
+  dueDate?: string;
+  owner?: string;
+}
+
+export interface ReapplicationStrategyReport {
+  readinessScore: number;
+  urgency: 'low' | 'medium' | 'high';
+  keyMilestones: string[];
+  checklist: Array<{
+    item: string;
+    status: 'complete' | 'in_progress' | 'not_started';
+    impact: 'critical' | 'high' | 'medium';
+    details: string;
+  }>;
+  strategyPillars: Array<{
+    pillar: string;
+    actions: string[];
+  }>;
+  timeline: ReapplicationStrategyTimelineItem[];
+  riskMitigation: string[];
+  submissionPlan: string[];
+}
+
 
