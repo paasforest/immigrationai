@@ -16,7 +16,9 @@ import {
   analyzeDocumentAuthenticityController,
   analyzeApplicationFormController,
   analyzeVisaRejectionController,
-  buildReapplicationStrategyController
+  buildReapplicationStrategyController,
+  checkDocumentConsistencyController,
+  generateStudentVisaPackageController
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 
@@ -73,6 +75,12 @@ router.post('/ai/visa-rejection', authenticateJWT, requirePlan('professional', '
 
 // Reapplication Strategy Builder (Professional+ required)
 router.post('/ai/reapplication-strategy', authenticateJWT, requirePlan('professional', 'enterprise'), buildReapplicationStrategyController);
+
+// Document Consistency Checker (Professional+ required)
+router.post('/ai/document-consistency', authenticateJWT, requirePlan('professional', 'enterprise'), checkDocumentConsistencyController);
+
+// Student Visa Package Generator (Professional+ required)
+router.post('/ai/student-visa-package', authenticateJWT, requirePlan('professional', 'enterprise'), generateStudentVisaPackageController);
 
 export default router;
 

@@ -307,4 +307,75 @@ export interface ReapplicationStrategyReport {
   submissionPlan: string[];
 }
 
+export interface ConsistencyCheckerDocument {
+  type: string;
+  content?: string;
+  keyFields?: string;
+}
+
+export interface ConsistencyCheckerInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  documents: ConsistencyCheckerDocument[];
+  keyFields?: string[];
+}
+
+export interface ConsistencyIssue {
+  field: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  document1: string;
+  document2: string;
+  description: string;
+  recommendation: string;
+}
+
+export interface ConsistencyCheckerReport {
+  consistencyScore: number;
+  status: 'fully_consistent' | 'mostly_consistent' | 'partially_consistent' | 'inconsistent';
+  criticalIssues: ConsistencyIssue[];
+  inconsistencies: ConsistencyIssue[];
+  strengths: string[];
+  recommendations: string[];
+  summary: string;
+}
+
+export interface StudentVisaPackageInput {
+  applicantName: string;
+  homeCountry: string;
+  targetCountry: string;
+  currentEducation?: string;
+  institution?: string;
+  program?: string;
+  programDuration?: string;
+  tuitionFees?: string;
+  startDate?: string;
+  availableFunds?: string;
+  sourceOfFunds?: string;
+  sponsorDetails?: string;
+  previousDegrees?: string;
+  academicAchievements?: string;
+  englishTest?: string;
+  testScores?: string;
+  careerGoals?: string;
+  whyThisProgram?: string;
+}
+
+export interface StudentVisaPackageReport {
+  sop: string;
+  financialLetter: string;
+  checklist: {
+    requiredDocuments: string[];
+    countrySpecific: string[];
+    verificationRequirements: string[];
+  };
+  timeline: {
+    weeksBeforeStart: string[];
+    deadlines: string[];
+  };
+  strengths: string[];
+  recommendations: string[];
+  summary: string;
+}
+
 

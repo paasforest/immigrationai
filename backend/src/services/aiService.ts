@@ -1748,6 +1748,168 @@ Always provide accurate, detailed analysis to help applicants strengthen their f
   }
 };
 
+// Check Document Consistency Across Multiple Documents
+export const checkDocumentConsistency = async (data: {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  documents: Array<{ type: string; content?: string; keyFields?: string }>;
+  keyFields?: string[];
+}): Promise<{
+  report: any;
+  tokensUsed: number;
+}> => {
+  try {
+    logger.info('Document Consistency Check', { 
+      targetCountry: data.targetCountry, 
+      visaType: data.visaType,
+      documentCount: data.documents.length
+    });
+
+    const { generateConsistencyCheckerPrompt } = await import('../prompts/consistencyCheckerPrompt');
+    const prompt = generateConsistencyCheckerPrompt(data);
+
+    const systemPrompt = `You are an expert immigration document analyst working for Immigration AI. You specialize in checking consistency across multiple documents for visa applications.
+
+Your expertise includes:
+- Cross-document field verification
+- Identifying inconsistencies and mismatches
+- Assessing severity of discrepancies
+- Providing actionable recommendations
+- Ensuring document coherence before submission
+
+Always provide accurate, detailed analysis to help applicants ensure document consistency.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 2000,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let report;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        report = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      logger.error('Failed to parse consistency report', { parseError, responseText });
+      report = {
+        consistencyScore: 0,
+        status: 'error',
+        criticalIssues: [],
+        inconsistencies: [{ field: 'Analysis Error', severity: 'critical', description: 'Unable to parse analysis', recommendation: 'Please try again with more document details' }],
+        strengths: [],
+        recommendations: ['Please provide complete document information and try again'],
+        summary: 'There was an error checking document consistency. Please try again with complete information.'
+      };
+    }
+
+    logger.info('Document consistency checked', { tokensUsed, consistencyScore: report.consistencyScore });
+
+    return { report, tokensUsed };
+  } catch (error: any) {
+    logger.error('Document consistency check error', { error: error.message });
+    throw new Error('Failed to check document consistency. Please try again.');
+  }
+};
+
+// Generate Complete Student Visa Package
+export const generateStudentVisaPackage = async (data: {
+  applicantName: string;
+  homeCountry: string;
+  targetCountry: string;
+  currentEducation?: string;
+  institution?: string;
+  program?: string;
+  programDuration?: string;
+  tuitionFees?: string;
+  startDate?: string;
+  availableFunds?: string;
+  sourceOfFunds?: string;
+  sponsorDetails?: string;
+  previousDegrees?: string;
+  academicAchievements?: string;
+  englishTest?: string;
+  testScores?: string;
+  careerGoals?: string;
+  whyThisProgram?: string;
+}): Promise<{
+  package: any;
+  tokensUsed: number;
+}> => {
+  try {
+    logger.info('Student Visa Package Generation', { 
+      targetCountry: data.targetCountry,
+      institution: data.institution 
+    });
+
+    const { generateStudentVisaPackagePrompt } = await import('../prompts/studentVisaPackagePrompt');
+    const prompt = generateStudentVisaPackagePrompt(data);
+
+    const systemPrompt = `You are an expert student visa consultant working for Immigration AI. You specialize in generating complete student visa document packages for applications to USA, Canada, UK, Australia, Germany, Ireland, and 150+ countries.
+
+Your expertise includes:
+- Statement of Purpose (SOP) writing
+- Financial proof letter generation
+- Country-specific document checklists
+- Application timelines
+- Strengths and recommendations
+
+Always provide accurate, country-specific information based on official embassy/consulate requirements.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 2500,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let packageData;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        packageData = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      logger.error('Failed to parse student visa package', { parseError, responseText });
+      packageData = {
+        sop: 'Unable to generate SOP. Please provide more details and try again.',
+        financialLetter: 'Unable to generate financial letter. Please provide more details and try again.',
+        checklist: { requiredDocuments: [], countrySpecific: [], verificationRequirements: [] },
+        timeline: { weeksBeforeStart: [], deadlines: [] },
+        strengths: [],
+        recommendations: ['Please provide complete information and try again'],
+        summary: 'There was an error generating the student visa package. Please try again with complete information.'
+      };
+    }
+
+    logger.info('Student Visa Package generated', { tokensUsed });
+
+    return { package: packageData, tokensUsed };
+  } catch (error: any) {
+    logger.error('Student visa package generation error', { error: error.message });
+    throw new Error('Failed to generate student visa package. Please try again.');
+  }
+};
+
 // Document Authenticity Checklist
 export const analyzeDocumentAuthenticity = async (
   data: DocumentAuthenticityInput

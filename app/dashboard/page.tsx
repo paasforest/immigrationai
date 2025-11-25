@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt, ClipboardCheck, ClipboardList, AlertTriangle } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt, ClipboardCheck, ClipboardList, AlertTriangle, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -236,6 +236,24 @@ const features = [
       description: "Build a phased execution plan after a refusal",
       href: "/documents/reapplication-strategy",
       color: "from-purple-500 to-pink-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <FileCheck className="w-8 h-8" />,
+      title: "Document Consistency Checker",
+      description: "Check consistency across multiple documents before submission",
+      href: "/documents/document-consistency",
+      color: "from-blue-500 to-cyan-500",
+      badge: "NEW",
+      premium: true
+    },
+    {
+      icon: <GraduationCap className="w-8 h-8" />,
+      title: "Student Visa Package",
+      description: "Complete student visa document package generator",
+      href: "/documents/student-visa-package",
+      color: "from-indigo-500 to-purple-500",
       badge: "NEW",
       premium: true
     },

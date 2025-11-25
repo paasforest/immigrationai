@@ -16,7 +16,9 @@ import {
   analyzeDocumentAuthenticity,
   analyzeApplicationForm,
   analyzeVisaRejection,
-  buildReapplicationStrategy
+  buildReapplicationStrategy,
+  checkDocumentConsistency,
+  generateStudentVisaPackage
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -696,6 +698,116 @@ export const buildReapplicationStrategyController = async (req: AuthRequest, res
   } catch (error: any) {
     logger.error('Reapplication strategy endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to build reapplication strategy', 500);
+  }
+};
+
+// Check Document Consistency Endpoint
+export const checkDocumentConsistencyController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'document_consistency_checker');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const { applicantName, targetCountry, visaType, documents, keyFields } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    if (!Array.isArray(documents) || documents.length < 2) {
+      return sendError(res, 'validation_error', 'Please provide at least 2 documents to compare', 400);
+    }
+
+    const result = await checkDocumentConsistency({
+      applicantName,
+      targetCountry,
+      visaType,
+      documents,
+      keyFields,
+    });
+
+    return sendSuccess(res, {
+      report: result.report,
+      tokensUsed: result.tokensUsed,
+    }, 'Document consistency checked');
+  } catch (error: any) {
+    logger.error('Document consistency endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to check document consistency', 500);
+  }
+};
+
+// Generate Student Visa Package Endpoint
+export const generateStudentVisaPackageController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    const accessCheck = await canAccessFeature(userId, 'student_visa_package');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const {
+      applicantName,
+      homeCountry,
+      targetCountry,
+      currentEducation,
+      institution,
+      program,
+      programDuration,
+      tuitionFees,
+      startDate,
+      availableFunds,
+      sourceOfFunds,
+      sponsorDetails,
+      previousDegrees,
+      academicAchievements,
+      englishTest,
+      testScores,
+      careerGoals,
+      whyThisProgram
+    } = req.body;
+
+    if (!applicantName || !homeCountry || !targetCountry) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, homeCountry, targetCountry', 400);
+    }
+
+    const result = await generateStudentVisaPackage({
+      applicantName,
+      homeCountry,
+      targetCountry,
+      currentEducation,
+      institution,
+      program,
+      programDuration,
+      tuitionFees,
+      startDate,
+      availableFunds,
+      sourceOfFunds,
+      sponsorDetails,
+      previousDegrees,
+      academicAchievements,
+      englishTest,
+      testScores,
+      careerGoals,
+      whyThisProgram
+    });
+
+    return sendSuccess(res, {
+      package: result.package,
+      tokensUsed: result.tokensUsed,
+    }, 'Student visa package generated');
+  } catch (error: any) {
+    logger.error('Student visa package endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate student visa package', 500);
   }
 };
 
