@@ -99,4 +99,42 @@ export interface ReviewSOPInputData {
   purpose?: string;
 }
 
+export interface FinancialCalculatorInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  availableFunds?: string;
+  monthlyIncome?: string;
+  annualIncome?: string;
+  sourceOfFunds?: string;
+  durationOfStay?: string;
+  homeCountry?: string;
+  tuitionFees?: string;
+  livingCosts?: string;
+  accommodationCosts?: string;
+  otherExpenses?: string;
+  sponsorName?: string;
+  sponsorRelationship?: string;
+  sponsorIncome?: string;
+  dependents?: string;
+}
+
+export interface BankAnalyzerInput {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  statementText?: string;
+  accountBalance?: string;
+  averageBalance?: string;
+  minimumBalance?: string;
+  accountType?: string;
+  currency?: string;
+  statementPeriod?: string;
+  monthlyIncome?: string;
+  monthlyExpenses?: string;
+  largeDeposits?: string;
+  sourceOfFunds?: string;
+  homeCountry?: string;
+}
+
 

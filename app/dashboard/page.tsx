@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -183,6 +183,24 @@ const features = [
       description: "Justify funds for visa application",
       href: "/documents/financial-letter",
       color: "from-emerald-500 to-green-500",
+      premium: true
+    },
+    {
+      icon: <Calculator className="w-8 h-8" />,
+      title: "Financial Capacity Calculator",
+      description: "Calculate minimum funds required and assess your financial capacity",
+      href: "/documents/financial-calculator",
+      color: "from-teal-500 to-cyan-500",
+      badge: "CRITICAL",
+      premium: true
+    },
+    {
+      icon: <Receipt className="w-8 h-8" />,
+      title: "Bank Statement Analyzer",
+      description: "Analyze bank statements for compliance and detect red flags",
+      href: "/documents/bank-analyzer",
+      color: "from-indigo-500 to-purple-500",
+      badge: "CRITICAL",
       premium: true
     },
     {

@@ -10,7 +10,9 @@ import {
   createFinancialLetter,
   createPurposeOfVisit,
   createTiesToHomeCountry,
-  createTravelItinerary
+  createTravelItinerary,
+  calculateFinancialCapacityController,
+  analyzeBankStatementController
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 
@@ -49,6 +51,12 @@ router.post('/ai/generate-ties-to-home-country', authenticateJWT, requirePlan('p
 
 // Travel Itinerary Builder (Entry+ required)
 router.post('/ai/generate-travel-itinerary', authenticateJWT, requirePlan('entry', 'professional', 'enterprise'), createTravelItinerary);
+
+// Financial Capacity Calculator (Professional+ required - CRITICAL feature)
+router.post('/ai/calculate-financial-capacity', authenticateJWT, requirePlan('professional', 'enterprise'), calculateFinancialCapacityController);
+
+// Bank Statement Analyzer (Professional+ required - CRITICAL feature)
+router.post('/ai/analyze-bank-statement', authenticateJWT, requirePlan('professional', 'enterprise'), analyzeBankStatementController);
 
 export default router;
 

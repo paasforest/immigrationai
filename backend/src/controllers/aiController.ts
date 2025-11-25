@@ -10,7 +10,9 @@ import {
   generateFinancialLetter,
   generatePurposeOfVisit,
   generateTiesToHomeCountry,
-  generateTravelItinerary
+  generateTravelItinerary,
+  calculateFinancialCapacity,
+  analyzeBankStatement
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -376,6 +378,138 @@ export const createTravelItinerary = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Travel itinerary endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to generate travel itinerary', 500);
+  }
+};
+
+// Calculate Financial Capacity Endpoint
+export const calculateFinancialCapacityController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    // Check feature access
+    const accessCheck = await canAccessFeature(userId, 'financial_calculator');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const {
+      applicantName,
+      targetCountry,
+      visaType,
+      availableFunds,
+      monthlyIncome,
+      annualIncome,
+      sourceOfFunds,
+      durationOfStay,
+      homeCountry,
+      tuitionFees,
+      livingCosts,
+      accommodationCosts,
+      otherExpenses,
+      sponsorName,
+      sponsorRelationship,
+      sponsorIncome,
+      dependents
+    } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    const result = await calculateFinancialCapacity({
+      applicantName,
+      targetCountry,
+      visaType,
+      availableFunds,
+      monthlyIncome,
+      annualIncome,
+      sourceOfFunds,
+      durationOfStay,
+      homeCountry,
+      tuitionFees,
+      livingCosts,
+      accommodationCosts,
+      otherExpenses,
+      sponsorName,
+      sponsorRelationship,
+      sponsorIncome,
+      dependents
+    });
+
+    return sendSuccess(res, {
+      calculation: result.calculation,
+      tokensUsed: result.tokensUsed,
+    }, 'Financial capacity calculated');
+  } catch (error: any) {
+    logger.error('Financial capacity calculation endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to calculate financial capacity', 500);
+  }
+};
+
+// Analyze Bank Statement Endpoint
+export const analyzeBankStatementController = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'auth_error', 'Authentication required', 401);
+    }
+
+    // Check feature access
+    const accessCheck = await canAccessFeature(userId, 'bank_analyzer');
+    if (!accessCheck.allowed) {
+      return sendError(res, 'access_denied', accessCheck.reason || 'Access denied', 403);
+    }
+
+    const {
+      applicantName,
+      targetCountry,
+      visaType,
+      statementText,
+      accountBalance,
+      averageBalance,
+      minimumBalance,
+      accountType,
+      currency,
+      statementPeriod,
+      monthlyIncome,
+      monthlyExpenses,
+      largeDeposits,
+      sourceOfFunds,
+      homeCountry
+    } = req.body;
+
+    if (!applicantName || !targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields: applicantName, targetCountry, visaType', 400);
+    }
+
+    const result = await analyzeBankStatement({
+      applicantName,
+      targetCountry,
+      visaType,
+      statementText,
+      accountBalance,
+      averageBalance,
+      minimumBalance,
+      accountType,
+      currency,
+      statementPeriod,
+      monthlyIncome,
+      monthlyExpenses,
+      largeDeposits,
+      sourceOfFunds,
+      homeCountry
+    });
+
+    return sendSuccess(res, {
+      analysis: result.analysis,
+      tokensUsed: result.tokensUsed,
+    }, 'Bank statement analyzed');
+  } catch (error: any) {
+    logger.error('Bank statement analysis endpoint error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to analyze bank statement', 500);
   }
 };
 

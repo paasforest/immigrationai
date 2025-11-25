@@ -1524,4 +1524,194 @@ Format as a structured document with clear sections. Length: 500-600 words. Be s
   }
 };
 
+// Calculate Financial Capacity for Visa Application
+export const calculateFinancialCapacity = async (data: {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  availableFunds?: string;
+  monthlyIncome?: string;
+  annualIncome?: string;
+  sourceOfFunds?: string;
+  durationOfStay?: string;
+  homeCountry?: string;
+  tuitionFees?: string;
+  livingCosts?: string;
+  accommodationCosts?: string;
+  otherExpenses?: string;
+  sponsorName?: string;
+  sponsorRelationship?: string;
+  sponsorIncome?: string;
+  dependents?: string;
+}): Promise<{
+  calculation: any;
+  tokensUsed: number;
+}> => {
+  try {
+    logger.info('Financial Capacity Calculation', { 
+      targetCountry: data.targetCountry, 
+      visaType: data.visaType 
+    });
+
+    const { generateFinancialCalculatorPrompt } = await import('../prompts/financialCalculatorPrompt');
+    const prompt = generateFinancialCalculatorPrompt(data);
+
+    const systemPrompt = `You are an expert immigration financial consultant working for Immigration AI. You specialize in calculating financial requirements for visa applications across 150+ countries including USA, Canada, UK, Australia, Germany, Ireland, and more.
+
+Your expertise includes:
+- Country-specific financial requirements
+- Visa type-specific minimum funds
+- Living cost calculations
+- Tuition fee requirements
+- Sponsor income requirements
+- Financial evidence requirements
+
+Always provide accurate, country-specific information based on official embassy/consulate requirements.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 1500,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    // Parse JSON response
+    let calculation;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        calculation = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      logger.error('Failed to parse financial calculation', { parseError, responseText });
+      // Return a structured error response
+      calculation = {
+        minimumRequired: { amount: 0, currency: 'USD', breakdown: {} },
+        availableFunds: { amount: 0, currency: 'USD', sources: [] },
+        sufficiencyScore: 0,
+        status: 'error',
+        gapAnalysis: { hasGap: true, gapAmount: 0, gapPercentage: 0 },
+        recommendations: ['Unable to calculate. Please try again with more details.'],
+        countrySpecificRequirements: [],
+        riskFactors: ['Calculation error'],
+        strengths: [],
+        nextSteps: ['Please provide more financial details and try again'],
+        summary: 'There was an error calculating your financial capacity. Please try again with complete information.'
+      };
+    }
+
+    logger.info('Financial Capacity calculated', { 
+      tokensUsed, 
+      sufficiencyScore: calculation.sufficiencyScore 
+    });
+
+    return { calculation, tokensUsed };
+  } catch (error: any) {
+    logger.error('Financial capacity calculation error', { error: error.message });
+    throw new Error('Failed to calculate financial capacity. Please try again.');
+  }
+};
+
+// Analyze Bank Statement for Visa Application
+export const analyzeBankStatement = async (data: {
+  applicantName: string;
+  targetCountry: string;
+  visaType: string;
+  statementText?: string;
+  accountBalance?: string;
+  averageBalance?: string;
+  minimumBalance?: string;
+  accountType?: string;
+  currency?: string;
+  statementPeriod?: string;
+  monthlyIncome?: string;
+  monthlyExpenses?: string;
+  largeDeposits?: string;
+  sourceOfFunds?: string;
+  homeCountry?: string;
+}): Promise<{
+  analysis: any;
+  tokensUsed: number;
+}> => {
+  try {
+    logger.info('Bank Statement Analysis', { 
+      targetCountry: data.targetCountry, 
+      visaType: data.visaType 
+    });
+
+    const { generateBankAnalyzerPrompt } = await import('../prompts/bankAnalyzerPrompt');
+    const prompt = generateBankAnalyzerPrompt(data);
+
+    const systemPrompt = `You are an expert immigration financial analyst working for Immigration AI. You specialize in analyzing bank statements and financial evidence for visa applications across 150+ countries.
+
+Your expertise includes:
+- Bank statement compliance analysis
+- Red flag detection (large deposits, irregular patterns, insufficient funds)
+- Transaction pattern analysis
+- Country-specific financial evidence requirements
+- Embassy/consulate compliance standards
+
+Always provide accurate, detailed analysis to help applicants strengthen their financial evidence.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 2000,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    // Parse JSON response
+    let analysis;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      logger.error('Failed to parse bank statement analysis', { parseError, responseText });
+      // Return a structured error response
+      analysis = {
+        accountAnalysis: {},
+        transactionAnalysis: {},
+        redFlags: ['Analysis error - please try again with more details'],
+        complianceScore: 0,
+        complianceStatus: 'error',
+        countryRequirements: {},
+        complianceCheck: {},
+        strengths: [],
+        weaknesses: ['Unable to analyze. Please provide more bank statement details.'],
+        recommendations: ['Please provide complete bank statement information and try again'],
+        nextSteps: ['Ensure all bank statement fields are filled'],
+        summary: 'There was an error analyzing your bank statement. Please try again with complete information.'
+      };
+    }
+
+    logger.info('Bank Statement analyzed', { 
+      tokensUsed, 
+      complianceScore: analysis.complianceScore 
+    });
+
+    return { analysis, tokensUsed };
+  } catch (error: any) {
+    logger.error('Bank statement analysis error', { error: error.message });
+    throw new Error('Failed to analyze bank statement. Please try again.');
+  }
+};
+
 
