@@ -22,6 +22,16 @@ fi
 
 echo -e "${GREEN}✅ .env file found${NC}"
 
+# Pull latest code from GitHub
+echo "📥 Pulling latest code from GitHub..."
+git pull origin main
+
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}⚠️  Git pull warning - continuing with existing code...${NC}"
+fi
+
+echo -e "${GREEN}✅ Code updated${NC}"
+
 # Install dependencies
 echo "📦 Installing dependencies..."
 npm install
