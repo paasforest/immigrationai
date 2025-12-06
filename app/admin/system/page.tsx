@@ -23,6 +23,7 @@ export default function AdminSystemPage() {
   const router = useRouter();
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchHealth();
@@ -33,7 +34,13 @@ export default function AdminSystemPage() {
   const fetchHealth = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/auth/login');
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/admin/system/health`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -44,13 +51,20 @@ export default function AdminSystemPage() {
         const data = await response.json();
         if (data.success) {
           setHealth(data.data);
+          setError(null);
+        } else {
+          setError(data.message || 'Failed to load system health');
         }
       } else if (response.status === 403) {
         alert('Access Denied: Admin privileges required');
         router.push('/dashboard');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Failed to fetch system health');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch system health:', error);
+      setError(error.message || 'Failed to fetch system health');
     } finally {
       setLoading(false);
     }
@@ -104,7 +118,18 @@ export default function AdminSystemPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {health && (
+        {error && (
+          <Card className="mb-6 border-l-4 border-l-red-600">
+            <CardContent className="p-4">
+              <p className="text-red-600">⚠️ {error}</p>
+              <Button onClick={fetchHealth} variant="outline" className="mt-2">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {health && !error && (
           <>
             {/* System Status */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

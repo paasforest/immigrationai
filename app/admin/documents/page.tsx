@@ -20,6 +20,7 @@ export default function AdminDocumentsPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
 
   useEffect(() => {
@@ -29,7 +30,13 @@ export default function AdminDocumentsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/auth/login');
+        return;
+      }
+
       const endDate = new Date();
       const startDate = new Date();
       
@@ -50,13 +57,20 @@ export default function AdminDocumentsPage() {
         const data = await response.json();
         if (data.success) {
           setAnalytics(data.data);
+          setError(null);
+        } else {
+          setError(data.message || 'Failed to load analytics');
         }
       } else if (response.status === 403) {
         alert('Access Denied: Admin privileges required');
         router.push('/dashboard');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Failed to fetch document analytics');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch analytics:', error);
+      setError(error.message || 'Failed to fetch document analytics');
     } finally {
       setLoading(false);
     }
@@ -111,7 +125,18 @@ export default function AdminDocumentsPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {analytics && (
+        {error && (
+          <Card className="mb-6 border-l-4 border-l-red-600">
+            <CardContent className="p-4">
+              <p className="text-red-600">⚠️ {error}</p>
+              <Button onClick={fetchAnalytics} variant="outline" className="mt-2">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {analytics && !error && (
           <>
             {/* Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

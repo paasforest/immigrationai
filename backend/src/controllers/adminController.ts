@@ -347,13 +347,13 @@ export class AdminController {
       }),
       prisma.$queryRaw`
         SELECT 
-          DATE(created_at) as date,
-          COUNT(*) as count
+          created_at::date as date,
+          COUNT(*)::int as count
         FROM documents
         WHERE created_at >= ${start} AND created_at <= ${end}
-        GROUP BY DATE(created_at)
+        GROUP BY created_at::date
         ORDER BY date DESC
-      `,
+      ` as Promise<Array<{ date: Date; count: number }>>,
     ]);
 
     return sendSuccess(
@@ -506,7 +506,7 @@ export class AdminController {
       prisma.apiUsage.count({
         where: { timestamp: { gte: last24h }, success: false },
       }),
-      prisma.$queryRaw`SELECT 1 as status`.then(() => ({ status: 'healthy' })).catch(() => ({ status: 'unhealthy' })),
+      prisma.$queryRaw`SELECT 1 as status`.then(() => ({ status: 'healthy' })).catch(() => ({ status: 'unhealthy' })) as Promise<{ status: string }>,
     ]);
 
     return sendSuccess(
