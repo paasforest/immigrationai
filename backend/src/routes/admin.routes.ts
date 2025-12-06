@@ -27,6 +27,19 @@ router.get('/analytics/utm/sessions', adminController.getRecentSessions);
 router.get('/analytics/utm/session-stats', adminController.getSessionStats);
 router.get('/analytics/eligibility', eligibilityController.getAnalytics);
 
+// Document Analytics
+router.get('/analytics/documents', adminController.getDocumentAnalytics);
+
+// Revenue Analytics
+router.get('/analytics/revenue', adminController.getRevenueAnalytics);
+
+// System Health
+router.get('/system/health', adminController.getSystemHealth);
+
+// User Management
+router.get('/users', adminController.getUsers);
+router.put('/users/:userId', adminController.updateUser);
+
 export default router;
 
 

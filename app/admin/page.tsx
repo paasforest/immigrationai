@@ -129,8 +129,7 @@ export default function AdminDashboardPage() {
       description: "Manage users, subscriptions, and access",
       href: "/admin/users",
       color: "from-blue-500 to-cyan-600",
-      stats: "Coming soon",
-      disabled: true
+      stats: "Active users"
     },
     {
       icon: <FileText className="w-8 h-8" />,
@@ -138,8 +137,7 @@ export default function AdminDashboardPage() {
       description: "View document generation statistics",
       href: "/admin/documents",
       color: "from-orange-500 to-red-600",
-      stats: "Coming soon",
-      disabled: true
+      stats: "Document stats"
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
@@ -147,8 +145,7 @@ export default function AdminDashboardPage() {
       description: "Track revenue, MRR, and growth metrics",
       href: "/admin/revenue",
       color: "from-pink-500 to-rose-600",
-      stats: "Coming soon",
-      disabled: true
+      stats: "Revenue tracking"
     },
     {
       icon: <Activity className="w-8 h-8" />,
@@ -156,8 +153,7 @@ export default function AdminDashboardPage() {
       description: "Monitor system performance and uptime",
       href: "/admin/system",
       color: "from-teal-500 to-green-600",
-      stats: "Coming soon",
-      disabled: true
+      stats: "System status"
     },
   ];
 
@@ -339,24 +335,14 @@ export default function AdminDashboardPage() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Administrative Tools</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminFeatures.map((feature, index) => {
-              const isDisabled = feature.disabled;
-              
-              const cardContent = (
-                <Card className={`h-full transition-all duration-300 group ${
-                  isDisabled 
-                    ? 'opacity-60 cursor-not-allowed' 
-                    : 'hover:shadow-lg cursor-pointer'
-                }`}>
+            {adminFeatures.map((feature, index) => (
+              <Link key={index} href={feature.href}>
+                <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group">
                   <CardContent className="p-6">
-                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-4 ${
-                      isDisabled ? '' : 'group-hover:scale-110'
-                    } transition-transform`}>
+                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
                       {feature.icon}
                     </div>
-                    <h3 className={`text-lg font-semibold text-gray-900 mb-2 ${
-                      isDisabled ? '' : 'group-hover:text-blue-600'
-                    } transition-colors`}>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                       {feature.title}
                     </h3>
                     <p className="text-sm text-gray-600 mb-3">
@@ -364,30 +350,14 @@ export default function AdminDashboardPage() {
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">{feature.stats}</span>
-                      {isDisabled ? (
-                        <span className="text-gray-400 text-sm font-medium">
-                          Coming Soon
-                        </span>
-                      ) : (
-                        <span className="text-blue-600 text-sm font-medium group-hover:underline">
-                          Open →
-                        </span>
-                      )}
+                      <span className="text-blue-600 text-sm font-medium group-hover:underline">
+                        Open →
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
-              );
-              
-              if (isDisabled) {
-                return <div key={index}>{cardContent}</div>;
-              }
-              
-              return (
-                <Link key={index} href={feature.href}>
-                  {cardContent}
-                </Link>
-              );
-            })}
+              </Link>
+            ))}
           </div>
         </div>
 
