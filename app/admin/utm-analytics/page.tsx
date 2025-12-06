@@ -14,7 +14,8 @@ import {
   RefreshCw,
   Filter,
   Download,
-  ExternalLink
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -127,13 +128,13 @@ export default function UTMAnalyticsPage() {
       }
 
       const [utmData, sessionsData, statsData] = await Promise.all([
-        utmRes.json(),
-        sessionsRes.json(),
-        statsRes.json(),
+        utmRes.json().catch(() => ({ success: false, data: null })),
+        sessionsRes.json().catch(() => ({ success: false, data: [] })),
+        statsRes.json().catch(() => ({ success: false, data: null })),
       ]);
-      if (utmData.success) setAnalytics(utmData.data);
+      if (utmData.success && utmData.data) setAnalytics(utmData.data);
       if (sessionsData.success) setSessions(sessionsData.data || []);
-      if (statsData.success) setSessionStats(statsData.data);
+      if (statsData.success && statsData.data) setSessionStats(statsData.data);
     } catch (err: any) {
       console.error('Analytics fetch error:', err);
       setError(err.message || 'Failed to load analytics');
@@ -153,7 +154,7 @@ export default function UTMAnalyticsPage() {
     });
   };
 
-  const filteredSessions = sessions.filter((s) => {
+  const filteredSessions = (sessions || []).filter((s) => {
     const bySource = selectedSource === 'all' || (s.utm_source || 'direct') === selectedSource;
     const byCampaign = selectedCampaign === 'all' || (s.utm_campaign || 'none') === selectedCampaign;
     return bySource && byCampaign;
@@ -221,6 +222,48 @@ export default function UTMAnalyticsPage() {
     );
   }
 
+  // Show error state if analytics failed to load
+  if (error && !analytics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Target className="w-8 h-8 text-purple-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">UTM Analytics</h1>
+                  <p className="text-sm text-gray-600">Track marketing campaigns and traffic sources</p>
+                </div>
+              </div>
+              <Link href="/admin">
+                <Button variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Admin Home
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="border-l-4 border-l-red-600">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Analytics</h3>
+                <p className="text-gray-600 mb-4">{error}</p>
+                <Button onClick={fetchAnalytics}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -262,7 +305,7 @@ export default function UTMAnalyticsPage() {
               onChange={(e) => setSelectedSource(e.target.value)}
             >
               <option value="all">All</option>
-              {analytics?.bySource.map((s, i) => (
+              {analytics?.bySource?.map((s, i) => (
                 <option key={i} value={s.source || 'direct'}>
                   {s.source || 'direct'}
                 </option>
@@ -277,7 +320,7 @@ export default function UTMAnalyticsPage() {
               onChange={(e) => setSelectedCampaign(e.target.value)}
             >
               <option value="all">All</option>
-              {analytics?.byCampaign.map((c, i) => (
+              {analytics?.byCampaign?.map((c, i) => (
                 <option key={i} value={c.campaign || 'none'}>
                   {c.campaign || 'none'}
                 </option>
@@ -416,7 +459,7 @@ export default function UTMAnalyticsPage() {
                 <CardTitle>Traffic by Source</CardTitle>
               </CardHeader>
               <CardContent>
-                {analytics.bySource.length > 0 ? (
+                {analytics.bySource && analytics.bySource.length > 0 ? (
                   <div className="space-y-4">
                     {analytics.bySource
                       .filter((item) => selectedSource === 'all' || (item.source || 'direct') === selectedSource)
@@ -504,28 +547,36 @@ export default function UTMAnalyticsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600">Total Sessions</p>
-                      <p className="text-2xl font-bold text-gray-900">{sessionStats.totalSessions}</p>
+                      <p className="text-2xl font-bold text-gray-900">{sessionStats.totalSessions || 0}</p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600 mb-2">Top Sources</p>
                       <div className="space-y-1 text-sm text-gray-800">
-                        {sessionStats.bySource.slice(0, 5).map((x, i) => (
-                          <div key={i} className="flex justify-between">
-                            <span className="capitalize">{x.utm_source || 'direct'}</span>
-                            <span className="font-medium">{x.count}</span>
-                          </div>
-                        ))}
+                        {sessionStats.bySource && sessionStats.bySource.length > 0 ? (
+                          sessionStats.bySource.slice(0, 5).map((x, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span className="capitalize">{x.utm_source || 'direct'}</span>
+                              <span className="font-medium">{x.count}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 text-sm">No sources yet</p>
+                        )}
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600 mb-2">Top Campaigns</p>
                       <div className="space-y-1 text-sm text-gray-800">
-                        {sessionStats.byCampaign.slice(0, 5).map((x, i) => (
-                          <div key={i} className="flex justify-between">
-                            <span>{x.utm_campaign || 'none'}</span>
-                            <span className="font-medium">{x.count}</span>
-                          </div>
-                        ))}
+                        {sessionStats.byCampaign && sessionStats.byCampaign.length > 0 ? (
+                          sessionStats.byCampaign.slice(0, 5).map((x, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span>{x.utm_campaign || 'none'}</span>
+                              <span className="font-medium">{x.count}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 text-sm">No campaigns yet</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -543,7 +594,7 @@ export default function UTMAnalyticsPage() {
                 <CardTitle>Traffic by Campaign</CardTitle>
               </CardHeader>
               <CardContent>
-                {analytics.byCampaign.length > 0 ? (
+                {analytics.byCampaign && analytics.byCampaign.length > 0 ? (
                   <div className="space-y-4">
                     {analytics.byCampaign
                       .filter((item) => selectedCampaign === 'all' || (item.campaign || 'none') === selectedCampaign)
@@ -582,7 +633,7 @@ export default function UTMAnalyticsPage() {
                 <CardTitle>Traffic by Medium</CardTitle>
               </CardHeader>
               <CardContent>
-                {analytics.byMedium.length > 0 ? (
+                {analytics.byMedium && analytics.byMedium.length > 0 ? (
                   <div className="space-y-4">
                     {analytics.byMedium.map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">

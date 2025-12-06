@@ -123,38 +123,6 @@ export default function AdminDashboardPage() {
       color: "from-purple-500 to-violet-600",
       stats: "ProConnectSA tracking"
     },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "User Management",
-      description: "Manage users, subscriptions, and access",
-      href: "/admin/users",
-      color: "from-blue-500 to-cyan-600",
-      stats: "Coming soon"
-    },
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "Document Analytics",
-      description: "View document generation statistics",
-      href: "/admin/documents",
-      color: "from-orange-500 to-red-600",
-      stats: "Coming soon"
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Revenue Analytics",
-      description: "Track revenue, MRR, and growth metrics",
-      href: "/admin/revenue",
-      color: "from-pink-500 to-rose-600",
-      stats: "Coming soon"
-    },
-    {
-      icon: <Activity className="w-8 h-8" />,
-      title: "System Health",
-      description: "Monitor system performance and uptime",
-      href: "/admin/system",
-      color: "from-teal-500 to-green-600",
-      stats: "Coming soon"
-    },
   ];
 
   return (
