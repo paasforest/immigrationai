@@ -23,10 +23,10 @@ export default function GermanyVisaEligibilityClient() {
             Germany Visa Eligibility Check
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Check your Germany visa eligibility for EU Blue Card, Job Seeker Visa, Student Visa, and more.
+            Free eligibility check — no sign-up required. Check your Germany visa eligibility for EU Blue Card, Job Seeker, Student, and more.
           </p>
           <Link href="/" className="bg-gradient-to-r from-yellow-600 to-yellow-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-            <span>Check Eligibility</span>
+            <span>Check Eligibility (Free)</span>
           </Link>
         </div>
       </section>

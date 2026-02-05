@@ -77,7 +77,7 @@ export default function CanadaVisaEligibilityPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-red-100 text-red-700 px-4 py-2 rounded-full mb-6">
             <MapPin className="w-4 h-4" />
-            <span className="text-sm font-medium">Canada Visa Eligibility Check</span>
+            <span className="text-sm font-medium">Canada Visa Eligibility Check · Free</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             Check Your Canada Visa Eligibility
@@ -86,7 +86,7 @@ export default function CanadaVisaEligibilityPage() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your Canada visa eligibility. Check requirements for Express Entry PR, Study Permit, Work Permit, and Spousal Sponsorship.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Express Entry PR, Study Permit, Work Permit, and Spousal Sponsorship.
           </p>
         </div>
       </section>
@@ -94,7 +94,7 @@ export default function CanadaVisaEligibilityPage() {
       <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto grid gap-8 lg:grid-cols-2">
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Eligibility Check</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Eligibility Check (Free)</h2>
             
             {error && (
               <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">

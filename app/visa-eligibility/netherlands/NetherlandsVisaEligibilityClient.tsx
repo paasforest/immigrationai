@@ -30,7 +30,7 @@ export default function NetherlandsVisaEligibilityClient() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your Netherlands visa eligibility. Check requirements for Highly Skilled Migrant Permit (HSM), Student Visa, Partner Visa, and EU Blue Card.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for HSM, Student, Partner, and EU Blue Card.
           </p>
         </div>
       </section>
@@ -59,7 +59,7 @@ export default function NetherlandsVisaEligibilityClient() {
           </div>
           <div className="text-center">
             <Link href="/" className="bg-gradient-to-r from-orange-600 to-orange-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-              <span>Check Netherlands Visa Eligibility</span>
+              <span>Check Netherlands Visa Eligibility (Free)</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

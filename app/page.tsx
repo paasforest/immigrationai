@@ -393,7 +393,7 @@ export default function ImmigrationAILanding() {
     {
       icon: <Target className="w-6 h-6" />,
       title: "Visa Eligibility Checker",
-      description: "Check your visa eligibility in minutes with AI-powered assessment based on actual embassy requirements."
+      description: "Check your visa eligibility for free in minutes with AI-powered assessment based on actual embassy requirements."
     },
     {
       icon: <Compass className="w-6 h-6" />,
@@ -442,7 +442,7 @@ export default function ImmigrationAILanding() {
     {
       step: 1,
       title: "Check Your Eligibility",
-      description: "Use our AI-powered eligibility checker to see if you qualify for your target visa route.",
+      description: "Use our free AI-powered eligibility checker to see if you qualify for your target visa route. No sign-up required.",
       icon: <Target className="w-8 h-8" />
     },
     {
@@ -776,13 +776,13 @@ export default function ImmigrationAILanding() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-sm uppercase tracking-wider text-blue-600 font-semibold">
-                  Africa-focused screening
+                  Africa-focused screening · Free
                 </p>
                 <h3 className="text-3xl font-bold text-slate-900 mt-2">
                   Check your visa eligibility
                 </h3>
                 <p className="text-slate-600 mt-1">
-                  Real embassy-style questions for UK, USA, Canada, Germany, Ireland, Schengen & UAE routes.
+                  Free — no sign-up required. Real embassy-style questions for UK, USA, Canada, Germany, Ireland, Schengen & UAE routes.
                 </p>
               </div>
               <Compass className="w-10 h-10 text-blue-500 hidden md:block" />
@@ -1056,7 +1056,7 @@ export default function ImmigrationAILanding() {
                 )}
               </button>
               <p className="text-xs text-slate-500 text-center">
-                We reference actual embassy criteria and never share your data.
+                Free — no account needed. We reference actual embassy criteria and never share your data.
               </p>
             </form>
           </div>

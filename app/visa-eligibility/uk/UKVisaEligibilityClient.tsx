@@ -84,7 +84,7 @@ export default function UKVisaEligibilityPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full mb-6">
             <MapPin className="w-4 h-4" />
-            <span className="text-sm font-medium">UK Visa Eligibility Check</span>
+            <span className="text-sm font-medium">UK Visa Eligibility Check · Free</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             Check Your UK Visa Eligibility
@@ -93,7 +93,7 @@ export default function UKVisaEligibilityPage() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your UK visa eligibility. Check requirements for Skilled Worker, Student, Partner, and other UK visa routes.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Skilled Worker, Student, Partner, and other UK visa routes.
           </p>
         </div>
       </section>
@@ -103,7 +103,7 @@ export default function UKVisaEligibilityPage() {
         <div className="max-w-7xl mx-auto grid gap-8 lg:grid-cols-2">
           {/* Form */}
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Eligibility Check</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Eligibility Check (Free)</h2>
             
             {error && (
               <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">

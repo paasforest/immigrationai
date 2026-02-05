@@ -30,7 +30,7 @@ export default function SpainVisaEligibilityClient() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your Spain visa eligibility. Check requirements for Golden Visa, Non-Lucrative Visa, Student Visa, Work Visa, and Entrepreneur Visa.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Golden Visa, Non-Lucrative, Student, Work, and Entrepreneur visas.
           </p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export default function SpainVisaEligibilityClient() {
           </div>
           <div className="text-center">
             <Link href="/" className="bg-gradient-to-r from-red-600 to-red-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-              <span>Check Spain Visa Eligibility</span>
+              <span>Check Spain Visa Eligibility (Free)</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

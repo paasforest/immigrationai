@@ -30,7 +30,7 @@ export default function SingaporeVisaEligibilityClient() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your Singapore visa eligibility. Check requirements for Employment Pass, S Pass, Student Pass, Dependent Pass, and Entrepreneur Pass.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Employment Pass, S Pass, Student Pass, Dependent Pass, and EntrePass.
           </p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export default function SingaporeVisaEligibilityClient() {
           </div>
           <div className="text-center">
             <Link href="/" className="bg-gradient-to-r from-red-600 to-red-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-              <span>Check Singapore Visa Eligibility</span>
+              <span>Check Singapore Visa Eligibility (Free)</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

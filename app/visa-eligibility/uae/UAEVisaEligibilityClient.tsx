@@ -30,7 +30,7 @@ export default function UAEVisaEligibilityClient() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your UAE visa eligibility. Check requirements for Employment Residence, Golden Visa, Family Residence, Investor Visa, and Student Visa.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Employment, Golden Visa, Family, Investor, and Student visas.
           </p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export default function UAEVisaEligibilityClient() {
           </div>
           <div className="text-center">
             <Link href="/" className="bg-gradient-to-r from-green-600 to-green-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-              <span>Check UAE Visa Eligibility</span>
+              <span>Check UAE Visa Eligibility (Free)</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

@@ -30,7 +30,7 @@ export default function PortugalVisaEligibilityClient() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get instant AI-powered feedback on your Portugal visa eligibility. Check requirements for Golden Visa, D7 Passive Income Visa, D2 Entrepreneur Visa, Student Visa, and Work Visa.
+            Free eligibility check — no sign-up required. Get instant AI-powered feedback for Golden Visa, D7, D2, Student, and Work visas.
           </p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export default function PortugalVisaEligibilityClient() {
           </div>
           <div className="text-center">
             <Link href="/" className="bg-gradient-to-r from-green-600 to-green-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
-              <span>Check Portugal Visa Eligibility</span>
+              <span>Check Portugal Visa Eligibility (Free)</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
