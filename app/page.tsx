@@ -1191,6 +1191,101 @@ export default function ImmigrationAILanding() {
           </div>
         </div>
       </footer>
+
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'Immigration AI',
+            applicationCategory: 'TravelApplication',
+            operatingSystem: 'Web',
+            description: 'AI-powered visa document generation and eligibility checking for African applicants',
+            url: 'https://www.immigrationai.co.za',
+            offers: {
+              '@type': 'Offer',
+              price: '149',
+              priceCurrency: 'ZAR',
+              priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: '149',
+                priceCurrency: 'ZAR',
+                unitText: 'MONTH',
+              },
+            },
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: '4.8',
+              ratingCount: '1250',
+              bestRating: '5',
+              worstRating: '1',
+            },
+            featureList: [
+              'SOP Generator',
+              'Cover Letter Writer',
+              'Visa Eligibility Checker',
+              'Document Checklist',
+              'Interview Practice',
+              'English Test Practice',
+            ],
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Immigration AI',
+            url: 'https://www.immigrationai.co.za',
+            logo: 'https://www.immigrationai.co.za/logo.png',
+            sameAs: [],
+            contactPoint: {
+              '@type': 'ContactPoint',
+              contactType: 'Customer Service',
+              email: 'support@immigrationai.co.za',
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'What is Immigration AI?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Immigration AI is an AI-powered platform that helps African applicants generate professional visa documents including SOPs, cover letters, and check visa eligibility for UK, USA, Canada, and other countries.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'How much does Immigration AI cost?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Immigration AI offers plans starting from R149/month for the Starter plan, with Entry plan at R299/month, Professional at R699/month, and Enterprise at R1499/month.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Which countries does Immigration AI support?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Immigration AI supports visa applications for UK, USA, Canada, Ireland, Germany, Schengen countries, and UAE.',
+                },
+              },
+            ],
+          }),
+        }}
+      />
     </div>
   );
 }

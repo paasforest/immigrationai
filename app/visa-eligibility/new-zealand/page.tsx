@@ -1,0 +1,96 @@
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { Globe, MapPin, ArrowRight, CheckCircle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'New Zealand Visa Eligibility Check for Africans | Immigration AI',
+  description: 'Check your New Zealand visa eligibility in minutes. AI-powered screening for Skilled Migrant Category (SMC), Student Visa, Partner Visa, and Work Visa. Get instant feedback.',
+  keywords: 'New Zealand visa eligibility, NZ skilled migrant, NZ SMC visa, New Zealand student visa, NZ visa for Africans',
+  openGraph: {
+    title: 'New Zealand Visa Eligibility Check for Africans | Immigration AI',
+    description: 'Check your New Zealand visa eligibility in minutes. AI-powered screening for Skilled Migrant Category, Student, and Work visas.',
+    type: 'website',
+    url: 'https://www.immigrationai.co.za/visa-eligibility/new-zealand',
+  },
+  alternates: {
+    canonical: 'https://www.immigrationai.co.za/visa-eligibility/new-zealand',
+  },
+};
+
+export default function NewZealandVisaEligibility() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-green-100">
+      <header className="bg-white shadow-sm">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link href="/" className="flex items-center space-x-2">
+            <Globe className="w-8 h-8 text-blue-600" />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Immigration AI
+            </span>
+          </Link>
+        </nav>
+      </header>
+      <section className="pt-12 pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-full mb-6">
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm font-medium">New Zealand Visa Eligibility Check</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            Check Your New Zealand Visa Eligibility
+            <span className="block mt-2 bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+              Skilled Migrant Category & Student Visas
+            </span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Get instant AI-powered feedback on your New Zealand visa eligibility. Check requirements for Skilled Migrant Category (SMC), Student Visa, Partner Visa, and Work Visa.
+          </p>
+        </div>
+      </section>
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Popular New Zealand Visa Routes</h2>
+            <ul className="space-y-3">
+              <li className="flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Skilled Migrant Category (SMC)</strong> - Points-based system for skilled workers</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Student Visa</strong> - For international students</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Partner Visa</strong> - For partners of NZ citizens/residents</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Work Visa</strong> - Essential Skills, Talent, and Accredited Employer visas</span>
+              </li>
+            </ul>
+          </div>
+          <div className="text-center">
+            <Link href="/" className="bg-gradient-to-r from-green-600 to-green-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center space-x-2">
+              <span>Check New Zealand Visa Eligibility</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'New Zealand Visa Eligibility Checker',
+            applicationCategory: 'TravelApplication',
+            operatingSystem: 'Web',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'ZAR' },
+          }),
+        }}
+      />
+    </div>
+  );
+}

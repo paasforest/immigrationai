@@ -1,42 +1,8 @@
-import { Metadata } from 'next';
-import AboutPageClient from './AboutPageClient';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'About Immigration AI - AI-Powered Visa Document Assistant',
-  description: 'Learn about Immigration AI - the AI-powered platform helping African applicants succeed with UK, USA, Canada, and other visa applications through professional document generation and eligibility checking.',
-  keywords: 'about Immigration AI, visa document service, immigration assistance, AI visa tools',
-  openGraph: {
-    title: 'About Immigration AI - AI-Powered Visa Document Assistant',
-    description: 'Learn about Immigration AI - helping African applicants succeed with visa applications.',
-    type: 'website',
-    url: 'https://www.immigrationai.co.za/about',
-  },
-  alternates: {
-    canonical: 'https://www.immigrationai.co.za/about',
-  },
-};
-
-export default function AboutPage() {
-  return (
-    <>
-      <AboutPageClient />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'AboutPage',
-            mainEntity: {
-              '@type': 'Organization',
-              name: 'Immigration AI',
-              description: 'AI-powered visa document generation and eligibility checking platform for African applicants',
-            },
-          }),
-        }}
-      />
-    </>
-  );
-}
+import React from 'react';
+import Link from 'next/link';
+import { ClipboardCheck, FileText, Mic, Shield, Users, Zap, CheckCircle } from 'lucide-react';
 
 const pillars = [
   {
@@ -92,7 +58,7 @@ const solutions = [
   },
 ];
 
-export default function AboutPage() {
+export default function AboutPageClient() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-blue-50">
       <header className="border-b bg-white/70 backdrop-blur">
@@ -246,5 +212,3 @@ export default function AboutPage() {
     </div>
   );
 }
-
-
