@@ -209,6 +209,20 @@ export default function AboutPageClient() {
           </div>
         </section>
       </main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'AboutPage',
+            mainEntity: {
+              '@type': 'Organization',
+              name: 'Immigration AI',
+              description: 'AI-powered visa document generation and eligibility checking platform for African applicants',
+            },
+          }),
+        }}
+      />
     </div>
   );
 }
