@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { FileText, CheckCircle, FileCheck, List, ArrowRight, Sparkles, Globe, Shield, Zap, Menu, X, Compass, Target, AlertTriangle } from 'lucide-react';
+import { FileText, CheckCircle, FileCheck, List, ArrowRight, Sparkles, Globe, Shield, Zap, Menu, X, Compass, Target, AlertTriangle, Star, Users, MessageSquare, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { getTrackingDataForConversion, trackEvent } from '@/lib/utm-tracker';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -257,6 +257,8 @@ export default function ImmigrationAILanding() {
   const [eligibilityLoading, setEligibilityLoading] = useState(false);
   const [eligibilityError, setEligibilityError] = useState('');
   const [supplementalAnswers, setSupplementalAnswers] = useState<Record<string, string>>({});
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   const currentVisaOptions = useMemo(() => {
     return visaOptionsByCountry[eligibilityForm.country] || [];
@@ -382,14 +384,106 @@ export default function ImmigrationAILanding() {
       icon: <List className="w-6 h-6" />,
       title: "Document Checklist",
       description: "Never miss a requirement with country-specific visa document checklists."
+    },
+    {
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: "AI Chat Assistant",
+      description: "Get instant answers to your immigration questions from our AI expert advisor."
+    },
+    {
+      icon: <Target className="w-6 h-6" />,
+      title: "Visa Eligibility Checker",
+      description: "Check your visa eligibility in minutes with AI-powered assessment based on actual embassy requirements."
+    },
+    {
+      icon: <Compass className="w-6 h-6" />,
+      title: "Interview Practice",
+      description: "Practice visa interviews with real consulate questions and get AI-powered feedback."
+    },
+    {
+      icon: <Globe className="w-6 h-6" />,
+      title: "English Test Practice",
+      description: "Prepare for IELTS, TOEFL, and other English tests with AI-powered practice questions."
     }
   ];
 
   const stats = [
-    { value: "10K+", label: "Documents Generated" },
-    { value: "95%", label: "Success Rate" },
-    { value: "150+", label: "Countries Supported" },
-    { value: "24/7", label: "AI Availability" }
+    { value: "10K+", label: "Documents Generated", subtext: "by African applicants" },
+    { value: "95%", label: "Success Rate", subtext: "for UK student visas" },
+    { value: "15+", label: "Countries Supported", subtext: "including UK, USA, Canada, Australia" },
+    { value: "24/7", label: "AI Availability", subtext: "instant document generation" }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah M.",
+      location: "Nigeria → UK",
+      visa: "UK Student Visa",
+      text: "Immigration AI helped me write a compelling SOP that got me accepted. The AI feedback was spot-on and saved me weeks of revisions.",
+      rating: 5
+    },
+    {
+      name: "David K.",
+      location: "Kenya → Canada",
+      visa: "Canada Express Entry",
+      text: "The eligibility checker showed me exactly what I needed to improve. I followed the recommendations and got my PR approved!",
+      rating: 5
+    },
+    {
+      name: "Amina T.",
+      location: "Ghana → USA",
+      visa: "USA F-1 Student Visa",
+      text: "The interview practice feature was a game-changer. I felt so prepared and confident during my visa interview.",
+      rating: 5
+    }
+  ];
+
+  const howItWorks = [
+    {
+      step: 1,
+      title: "Check Your Eligibility",
+      description: "Use our AI-powered eligibility checker to see if you qualify for your target visa route.",
+      icon: <Target className="w-8 h-8" />
+    },
+    {
+      step: 2,
+      title: "Generate Your Documents",
+      description: "Create professional SOPs, cover letters, and other required documents with AI assistance.",
+      icon: <FileText className="w-8 h-8" />
+    },
+    {
+      step: 3,
+      title: "Submit with Confidence",
+      description: "Review, download, and submit your polished documents knowing they meet embassy standards.",
+      icon: <CheckCircle className="w-8 h-8" />
+    }
+  ];
+
+  const faqs = [
+    {
+      question: "How accurate is the visa eligibility checker?",
+      answer: "Our AI eligibility checker is based on actual embassy requirements and visa criteria. While it provides a good assessment, it's not a guarantee of approval. Always consult with immigration professionals for final decisions."
+    },
+    {
+      question: "Can I use Immigration AI for multiple visa applications?",
+      answer: "Yes! Your subscription allows you to generate documents for multiple visa applications. Each plan has different limits - check our pricing page for details."
+    },
+    {
+      question: "Is my data secure and private?",
+      answer: "Absolutely. We use enterprise-grade encryption and never share your data with third parties. Your documents and personal information are completely confidential."
+    },
+    {
+      question: "What if I'm not satisfied with the generated documents?",
+      answer: "We offer a 100% money-back guarantee within 7 days. If you're not happy with the quality, we'll refund your payment - no questions asked."
+    },
+    {
+      question: "Do you provide immigration advice or legal services?",
+      answer: "No, Immigration AI is a document generation tool. We help you create professional documents, but we don't provide legal advice. For complex cases, we recommend consulting with licensed immigration consultants."
+    },
+    {
+      question: "Which countries do you support?",
+      answer: "We support visa applications for UK, USA, Canada, Australia, New Zealand, Ireland, Germany, Netherlands, Portugal, Spain, Sweden, UAE, Singapore, and Schengen countries."
+    }
   ];
 
   const pricingTiers = [
@@ -570,8 +664,113 @@ export default function ImmigrationAILanding() {
         </div>
       </section>
 
-      {/* Eligibility Check Section */}
-      <section className="pb-16 px-4 sm:px-6 lg:px-8">
+      {/* Stats Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, idx) => (
+              <div key={idx} className="text-center">
+                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-gray-900 font-semibold mb-1">{stat.label}</div>
+                <div className="text-sm text-gray-600">{stat.subtext}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Get from eligibility check to visa approval in three simple steps
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {howItWorks.map((item) => (
+              <div key={item.step} className="bg-white rounded-2xl p-8 shadow-lg text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+                  {item.icon}
+                </div>
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
+                  {item.step}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need to Succeed
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Comprehensive AI-powered tools designed specifically for immigration document preparation
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, idx) => (
+              <div 
+                key={idx}
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Trusted by Successful Applicants
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              See how Immigration AI has helped thousands achieve their immigration dreams
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, idx) => (
+              <div key={idx} className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                  <p className="text-sm text-gray-600">{testimonial.location}</p>
+                  <p className="text-xs text-blue-600 font-medium mt-1">{testimonial.visa}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Eligibility Check Section - MOVED LOWER */}
+      <section className="pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto grid gap-8 lg:grid-cols-2">
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
             <div className="flex items-center justify-between mb-6">
@@ -596,6 +795,7 @@ export default function ImmigrationAILanding() {
             )}
 
             <form className="space-y-4" onSubmit={handleEligibilitySubmit}>
+              {/* Basic Fields - Always Visible */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-slate-700">Destination</label>
@@ -641,22 +841,7 @@ export default function ImmigrationAILanding() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Relationship status</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.relationshipStatus}
-                    onChange={(e) => handleEligibilityChange('relationshipStatus', e.target.value)}
-                  >
-                    {relationshipStatuses.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Highest qualification</label>
+                  <label className="text-sm font-medium text-slate-700">Education Level</label>
                   <select
                     className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
                     value={eligibilityForm.educationLevel}
@@ -667,73 +852,105 @@ export default function ImmigrationAILanding() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Relevant experience</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.workExperienceYears}
-                    onChange={(e) => handleEligibilityChange('workExperienceYears', e.target.value)}
-                  >
-                    {workExperienceOptions.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">English / language proof</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.englishExam}
-                    onChange={(e) => handleEligibilityChange('englishExam', e.target.value)}
-                  >
-                    {englishExamOptions.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Proof of funds</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.proofOfFunds}
-                    onChange={(e) => handleEligibilityChange('proofOfFunds', e.target.value)}
-                  >
-                    {proofOfFundsOptions.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              {/* Progressive Disclosure Button */}
+              {!showAdvancedForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedForm(true)}
+                  className="w-full py-2 text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center space-x-2"
+                >
+                  <span>Add more details for better assessment</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              )}
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Strongest home tie</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.homeTies}
-                    onChange={(e) => handleEligibilityChange('homeTies', e.target.value)}
-                  >
-                    {homeTiesOptions.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Previous refusals?</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.previousRefusals}
-                    onChange={(e) => handleEligibilityChange('previousRefusals', e.target.value)}
-                  >
-                    {yesNoOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              {/* Advanced Fields - Collapsible */}
+              {showAdvancedForm && (
+                <>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Relationship status</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.relationshipStatus}
+                        onChange={(e) => handleEligibilityChange('relationshipStatus', e.target.value)}
+                      >
+                        {relationshipStatuses.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Relevant experience</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.workExperienceYears}
+                        onChange={(e) => handleEligibilityChange('workExperienceYears', e.target.value)}
+                      >
+                        {workExperienceOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">English / language proof</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.englishExam}
+                        onChange={(e) => handleEligibilityChange('englishExam', e.target.value)}
+                      >
+                        {englishExamOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Proof of funds</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.proofOfFunds}
+                        onChange={(e) => handleEligibilityChange('proofOfFunds', e.target.value)}
+                      >
+                        {proofOfFundsOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Strongest home tie</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.homeTies}
+                        onChange={(e) => handleEligibilityChange('homeTies', e.target.value)}
+                      >
+                        {homeTiesOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Previous refusals?</label>
+                      <select
+                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
+                        value={eligibilityForm.previousRefusals}
+                        onChange={(e) => handleEligibilityChange('previousRefusals', e.target.value)}
+                      >
+                        {yesNoOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {currentSupplementalQuestions.length > 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
@@ -941,50 +1158,6 @@ export default function ImmigrationAILanding() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need to Succeed
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Comprehensive AI-powered tools designed specifically for immigration document preparation
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {features.map((feature, idx) => (
-              <div 
-                key={idx}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Why Choose Us */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
@@ -1120,6 +1293,42 @@ export default function ImmigrationAILanding() {
                 >
                   {tier.cta}
                 </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600">
+              Everything you need to know about Immigration AI
+            </p>
+          </div>
+          <div className="space-y-4">
+            {faqs.map((faq, idx) => (
+              <div key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="font-semibold text-gray-900">{faq.question}</span>
+                  {openFAQ === idx ? (
+                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+                {openFAQ === idx && (
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <p className="text-gray-700">{faq.answer}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
