@@ -34,6 +34,15 @@ export const chat = async (req: Request, res: Response) => {
       return sendError(res, 'validation_error', 'Message is required', 400);
     }
 
+    // Check feature access if user is authenticated
+    const authReq = req as AuthRequest;
+    if (authReq.user?.userId) {
+      const accessCheck = await canAccessFeature(authReq.user.userId, 'ai_chat');
+      if (!accessCheck.allowed) {
+        return sendError(res, 'LIMIT_EXCEEDED', accessCheck.reason || 'Feature not available in your plan', 403);
+      }
+    }
+
     const response = await chatWithAI(message, history || []);
 
     return sendSuccess(res, { message: response }, 'Chat response generated');

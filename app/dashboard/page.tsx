@@ -40,6 +40,26 @@ export default function DashboardPage() {
   const getFeatureAccess = (feature: any) => {
     const userPlan = user?.subscriptionPlan || 'starter';
     
+    // Marketing Test Plan - Only show 5 core features
+    if (userPlan === 'marketing_test') {
+      const marketingTestFeatures = [
+        'SOP Generator',
+        'SOP Reviewer',
+        'Visa Eligibility',
+        'AI Chat Assistant',
+        'Document Checklist'
+      ];
+      
+      if (marketingTestFeatures.includes(feature.title)) {
+        return { accessible: true, reason: null };
+      } else {
+        return { 
+          accessible: false, 
+          reason: 'This feature is not available during the marketing test period. Coming soon!' 
+        };
+      }
+    }
+    
     // Define plan hierarchy
     const planLevels = {
       'starter': 1,

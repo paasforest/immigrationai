@@ -13,6 +13,15 @@ export interface TierLimits {
 }
 
 export const TIER_LIMITS: Record<string, TierLimits> = {
+  // Marketing Test Plan - Limited features for 1-month testing period
+  marketing_test: {
+    visaChecksPerMonth: -1, // unlimited for testing
+    documentGenerationsPerMonth: -1, // unlimited for testing
+    documentTypesAllowed: ['sop', 'review', 'checklist'],
+    interviewSessionsPerMonth: 0,
+    englishTestSessionsPerMonth: 0,
+    featuresAllowed: ['sop_generation', 'sop_reviewer', 'visa_eligibility_check', 'ai_chat', 'checklist', 'pdf_export'],
+  },
   starter: {
     visaChecksPerMonth: 3,
     documentGenerationsPerMonth: 3,
