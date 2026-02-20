@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Zap, ArrowRight, Star, Calendar, DollarSign, Building, CreditCard, Shield } from 'lucide-react';
+import { Check, Crown, Zap, ArrowRight, Star, Calendar, DollarSign, Building, CreditCard, Shield, Users, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
