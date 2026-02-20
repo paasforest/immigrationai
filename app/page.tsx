@@ -1431,6 +1431,11 @@ export default function ImmigrationAILanding() {
               bestRating: '5',
               worstRating: '1',
             },
+            applicationSubCategory: 'Travel & Immigration',
+            operatingSystem: 'Web Browser',
+            browserRequirements: 'Requires JavaScript. Requires HTML5.',
+            softwareVersion: '2.0',
+            releaseNotes: 'AI-powered visa document generation and eligibility checking',
             featureList: [
               'SOP Generator',
               'Cover Letter Writer',
@@ -1452,10 +1457,28 @@ export default function ImmigrationAILanding() {
             url: 'https://www.immigrationai.co.za',
             logo: 'https://www.immigrationai.co.za/logo.png',
             sameAs: [],
-            contactPoint: {
-              '@type': 'ContactPoint',
-              contactType: 'Customer Service',
-              email: 'support@immigrationai.co.za',
+            contactPoint: [
+              {
+                '@type': 'ContactPoint',
+                contactType: 'Customer Service',
+                email: 'support@immigrationai.co.za',
+                availableLanguage: ['English'],
+              },
+              {
+                '@type': 'ContactPoint',
+                contactType: 'Technical Support',
+                email: 'support@immigrationai.co.za',
+                availableLanguage: ['English'],
+              },
+            ],
+            address: {
+              '@type': 'PostalAddress',
+              addressCountry: 'ZA',
+            },
+            foundingDate: '2024',
+            numberOfEmployees: {
+              '@type': 'QuantitativeValue',
+              value: '10-50',
             },
           }),
         }}
