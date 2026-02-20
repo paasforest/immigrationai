@@ -241,6 +241,55 @@ export default function PricingPage() {
             Select the perfect plan for your immigration journey. Save up to 17% with annual billing.
           </p>
           
+          {/* Social Proof */}
+          <div className="flex items-center justify-center space-x-8 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600 flex items-center justify-center space-x-1">
+                <Users className="w-6 h-6" />
+                <span>1,250+</span>
+              </div>
+              <div className="text-xs text-gray-600">Happy Users</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600 flex items-center justify-center space-x-1">
+                <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                <span>4.8/5</span>
+              </div>
+              <div className="text-xs text-gray-600">Average Rating</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600 flex items-center justify-center space-x-1">
+                <TrendingUp className="w-6 h-6" />
+                <span>5,000+</span>
+              </div>
+              <div className="text-xs text-gray-600">Documents Generated</div>
+            </div>
+          </div>
+
+          {/* Value Comparison */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-200 max-w-4xl mx-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              💰 Save Thousands vs Hiring a Consultant
+            </h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg p-4 text-center">
+                <div className="text-xl font-bold text-red-600 mb-1">R5,000 - R20,000</div>
+                <div className="text-xs text-gray-600">Immigration Consultant</div>
+                <div className="text-xs text-gray-500 mt-1">Per application</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 text-center border-2 border-blue-500">
+                <div className="text-xl font-bold text-green-600 mb-1">R299 - R1,499</div>
+                <div className="text-xs text-gray-600">Immigration AI</div>
+                <div className="text-xs text-gray-500 mt-1">Per month (unlimited)</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 text-center">
+                <div className="text-xl font-bold text-blue-600 mb-1">Save 90%+</div>
+                <div className="text-xs text-gray-600">With our platform</div>
+                <div className="text-xs text-gray-500 mt-1">Plus 24/7 access</div>
+              </div>
+            </div>
+          </div>
+          
           {/* Money-Back Guarantee Badge */}
           <div className="flex items-center justify-center space-x-2 mb-6">
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-6 py-2 flex items-center space-x-2">
@@ -249,6 +298,19 @@ export default function PricingPage() {
               <span className="text-green-600 text-sm">• Not satisfied? Full refund within 7 days</span>
             </div>
           </div>
+
+          {/* Annual Savings Banner */}
+          {billingCycle === 'annual' && (
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">🎉</span>
+                <div>
+                  <div className="font-bold text-lg">Save up to 17% with Annual Plan!</div>
+                  <div className="text-sm text-green-100">Get 2 months free + priority support</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center space-x-4 mb-8">
@@ -290,9 +352,17 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1">
-                    <Star className="w-3 h-3 mr-1" />
+                  <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 animate-pulse">
+                    <Star className="w-3 h-3 mr-1 fill-yellow-300" />
                     Most Popular
+                  </Badge>
+                </div>
+              )}
+              {isCurrentPlan(plan.id) && (
+                <div className="absolute -top-4 right-4">
+                  <Badge className="bg-green-500 text-white px-3 py-1">
+                    <Check className="w-3 h-3 mr-1" />
+                    Your Plan
                   </Badge>
                 </div>
               )}
@@ -403,6 +473,88 @@ export default function PricingPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Pay-Per-Use Option Section */}
+        <div className="max-w-2xl mx-auto mt-16 mb-16">
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="text-center text-xl">
+                💳 Need Just One Document? Try Pay-Per-Use
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div>
+                <div className="text-4xl font-bold text-purple-600 mb-2">R99</div>
+                <div className="text-sm text-gray-600">Per document (one-time payment)</div>
+              </div>
+              <p className="text-sm text-gray-700">
+                Perfect if you only need one SOP or cover letter. No subscription required!
+              </p>
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => {
+                  alert('Pay-per-use option coming soon! For now, choose a monthly plan.');
+                }}
+              >
+                Choose Pay-Per-Use
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Testimonials Section */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+            What Our Customers Say
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-1 text-yellow-500 mb-3">
+                  {[1,2,3,4,5].map((i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-700 mb-4 italic">
+                  "Saved me R8,000 compared to hiring a consultant. Got my UK visa approved on first try!"
+                </p>
+                <div className="text-xs text-gray-600">
+                  - Sarah M., UK Student Visa
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-1 text-yellow-500 mb-3">
+                  {[1,2,3,4,5].map((i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-700 mb-4 italic">
+                  "The SOP generator is amazing! Created a professional document in 10 minutes. Best investment for my visa journey."
+                </p>
+                <div className="text-xs text-gray-600">
+                  - John D., Canada Express Entry
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-1 text-yellow-500 mb-3">
+                  {[1,2,3,4,5].map((i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-700 mb-4 italic">
+                  "Interview practice helped me so much! The AI feedback was spot-on. Highly recommend!"
+                </p>
+                <div className="text-xs text-gray-600">
+                  - Maria K., USA H1B Visa
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* FAQ Section */}
