@@ -1430,11 +1430,7 @@ export default function ImmigrationAILanding() {
               bestRating: '5',
               worstRating: '1',
             },
-            applicationSubCategory: 'Travel & Immigration',
             operatingSystem: 'Web Browser',
-            browserRequirements: 'Requires JavaScript. Requires HTML5.',
-            softwareVersion: '2.0',
-            releaseNotes: 'AI-powered visa document generation and eligibility checking',
             featureList: [
               'SOP Generator',
               'Cover Letter Writer',
