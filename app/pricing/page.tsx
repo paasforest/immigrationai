@@ -16,12 +16,27 @@ export default function PricingPage() {
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
-  // Redirect to login if user is not authenticated
+  // Check if it's a crawler (for SEO - allow Googlebot to index)
+  const [isCrawler, setIsCrawler] = React.useState(false);
+  
   React.useEffect(() => {
-    if (!loading && !user) {
+    if (typeof window !== 'undefined') {
+      const ua = navigator.userAgent;
+      const crawlerPatterns = [
+        'Googlebot', 'bingbot', 'Slurp', 'DuckDuckBot', 
+        'facebookexternalhit', 'Twitterbot', 'LinkedInBot',
+        'WhatsApp', 'Applebot', 'Baiduspider', 'YandexBot'
+      ];
+      setIsCrawler(crawlerPatterns.some(pattern => ua.includes(pattern)));
+    }
+  }, []);
+
+  // Redirect to login if user is not authenticated (but allow crawlers for SEO)
+  React.useEffect(() => {
+    if (!isCrawler && !loading && !user) {
       window.location.href = '/auth/login';
     }
-  }, [user, loading]);
+  }, [user, loading, isCrawler]);
 
   // Read plan parameter from URL and pre-select plan
   React.useEffect(() => {
@@ -214,10 +229,24 @@ export default function PricingPage() {
     );
   }
 
-  // Don't render if user is not authenticated (will redirect)
-  if (!user) {
-    return null;
+  // Show pricing page to crawlers even without auth, otherwise redirect logged-out users
+  if (!isCrawler && !user && !loading) {
+    // Will redirect via useEffect above
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
+
+  // For crawlers or authenticated users, show the pricing page
+  const canViewPricing = isCrawler || user;
+
+  // For crawlers, show the pricing page content even without auth
+  const showContent = isCrawler || user;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -458,6 +487,18 @@ export default function PricingPage() {
                       
                       <div className="text-center text-xs text-gray-500">
                         Direct bank transfer (Zero fees)
+                      </div>
+                    </div>
+                  ) : !user ? (
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => window.location.href = '/auth/signup'}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        Sign Up to Get Started
+                      </Button>
+                      <div className="text-center text-xs text-gray-500">
+                        Create account to access plans
                       </div>
                     </div>
                   ) : (
