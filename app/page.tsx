@@ -1410,7 +1410,6 @@ export default function ImmigrationAILanding() {
             '@type': 'SoftwareApplication',
             name: 'Immigration AI',
             applicationCategory: 'TravelApplication',
-            operatingSystem: 'Web',
             description: 'AI-powered visa document generation and eligibility checking for African applicants',
             url: 'https://www.immigrationai.co.za',
             offers: {
