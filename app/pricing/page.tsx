@@ -122,70 +122,68 @@ export default function PricingPage() {
     {
       name: 'Starter',
       id: 'starter',
-      monthlyPrice: 149,
-      annualPrice: 1490,
-      description: 'Perfect for individuals getting started',
+      monthlyPrice: 499,
+      annualPrice: 4990,
+      description: 'Perfect for solo practitioners',
       features: [
-        '3 document generations/month',
-        'Basic SOP templates',
-        'PDF export',
+        'Up to 10 active cases',
+        'Basic case management',
+        'Client portal access',
+        'Document uploads',
+        'Task management',
         'Email support'
       ],
       popular: false,
     },
     {
-      name: 'Entry',
-      id: 'entry',
-      monthlyPrice: 299,
-      annualPrice: 2990,
-      description: 'For serious applicants',
+      name: 'Professional',
+      id: 'professional',
+      monthlyPrice: 999,
+      annualPrice: 9990,
+      description: 'For small to medium agencies',
       features: [
-        '5 document generations/month',
-        '10 visa eligibility checks/month',
-        'Cover letter generation',
-        'SOP reviewer',
-        'Checklist generator',
-        'AI chat assistant',
-        'IELTS practice (5 sessions)',
-        'Interview practice (5 sessions)',
+        'Unlimited cases',
+        'Team collaboration (up to 5 members)',
+        'Automated lead routing',
+        'Client messaging system',
+        'Analytics dashboard',
+        'Document checklists',
+        'Deadline tracking',
         'Priority support'
       ],
       popular: true,
     },
     {
-      name: 'Professional',
-      id: 'professional',
-      monthlyPrice: 699,
-      annualPrice: 6990,
-      description: 'For agents and consultants',
+      name: 'Agency',
+      id: 'agency',
+      monthlyPrice: 1999,
+      annualPrice: 19990,
+      description: 'For growing agencies',
       features: [
-        'Unlimited everything (docs, visa checks, AI chat)',
-        'All 9 premium document types',
-        'Email & support letter templates',
-        'Travel history & financial letters',
-        'Relationship proof kit',
-        '500+ interview questions database',
-        'Mock interview coach with AI feedback',
-        'All English tests (IELTS, TOEFL, CELPIP)',
-        'Advanced analytics dashboard',
-        'Custom templates',
-        'Priority support'
+        'Everything in Professional',
+        'Unlimited team members',
+        'Advanced analytics & reporting',
+        'Custom branding',
+        'API access',
+        'Bulk case operations',
+        'White-label client portal',
+        'Dedicated support'
       ],
       popular: false,
     },
     {
       name: 'Enterprise',
       id: 'enterprise',
-      monthlyPrice: 1499,
-      annualPrice: 14990,
-      description: 'For large agencies',
+      monthlyPrice: 0,
+      annualPrice: 0,
+      description: 'For large organizations',
       features: [
-        'Everything in Professional',
-        'Team management',
-        'Bulk processing',
-        'Advanced analytics',
-        'API access',
-        'Dedicated support'
+        'Everything in Agency',
+        'Custom integrations',
+        'SLA guarantee (99.9% uptime)',
+        'Dedicated account manager',
+        'On-premise deployment options',
+        'Custom training & onboarding'
       ],
       popular: false,
     }
@@ -211,7 +209,7 @@ export default function PricingPage() {
 
   const isCurrentPlan = (planId: string) => user?.subscriptionPlan === planId;
   const canUpgrade = (planId: string) => {
-    const planOrder = ['starter', 'entry', 'professional', 'enterprise'];
+    const planOrder = ['starter', 'professional', 'agency', 'enterprise'];
     const currentIndex = planOrder.indexOf(user?.subscriptionPlan || 'starter');
     const targetIndex = planOrder.indexOf(planId);
     return targetIndex > currentIndex;
@@ -419,14 +417,16 @@ export default function PricingPage() {
                 </CardTitle>
                 <div className="mb-2">
                   <span className="text-4xl font-bold text-gray-900">
-                    R{getCurrentPrice(plan).toLocaleString()}
+                    {plan.id === 'enterprise' ? 'Custom' : `R${getCurrentPrice(plan).toLocaleString()}`}
                   </span>
-                  <span className="text-gray-600 ml-2">
-                    /{billingCycle === 'monthly' ? 'month' : 'year'}
-                  </span>
+                  {plan.id !== 'enterprise' && (
+                    <span className="text-gray-600 ml-2">
+                      /{billingCycle === 'monthly' ? 'month' : 'year'}
+                    </span>
+                  )}
                 </div>
                 
-                {billingCycle === 'annual' && getSavings(plan) > 0 && (
+                {billingCycle === 'annual' && plan.id !== 'enterprise' && getSavings(plan) > 0 && (
                   <div className="text-sm text-green-600 font-medium">
                     Save R{getSavings(plan).toLocaleString()} ({getSavingsPercentage(plan)}% off)
                   </div>

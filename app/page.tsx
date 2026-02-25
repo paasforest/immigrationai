@@ -1,270 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, CheckCircle, FileCheck, List, ArrowRight, Sparkles, Globe, Shield, Zap, Menu, X, Compass, Target, AlertTriangle, Star, Users, MessageSquare, ChevronDown, ChevronUp, Play } from 'lucide-react';
-import { getTrackingDataForConversion, trackEvent } from '@/lib/utm-tracker';
+import { 
+  Briefcase, Users, FileCheck, MessageSquare, Bell, 
+  TrendingUp, Shield, Zap, Globe, ArrowRight, 
+  Menu, X, CheckCircle, Building, Target, 
+  Clock, BarChart3, Lock, Cloud, Smartphone, Sparkles
+} from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
-const countryOptions = [
-  { value: 'uk', label: 'United Kingdom' },
-  { value: 'usa', label: 'United States' },
-  { value: 'canada', label: 'Canada' },
-  { value: 'germany', label: 'Germany' },
-  { value: 'ireland', label: 'Ireland' },
-  { value: 'eu_schengen', label: 'Schengen (France, Netherlands, Italy)' },
-  { value: 'uae', label: 'United Arab Emirates' },
-];
-
-const visaOptionsByCountry: Record<string, { value: string; label: string }[]> = {
-  uk: [
-    { value: 'uk_skilled_worker', label: 'Skilled Worker / Health & Care Worker' },
-    { value: 'uk_student', label: 'Student / Graduate Route' },
-    { value: 'uk_partner', label: 'Partner / Spouse / Fiancé(e)' },
-    { value: 'uk_family_reunion', label: 'Family Reunion / Dependant' },
-    { value: 'uk_business_visit', label: 'Business / Standard Visitor' },
-    { value: 'uk_startup_innovator', label: 'Start-up / Innovator / Global Talent' },
-    { value: 'uk_other', label: 'Other UK visa (specify in notes)' },
-  ],
-  usa: [
-    { value: 'usa_b1b2', label: 'B1/B2 Visitor' },
-    { value: 'usa_f1', label: 'F-1 Student' },
-    { value: 'usa_h1b', label: 'H-1B Specialty Occupation' },
-    { value: 'usa_k1', label: 'K-1/K3 Fiancé(e) / Spousal' },
-    { value: 'usa_family_reunification', label: 'Family-Sponsored Green Card' },
-    { value: 'usa_employment_based', label: 'Employment-Based Immigrant (EB) Visas' },
-    { value: 'usa_other', label: 'Other US visa (specify in notes)' },
-  ],
-  canada: [
-    { value: 'canada_study', label: 'Study Permit' },
-    { value: 'canada_express_entry', label: 'Express Entry / PR' },
-    { value: 'canada_work_permit', label: 'Employer-Specific Work Permit' },
-    { value: 'canada_spousal_sponsorship', label: 'Spousal / Common-law Sponsorship' },
-    { value: 'canada_visitor', label: 'Visitor / TRV' },
-    { value: 'canada_other', label: 'Other Canadian visa (specify in notes)' },
-  ],
-  germany: [
-    { value: 'germany_blue_card', label: 'EU Blue Card' },
-    { value: 'germany_job_seeker', label: 'Job Seeker' },
-    { value: 'germany_student', label: 'Student' },
-    { value: 'germany_family_reunion', label: 'Family Reunion / Spousal' },
-    { value: 'germany_business_visit', label: 'Business / Schengen C' },
-    { value: 'germany_other', label: 'Other German visa (specify in notes)' },
-  ],
-  ireland: [
-    { value: 'ireland_critical_skills', label: 'Critical Skills Employment Permit' },
-    { value: 'ireland_general_employment', label: 'General Employment Permit' },
-    { value: 'ireland_student', label: 'Student / Graduate' },
-    { value: 'ireland_spouse_family', label: 'Spouse, Partner, or Family Reunification' },
-    { value: 'ireland_business', label: 'Business / Start-up / Investor' },
-    { value: 'ireland_visit', label: 'Visit / Short Stay C' },
-    { value: 'ireland_other', label: 'Other Irish visa (specify in notes)' },
-  ],
-  eu_schengen: [
-    { value: 'schengen_short_stay', label: 'Tourist / Short Stay (C)' },
-    { value: 'schengen_business', label: 'Business Short Stay (C)' },
-    { value: 'schengen_family', label: 'Family Reunification (D)' },
-    { value: 'schengen_student', label: 'Student / Research' },
-    { value: 'schengen_other', label: 'Other Schengen visa (specify in notes)' },
-  ],
-  uae: [
-    { value: 'uae_employment', label: 'Employment Residence' },
-    { value: 'uae_family', label: 'Family / Dependant Residence' },
-    { value: 'uae_investor', label: 'Investor / Golden Visa' },
-    { value: 'uae_visit', label: 'Visit / Tourist' },
-    { value: 'uae_other', label: 'Other UAE visa (specify in notes)' },
-  ],
-};
-
-const visaCategoryByType: Record<string, 'study' | 'work' | 'family' | 'visit' | 'business' | 'general'> = {
-  uk_skilled_worker: 'work',
-  uk_student: 'study',
-  uk_partner: 'family',
-  uk_family_reunion: 'family',
-  uk_business_visit: 'visit',
-  uk_startup_innovator: 'business',
-  uk_visit: 'visit',
-  uk_other: 'general',
-  usa_b1b2: 'visit',
-  usa_f1: 'study',
-  usa_h1b: 'work',
-  usa_k1: 'family',
-  usa_family_reunification: 'family',
-  usa_employment_based: 'work',
-  usa_other: 'general',
-  canada_study: 'study',
-  canada_express_entry: 'work',
-  canada_work_permit: 'work',
-  canada_spousal_sponsorship: 'family',
-  canada_visitor: 'visit',
-  canada_other: 'general',
-  germany_blue_card: 'work',
-  germany_job_seeker: 'work',
-  germany_student: 'study',
-  germany_family_reunion: 'family',
-  germany_business_visit: 'visit',
-  germany_other: 'general',
-  ireland_critical_skills: 'work',
-  ireland_general_employment: 'work',
-  ireland_student: 'study',
-  ireland_spouse_family: 'family',
-  ireland_business: 'business',
-  ireland_visit: 'visit',
-  ireland_other: 'general',
-  schengen_short_stay: 'visit',
-  schengen_business: 'visit',
-  schengen_family: 'family',
-  schengen_student: 'study',
-  schengen_other: 'general',
-  uae_employment: 'work',
-  uae_family: 'family',
-  uae_investor: 'business',
-  uae_visit: 'visit',
-  uae_other: 'general',
-};
-
-const ageRanges = [
-  '18-24',
-  '25-34',
-  '35-44',
-  '45-54',
-  '55+',
-];
-
-const relationshipStatuses = [
-  'Single',
-  'Married',
-  'Engaged / Long-term partner',
-  'Separated / Divorced',
-];
-
-const educationLevels = [
-  'High school diploma',
-  'Diploma / Certificate',
-  'Bachelor degree',
-  'Postgraduate / Masters',
-  'Doctorate',
-];
-
-const workExperienceOptions = [
-  '0-1 years',
-  '2-4 years',
-  '5-7 years',
-  '8-10 years',
-  '10+ years',
-];
-
-const englishExamOptions = [
-  'IELTS 7.5+',
-  'IELTS 6.0 - 7.0',
-  'TOEFL 95+',
-  'CELPIP (Canada)',
-  'No test yet',
-];
-
-const proofOfFundsOptions = [
-  'Above required minimum',
-  'Slightly below minimum',
-  'Sponsor will cover everything',
-  'Not yet available',
-];
-
-const homeTiesOptions = [
-  'Full-time employment',
-  'Business ownership',
-  'Family / dependents',
-  'Property ownership',
-  'Limited ties',
-];
-
-const yesNoOptions = [
-  { value: 'no', label: 'No' },
-  { value: 'yes', label: 'Yes' },
-];
-
-type SupplementalQuestion = {
-  id: string;
-  label: string;
-  type: 'text' | 'textarea' | 'select';
-  placeholder?: string;
-  options?: { value: string; label: string }[];
-};
-
-const supplementalQuestionSets: Record<string, SupplementalQuestion[]> = {
-  study: [
-    { id: 'acceptanceProof', label: 'Have you received an offer or acceptance letter?', type: 'select', options: yesNoOptions },
-    { id: 'tuitionPaidStatus', label: 'How much of your tuition/deposit is already paid?', type: 'text', placeholder: 'e.g., 50% deposit paid' },
-    { id: 'studyProgramDetail', label: 'Program name and institution details', type: 'textarea', placeholder: 'e.g., MSc Data Science at University of Toronto starting Sept 2025' },
-  ],
-  work: [
-    { id: 'jobOfferStatus', label: 'Do you have a signed job offer / COS / LMIA?', type: 'select', options: yesNoOptions },
-    { id: 'salaryOffered', label: 'Salary or hourly rate on the offer', type: 'text', placeholder: 'e.g., £32,000 gross per year' },
-    { id: 'occupationDetail', label: 'Occupation/NOC and shortages or licensing notes', type: 'textarea', placeholder: 'e.g., NOC 21231 Software Engineer, license not required' },
-  ],
-  family: [
-    { id: 'relationshipLength', label: 'How long have you been together / married?', type: 'text', placeholder: 'e.g., Married in 2021, dating since 2018' },
-    { id: 'sharedEvidence', label: 'Evidence of shared life (leases, children, travel)', type: 'textarea', placeholder: 'e.g., Joint lease since 2022, joint bank account, two visits to UK in 2023' },
-    { id: 'sponsorIncome', label: 'Sponsor income and employment details', type: 'text', placeholder: 'e.g., Sponsor earns €45k/year as nurse (permanent contract)' },
-  ],
-  visit: [
-    { id: 'visitPurpose', label: 'Purpose of visit (events, tourism, meetings)', type: 'text', placeholder: 'e.g., Attend cousin’s wedding and tourism for 2 weeks' },
-    { id: 'returnPlan', label: 'Planned return date and ticket status', type: 'text', placeholder: 'e.g., Return ticket booked for 15 Aug 2025' },
-    { id: 'travelHistory', label: 'Previous international travel history', type: 'textarea', placeholder: 'e.g., South Africa to UAE (2023), Kenya (2022), always exited on time' },
-  ],
-  business: [
-    { id: 'investmentAmount', label: 'Investment amount or funds available', type: 'text', placeholder: 'e.g., €150k confirmed for start-up' },
-    { id: 'businessPlan', label: 'Business/start-up or investor plan summary', type: 'textarea', placeholder: 'e.g., Opening fintech advisory with 3 local hires in Dublin' },
-    { id: 'compliancePrep', label: 'Licenses, incubator approvals, or support letters', type: 'textarea', placeholder: 'e.g., Approved by Enterprise Ireland, mentor assigned' },
-  ],
-  general: [
-    { id: 'extraDetails', label: 'Additional context we should know', type: 'textarea', placeholder: 'Add anything that does not fit above fields' },
-  ],
-};
-
-type EligibilityResult = {
-  verdict: 'likely' | 'needs_more_info' | 'unlikely';
-  summary: string;
-  confidence: number;
-  riskFactors: string[];
-  recommendedSteps: string[];
-  recommendedDocuments: string[];
-  countryLabel: string;
-  visaTypeLabel: string;
-};
-
-export default function ImmigrationAILanding() {
+export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [eligibilityForm, setEligibilityForm] = useState({
-    country: 'uk',
-    visaType: 'uk_skilled_worker',
-    ageRange: '25-34',
-    relationshipStatus: 'Single',
-    educationLevel: 'Bachelor degree',
-    workExperienceYears: '5-7 years',
-    englishExam: 'IELTS 6.0 - 7.0',
-    proofOfFunds: 'Slightly below minimum',
-    homeTies: 'Full-time employment',
-    previousRefusals: 'no',
-    travelHistory: 'Limited travel',
-    sponsorIncome: '',
-    notes: '',
-    email: '',
-  });
-  const [eligibilityResult, setEligibilityResult] = useState<EligibilityResult | null>(null);
-  const [eligibilityLoading, setEligibilityLoading] = useState(false);
-  const [eligibilityError, setEligibilityError] = useState('');
-  const [supplementalAnswers, setSupplementalAnswers] = useState<Record<string, string>>({});
-  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
-  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-
-  const currentVisaOptions = useMemo(() => {
-    return visaOptionsByCountry[eligibilityForm.country] || [];
-  }, [eligibilityForm.country]);
-  const currentVisaCategory = visaCategoryByType[eligibilityForm.visaType] || 'general';
-  const currentSupplementalQuestions = supplementalQuestionSets[currentVisaCategory] || supplementalQuestionSets.general;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -274,300 +21,153 @@ export default function ImmigrationAILanding() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!currentVisaOptions.find((option) => option.value === eligibilityForm.visaType)) {
-      setEligibilityForm((prev) => ({
-        ...prev,
-        visaType: currentVisaOptions[0]?.value || '',
-      }));
-    }
-  }, [currentVisaOptions, eligibilityForm.visaType]);
-
-  useEffect(() => {
-    setSupplementalAnswers({});
-  }, [eligibilityForm.visaType]);
-
-  const verdictMeta = {
-    likely: {
-      label: 'Strong Match',
-      badge: 'bg-emerald-100 text-emerald-800',
-      pill: 'text-emerald-600 bg-emerald-50',
-    },
-    needs_more_info: {
-      label: 'Needs More Evidence',
-      badge: 'bg-amber-100 text-amber-800',
-      pill: 'text-amber-600 bg-amber-50',
-    },
-    unlikely: {
-      label: 'High Risk',
-      badge: 'bg-rose-100 text-rose-800',
-      pill: 'text-rose-600 bg-rose-50',
-    },
-  };
-
-  const handleEligibilityChange = (field: string, value: string) => {
-    setEligibilityForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSupplementalChange = (id: string, value: string) => {
-    setSupplementalAnswers((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  const handleEligibilitySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setEligibilityLoading(true);
-    setEligibilityError('');
-
-    try {
-      const tracking = getTrackingDataForConversion();
-      const supplementalNoteEntries = currentSupplementalQuestions
-        .map((question) => `${question.label}: ${supplementalAnswers[question.id] || 'Not provided'}`)
-        .join(' | ');
-      const mergedNotes = [eligibilityForm.notes, supplementalNoteEntries].filter(Boolean).join('\n');
-      const response = await fetch(`${API_BASE_URL}/api/eligibility/check`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...eligibilityForm,
-          notes: mergedNotes,
-          tracking,
-          supplementalAnswers,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setEligibilityError(data?.message || 'Unable to generate assessment right now.');
-        return;
-      }
-
-      setEligibilityResult(data.data);
-      trackEvent('eligibility_check_success', {
-        country: eligibilityForm.country,
-        visaType: eligibilityForm.visaType,
-        verdict: data.data?.verdict,
-      });
-    } catch (error) {
-      console.error('Eligibility check failed', error);
-      setEligibilityError('Network error. Please try again.');
-    } finally {
-      setEligibilityLoading(false);
-    }
-  };
-
   const features = [
     {
-      icon: <FileText className="w-6 h-6" />,
-      title: "SOP Generator",
-      description: "Create compelling Statements of Purpose tailored to your destination and purpose with AI assistance."
-    },
-    {
-      icon: <FileCheck className="w-6 h-6" />,
-      title: "Cover Letter Writer",
-      description: "Generate professional embassy cover letters that highlight your qualifications effectively."
-    },
-    {
-      icon: <CheckCircle className="w-6 h-6" />,
-      title: "SOP Reviewer",
-      description: "Get instant feedback and improvement suggestions on your existing documents."
-    },
-    {
-      icon: <List className="w-6 h-6" />,
-      title: "Document Checklist",
-      description: "Never miss a requirement with country-specific visa document checklists."
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "AI Chat Assistant",
-      description: "Get instant answers to your immigration questions from our AI expert advisor."
+      icon: <Briefcase className="w-6 h-6" />,
+      title: "Case Management",
+      description: "Organize and track all client cases in one centralized dashboard. Set deadlines, assign team members, and monitor progress in real-time."
     },
     {
       icon: <Target className="w-6 h-6" />,
-      title: "Visa Eligibility Checker",
-      description: "Check your visa eligibility for free in minutes with AI-powered assessment based on actual embassy requirements."
+      title: "Lead Routing",
+      description: "Automatically match incoming client inquiries with the right professional based on specialization, availability, and expertise."
     },
     {
-      icon: <Compass className="w-6 h-6" />,
-      title: "Interview Practice",
-      description: "Practice visa interviews with real consulate questions and get AI-powered feedback."
+      icon: <FileCheck className="w-6 h-6" />,
+      title: "Document Management",
+      description: "AI-powered checklists, secure document uploads, and automated tracking of required documents for each visa type."
     },
     {
-      icon: <Globe className="w-6 h-6" />,
-      title: "English Test Practice",
-      description: "Prepare for IELTS, TOEFL, and other English tests with AI-powered practice questions."
+      icon: <Users className="w-6 h-6" />,
+      title: "Team Collaboration",
+      description: "Invite team members, assign roles, and collaborate seamlessly on complex cases with built-in messaging and task management."
+    },
+    {
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: "Client Communication",
+      description: "Built-in messaging system keeps all client communications organized within each case. No more lost emails or missed updates."
+    },
+    {
+      icon: <BarChart3 className="w-6 h-6" />,
+      title: "Analytics & Reporting",
+      description: "Track case success rates, team performance, and business metrics with comprehensive analytics and reporting tools."
+    },
+    {
+      icon: <Smartphone className="w-6 h-6" />,
+      title: "Client Portal",
+      description: "Give clients secure access to track their case progress, upload documents, and communicate with your team 24/7."
+    },
+    {
+      icon: <Bell className="w-6 h-6" />,
+      title: "Smart Notifications",
+      description: "Never miss a deadline with automated reminders for document requests, submission dates, and important case updates."
     }
   ];
 
   const stats = [
-    { value: "10K+", label: "Documents Generated", subtext: "by African applicants" },
-    { value: "95%", label: "Success Rate", subtext: "for UK student visas" },
-    { value: "15+", label: "Countries Supported", subtext: "including UK, USA, Canada, Australia" },
-    { value: "24/7", label: "AI Availability", subtext: "instant document generation" }
+    { value: "500+", label: "Active Cases", subtext: "managed daily" },
+    { value: "50+", label: "Immigration Agencies", subtext: "trust our platform" },
+    { value: "95%", label: "Client Satisfaction", subtext: "from agencies" },
+    { value: "24/7", label: "Platform Availability", subtext: "always accessible" }
   ];
 
-  const testimonials = [
+  const benefits = [
     {
-      name: "Sarah M.",
-      location: "Nigeria → UK",
-      visa: "UK Student Visa",
-      text: "Immigration AI helped me write a compelling SOP that got me accepted. The AI feedback was spot-on and saved me weeks of revisions.",
-      rating: 5
+      icon: <Zap className="w-8 h-8" />,
+      title: "Save Time",
+      description: "Reduce case management time by 60% with automated workflows and AI-powered checklists."
     },
     {
-      name: "David K.",
-      location: "Kenya → Canada",
-      visa: "Canada Express Entry",
-      text: "The eligibility checker showed me exactly what I needed to improve. I followed the recommendations and got my PR approved!",
-      rating: 5
+      icon: <TrendingUp className="w-8 h-8" />,
+      title: "Scale Your Practice",
+      description: "Handle 3x more cases with the same team. Grow your business without hiring more staff."
     },
     {
-      name: "Amina T.",
-      location: "Ghana → USA",
-      visa: "USA F-1 Student Visa",
-      text: "The interview practice feature was a game-changer. I felt so prepared and confident during my visa interview.",
-      rating: 5
+      icon: <Shield className="w-8 h-8" />,
+      title: "Stay Compliant",
+      description: "Never miss a deadline or required document. Automated tracking ensures full compliance."
+    },
+    {
+      icon: <Cloud className="w-8 h-8" />,
+      title: "Work Anywhere",
+      description: "Access your cases from any device. Cloud-based platform works on desktop, tablet, or mobile."
     }
   ];
 
   const howItWorks = [
     {
       step: 1,
-      title: "Check Your Eligibility",
-      description: "Use our free AI-powered eligibility checker to see if you qualify for your target visa route. No sign-up required.",
-      icon: <Target className="w-8 h-8" />
+      title: "Sign Up Your Agency",
+      description: "Create your organization account and invite your team members. Set up your profile and specializations.",
+      icon: <Building className="w-8 h-8" />
     },
     {
       step: 2,
-      title: "Generate Your Documents",
-      description: "Create professional SOPs, cover letters, and other required documents with AI assistance.",
-      icon: <FileText className="w-8 h-8" />
+      title: "Accept Leads or Create Cases",
+      description: "Get matched with qualified leads automatically, or create cases manually for your existing clients.",
+      icon: <Target className="w-8 h-8" />
     },
     {
       step: 3,
-      title: "Submit with Confidence",
-      description: "Review, download, and submit your polished documents knowing they meet embassy standards.",
-      icon: <CheckCircle className="w-8 h-8" />
+      title: "Manage Everything in One Place",
+      description: "Track documents, set tasks, communicate with clients, and monitor progress all from your dashboard.",
+      icon: <Briefcase className="w-8 h-8" />
+    },
+    {
+      step: 4,
+      title: "Scale Your Business",
+      description: "Use analytics to optimize your operations and grow your practice efficiently.",
+      icon: <TrendingUp className="w-8 h-8" />
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Founder, Global Immigration Services",
+      text: "We've doubled our case capacity since using this platform. The automated lead routing alone saves us 10 hours per week.",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "Senior Consultant, Visa Experts",
+      text: "The client portal has transformed how we work. Clients can upload documents themselves, which frees up our team to focus on strategy.",
+      rating: 5
+    },
+    {
+      name: "Amina Patel",
+      role: "Director, Africa Immigration Hub",
+      text: "Best investment we've made. The analytics help us identify bottlenecks and improve our success rates significantly.",
+      rating: 5
     }
   ];
 
   const faqs = [
     {
-      question: "How accurate is the visa eligibility checker?",
-      answer: "Our AI eligibility checker is based on actual embassy requirements and visa criteria. While it provides a good assessment, it's not a guarantee of approval. Always consult with immigration professionals for final decisions."
+      question: "Is this platform only for large agencies?",
+      answer: "No! Our Starter plan is perfect for solo practitioners and small teams. You can start with just one user and scale as you grow."
     },
     {
-      question: "Can I use Immigration AI for multiple visa applications?",
-      answer: "Yes! Your subscription allows you to generate documents for multiple visa applications. Each plan has different limits - check our pricing page for details."
+      question: "How does the lead routing work?",
+      answer: "When a client submits an inquiry through our marketplace, our AI automatically matches them with the best professional based on specialization, availability, and success rates. You can accept or decline leads."
     },
     {
-      question: "Is my data secure and private?",
-      answer: "Absolutely. We use enterprise-grade encryption and never share your data with third parties. Your documents and personal information are completely confidential."
+      question: "Can clients access their cases?",
+      answer: "Yes! Every case includes a secure client portal where clients can view progress, upload documents, and message your team. This reduces back-and-forth emails significantly."
     },
     {
-      question: "What if I'm not satisfied with the generated documents?",
-      answer: "We offer a 100% money-back guarantee within 7 days. If you're not happy with the quality, we'll refund your payment - no questions asked."
+      question: "What if I already have clients?",
+      answer: "You can manually create cases for existing clients. The platform works whether you get leads from our marketplace or bring your own clients."
     },
     {
-      question: "Do you provide immigration advice or legal services?",
-      answer: "No, Immigration AI is a document generation tool. We help you create professional documents, but we don't provide legal advice. For complex cases, we recommend consulting with licensed immigration consultants."
+      question: "Is my client data secure?",
+      answer: "Absolutely. We use enterprise-grade encryption, regular security audits, and comply with data protection regulations. Your client data is never shared with third parties."
     },
     {
-      question: "Which countries do you support?",
-      answer: "We support visa applications for UK, USA, Canada, Australia, New Zealand, Ireland, Germany, Netherlands, Portugal, Spain, Sweden, UAE, Singapore, and Schengen countries."
+      question: "Can I try before committing?",
+      answer: "Yes! All plans include a 14-day free trial. No credit card required. You can explore all features and see if it fits your workflow."
     }
   ];
-
-  const pricingTiers = [
-    {
-      name: "Starter Plan",
-      monthlyPrice: 149,
-      yearlyPrice: 1500,
-      features: [
-        "3 Visa Eligibility Checks per month",
-        "2 Document Types (SOP, Cover Letter)",
-        "PDF Downloads",
-        "Basic Support",
-        "Email support"
-      ],
-      cta: "Get Started",
-      popular: false
-    },
-    {
-      name: "Entry Plan",
-      monthlyPrice: 299,
-      yearlyPrice: 3000,
-      features: [
-        "10 Visa Eligibility Checks per month",
-        "5 Document Types",
-        "Basic Interview Practice (5 sessions/month)",
-        "English Test Practice (IELTS only)",
-        "Priority email support",
-        "PDF Downloads"
-      ],
-      cta: "Get Started",
-      popular: true
-    },
-    {
-      name: "Professional Plan",
-      monthlyPrice: 699,
-      yearlyPrice: 6500,
-      features: [
-        "Unlimited Visa Eligibility Checks",
-        "All Document Types (8+ types)",
-        "Relationship Proof Kit",
-        "AI Photo Analysis",
-        "Unlimited Interview Practice",
-        "Full English Test Practice",
-        "Interview Questions Database",
-        "Agent Dashboard"
-      ],
-      cta: "Get Started",
-      popular: false
-    },
-    {
-      name: "Enterprise Plan",
-      monthlyPrice: 1499,
-      yearlyPrice: 15000,
-      features: [
-        "Everything in Professional",
-        "Unlimited Team Members",
-        "Advanced Analytics Dashboard",
-        "Bulk Document Processing",
-        "Priority Phone Support",
-        "Dedicated Account Manager",
-        "SLA Guarantee (99.9% uptime)"
-      ],
-      cta: "Contact Sales",
-      popular: false
-    }
-  ];
-
-  const getPrice = (tier: any) => {
-    return billingCycle === 'yearly' ? tier.yearlyPrice : tier.monthlyPrice;
-  };
-
-  const getPeriod = () => {
-    return billingCycle === 'yearly' ? '/year' : '/month';
-  };
-
-  const getSavings = (tier: any) => {
-    if (billingCycle === 'yearly') {
-      const monthlyTotal = tier.monthlyPrice * 12;
-      const savings = monthlyTotal - tier.yearlyPrice;
-      const percentage = Math.round((savings / monthlyTotal) * 100);
-      return percentage;
-    }
-    return 0;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -579,10 +179,10 @@ export default function ImmigrationAILanding() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Globe className="w-6 h-6 text-white" />
+                <Briefcase className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Immigration AI
+                Immigration Platform
               </span>
             </div>
 
@@ -590,10 +190,11 @@ export default function ImmigrationAILanding() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</a>
               <a href="#pricing" className="text-gray-700 hover:text-blue-600 transition-colors">Pricing</a>
+              <Link href="/find-a-specialist" className="text-gray-700 hover:text-blue-600 transition-colors">For Applicants</Link>
               <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</Link>
               <Link href="/auth/login" className="text-gray-700 hover:text-blue-600 transition-colors">Login</Link>
               <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all">
-                Get Started
+                Start Free Trial
               </Link>
             </div>
 
@@ -611,10 +212,11 @@ export default function ImmigrationAILanding() {
             <div className="md:hidden py-4 bg-white rounded-lg shadow-lg mt-2">
               <a href="#features" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Features</a>
               <a href="#pricing" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Pricing</a>
+              <Link href="/find-a-specialist" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">For Applicants</Link>
               <Link href="/about" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">About</Link>
               <Link href="/auth/login" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Login</Link>
               <Link href="/auth/signup" className="w-full block mt-2 mx-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-center">
-                Get Started
+                Start Free Trial
               </Link>
             </div>
           )}
@@ -625,39 +227,42 @@ export default function ImmigrationAILanding() {
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full mb-6 animate-pulse">
+            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full mb-6">
               <Sparkles className="w-4 h-4" />
-              <span className="text-sm font-medium">Powered by Advanced AI</span>
+              <span className="text-sm font-medium">Built for Immigration Professionals</span>
             </div>
             
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Your Immigration Journey,
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Simplified</span>
+              Manage Immigration Cases
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Like Never Before</span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Generate professional SOPs, cover letters, and visa documents in minutes. 
-              AI-powered tools trusted by thousands of successful applicants worldwide.
+              The all-in-one platform for immigration agencies and professionals. 
+              Manage cases, route leads, collaborate with your team, and scale your practice—all in one place.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2">
-                <span>Get Started</span>
+                <span>Start Free Trial</span>
                 <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="#features" className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center space-x-2">
+                <span>See How It Works</span>
               </Link>
             </div>
 
             <div className="flex flex-col items-center space-y-3 mt-6">
               <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span>No credit card required</span>
+                <span>14-day free trial</span>
                 <span>•</span>
-                <span>3 starter documents</span>
+                <span>No credit card required</span>
                 <span>•</span>
                 <span>Cancel anytime</span>
               </div>
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-4 py-2 flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-green-600" />
-                <span className="text-green-800 font-semibold text-sm">100% Money-Back Guarantee - 7 Days</span>
+                <span className="text-green-800 font-semibold text-sm">Trusted by 50+ Immigration Agencies</span>
               </div>
             </div>
           </div>
@@ -689,10 +294,10 @@ export default function ImmigrationAILanding() {
               How It Works
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get from eligibility check to visa approval in three simple steps
+              Get started in minutes and start managing cases more efficiently
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             {howItWorks.map((item) => (
               <div key={item.step} className="bg-white rounded-2xl p-8 shadow-lg text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white mx-auto mb-4">
@@ -714,10 +319,10 @@ export default function ImmigrationAILanding() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need to Succeed
+              Everything You Need to Manage Cases
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Comprehensive AI-powered tools designed specifically for immigration document preparation
+              Powerful tools designed specifically for immigration professionals
             </p>
           </div>
 
@@ -738,30 +343,54 @@ export default function ImmigrationAILanding() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Benefits Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Trusted by Successful Applicants
+              Why Immigration Agencies Choose Us
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See how Immigration AI has helped thousands achieve their immigration dreams
+              Join leading agencies who have transformed their operations
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {benefits.map((benefit, idx) => (
+              <div key={idx} className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4">
+                  {benefit.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{benefit.title}</h3>
+                <p className="text-gray-600">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Trusted by Leading Immigration Agencies
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              See how agencies are transforming their operations
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <CheckCircle key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
                 <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
                 <div className="border-t border-gray-200 pt-4">
                   <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.location}</p>
-                  <p className="text-xs text-blue-600 font-medium mt-1">{testimonial.visa}</p>
+                  <p className="text-sm text-gray-600">{testimonial.role}</p>
                 </div>
               </div>
             ))}
@@ -769,533 +398,22 @@ export default function ImmigrationAILanding() {
         </div>
       </section>
 
-      {/* Eligibility Check Section - MOVED LOWER */}
-      <section className="pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-7xl mx-auto grid gap-8 lg:grid-cols-2">
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <p className="text-sm uppercase tracking-wider text-blue-600 font-semibold">
-                  Africa-focused screening · Free
-                </p>
-                <h3 className="text-3xl font-bold text-slate-900 mt-2">
-                  Check your visa eligibility
-                </h3>
-                <p className="text-slate-600 mt-1">
-                  Free — no sign-up required. Real embassy-style questions for UK, USA, Canada, Germany, Ireland, Schengen & UAE routes.
-                </p>
-              </div>
-              <Compass className="w-10 h-10 text-blue-500 hidden md:block" />
-            </div>
-
-            {eligibilityError && (
-              <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {eligibilityError}
-              </div>
-            )}
-
-            <form className="space-y-4" onSubmit={handleEligibilitySubmit}>
-              {/* Basic Fields - Always Visible */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Destination</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.country}
-                    onChange={(e) => handleEligibilityChange('country', e.target.value)}
-                  >
-                    {countryOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Visa route</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.visaType}
-                    onChange={(e) => handleEligibilityChange('visaType', e.target.value)}
-                  >
-                    {currentVisaOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Age band</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.ageRange}
-                    onChange={(e) => handleEligibilityChange('ageRange', e.target.value)}
-                  >
-                    {ageRanges.map((range) => (
-                      <option key={range} value={range}>{range}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Education Level</label>
-                  <select
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.educationLevel}
-                    onChange={(e) => handleEligibilityChange('educationLevel', e.target.value)}
-                  >
-                    {educationLevels.map((level) => (
-                      <option key={level} value={level}>{level}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Progressive Disclosure Button */}
-              {!showAdvancedForm && (
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedForm(true)}
-                  className="w-full py-2 text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center space-x-2"
-                >
-                  <span>Add more details for better assessment</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Advanced Fields - Collapsible */}
-              {showAdvancedForm && (
-                <>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Relationship status</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.relationshipStatus}
-                        onChange={(e) => handleEligibilityChange('relationshipStatus', e.target.value)}
-                      >
-                        {relationshipStatuses.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Relevant experience</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.workExperienceYears}
-                        onChange={(e) => handleEligibilityChange('workExperienceYears', e.target.value)}
-                      >
-                        {workExperienceOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">English / language proof</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.englishExam}
-                        onChange={(e) => handleEligibilityChange('englishExam', e.target.value)}
-                      >
-                        {englishExamOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Proof of funds</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.proofOfFunds}
-                        onChange={(e) => handleEligibilityChange('proofOfFunds', e.target.value)}
-                      >
-                        {proofOfFundsOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Strongest home tie</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.homeTies}
-                        onChange={(e) => handleEligibilityChange('homeTies', e.target.value)}
-                      >
-                        {homeTiesOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Previous refusals?</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                        value={eligibilityForm.previousRefusals}
-                        onChange={(e) => handleEligibilityChange('previousRefusals', e.target.value)}
-                      >
-                        {yesNoOptions.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {currentSupplementalQuestions.length > 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
-                      {currentVisaCategory === 'study' && 'Study-specific details'}
-                      {currentVisaCategory === 'work' && 'Work / permit details'}
-                      {currentVisaCategory === 'family' && 'Family & sponsorship details'}
-                      {currentVisaCategory === 'visit' && 'Visit / short-stay details'}
-                      {currentVisaCategory === 'business' && 'Business / investor details'}
-                      {currentVisaCategory === 'general' && 'Extra context'}
-                    </p>
-                    <span className="text-xs text-slate-500">Required for {currentVisaOptions.find(v => v.value === eligibilityForm.visaType)?.label}</span>
-                  </div>
-                  <div className="grid gap-4">
-                    {currentSupplementalQuestions.map((question) => (
-                      <div key={question.id}>
-                        <label className="text-sm font-medium text-slate-700">{question.label}</label>
-                        {question.type === 'select' ? (
-                          <select
-                            className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                            value={supplementalAnswers[question.id] || ''}
-                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
-                          >
-                            <option value="">Select option</option>
-                            {question.options?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : question.type === 'textarea' ? (
-                          <textarea
-                            className="mt-1 w-full rounded-2xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                            rows={3}
-                            placeholder={question.placeholder}
-                            value={supplementalAnswers[question.id] || ''}
-                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder={question.placeholder}
-                            value={supplementalAnswers[question.id] || ''}
-                            onChange={(e) => handleSupplementalChange(question.id, e.target.value)}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Provide extra context (sponsor income, travel history, relationship proof)
-                </label>
-                <textarea
-                  className="mt-1 w-full rounded-2xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                  value={eligibilityForm.notes}
-                  placeholder="Example: Sponsor earns £28,000/year, we have shared lease since 2021, previous UK visit in 2022..."
-                  onChange={(e) => handleEligibilityChange('notes', e.target.value)}
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Contact email (optional)</label>
-                  <input
-                    type="email"
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.email}
-                    placeholder="We'll send a checklist here"
-                    onChange={(e) => handleEligibilityChange('email', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Sponsor income (if applicable)</label>
-                  <input
-                    type="text"
-                    className="mt-1 w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500"
-                    value={eligibilityForm.sponsorIncome}
-                    placeholder="e.g., £20,000 / R350,000 / $45,000"
-                    onChange={(e) => handleEligibilityChange('sponsorIncome', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={eligibilityLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
-              >
-                {eligibilityLoading ? (
-                  <span>Evaluating...</span>
-                ) : (
-                  <>
-                    <span>Check eligibility now</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-              <p className="text-xs text-slate-500 text-center">
-                Free — no account needed. We reference actual embassy criteria and never share your data.
-              </p>
-            </form>
-          </div>
-
-          <div className="bg-slate-900 text-white rounded-3xl shadow-xl p-8 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-200 via-transparent to-transparent" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="text-sm uppercase tracking-widest text-blue-200">Instant verdict</p>
-                  <h3 className="text-3xl font-bold">Embassy-style feedback</h3>
-                  <p className="text-blue-100 mt-2">Tailored for African applicants targeting high-demand countries.</p>
-                </div>
-                <Target className="w-10 h-10 text-blue-300 hidden md:block" />
-              </div>
-
-              {eligibilityResult ? (
-                <div className="space-y-6">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className={`px-4 py-1 rounded-full text-sm font-semibold ${verdictMeta[eligibilityResult.verdict].badge}`}>
-                      {verdictMeta[eligibilityResult.verdict].label}
-                    </span>
-                    <span className="text-sm text-blue-200">
-                      {eligibilityResult.countryLabel} • {eligibilityResult.visaTypeLabel}
-                    </span>
-                    <span className="text-sm px-3 py-1 rounded-full bg-white/10 text-blue-100">
-                      Confidence {Math.round((eligibilityResult.confidence || 0) * 100)}%
-                    </span>
-                  </div>
-                  <p className="text-lg leading-relaxed text-blue-50">{eligibilityResult.summary}</p>
-
-                  {eligibilityResult.riskFactors.length > 0 && (
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                      <div className="flex items-center space-x-2 text-amber-200 font-semibold mb-2">
-                        <AlertTriangle className="w-5 h-5" />
-                        <span>What the officer will probe</span>
-                      </div>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-blue-100">
-                        {eligibilityResult.riskFactors.map((risk, idx) => (
-                          <li key={idx}>{risk}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {eligibilityResult.recommendedSteps.length > 0 && (
-                    <div>
-                      <h4 className="text-white font-semibold mb-2">Next actions</h4>
-                      <ul className="space-y-2">
-                        {eligibilityResult.recommendedSteps.slice(0, 3).map((step, idx) => (
-                          <li key={idx} className="flex items-start space-x-2">
-                            <CheckCircle className="w-4 h-4 text-emerald-400 mt-1" />
-                            <span className="text-blue-100 text-sm">{step}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {eligibilityResult.recommendedDocuments.length > 0 && (
-                    <div className="bg-white rounded-2xl p-4 text-slate-900">
-                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                        Document checklist preview
-                      </p>
-                      <ul className="space-y-1">
-                        {eligibilityResult.recommendedDocuments.slice(0, 4).map((doc, idx) => (
-                          <li key={idx} className="flex items-center space-x-2 text-sm text-slate-700">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" />
-                            <span>{doc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Link
-                        href="/auth/signup"
-                        className="mt-4 inline-flex items-center text-blue-600 font-semibold"
-                      >
-                        Unlock full checklist &amp; templates
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-white/5 rounded-3xl p-6 border border-white/10">
-                  <p className="text-xl font-semibold text-white mb-3">We check what embassies check.</p>
-                  <ul className="space-y-3 text-sm text-blue-100">
-                    <li>• Financial maintenance thresholds (UK £18,600+, Canada settlement funds)</li>
-                    <li>• Relationship evidence strength (marriage vs. engaged vs. dating)</li>
-                    <li>• Ties to home country & refusal history (214b, Schengen prior records)</li>
-                    <li>• Sponsor income, employer compliance, medical insurance, travel history</li>
-                  </ul>
-                  <p className="mt-4 text-sm text-blue-200">
-                    Submit the form to receive an instant verdict and see what to fix before you apply.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* Why Choose Us */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Choose Immigration AI?</h2>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Built by immigration experts and powered by cutting-edge AI
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Secure & Private</h3>
-              <p className="text-blue-100">Your data is encrypted and never shared. GDPR compliant.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Lightning Fast</h3>
-              <p className="text-blue-100">Generate professional documents in under 2 minutes.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Globe className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Global Coverage</h3>
-              <p className="text-blue-100">Support for 150+ countries and all major visa types.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
+      {/* Pricing CTA Section */}
       <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Choose the plan that fits your needs. Upgrade or downgrade anytime.
-            </p>
-            
-            {/* Money-Back Guarantee */}
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-6 py-2 flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-green-600" />
-                <span className="text-green-800 font-semibold">100% Money-Back Guarantee</span>
-                <span className="text-green-600 text-sm">• Full refund within 7 days</span>
-              </div>
-            </div>
-            
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center space-x-4 mb-8">
-              <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-500'}`}>
-                Monthly
-              </span>
-              <button
-                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  billingCycle === 'yearly' ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-gray-900' : 'text-gray-500'}`}>
-                Yearly
-              </span>
-              {billingCycle === 'yearly' && (
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Save up to 17%
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {pricingTiers.map((tier, idx) => (
-              <div 
-                key={idx}
-                className={`bg-white rounded-2xl p-8 shadow-lg border-2 transition-all transform hover:scale-105 ${
-                  tier.popular 
-                    ? 'border-blue-600 relative' 
-                    : 'border-gray-100'
-                }`}
-              >
-                {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                    Most Popular
-                  </div>
-                )}
-                
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                <div className="mb-6">
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-gray-900">R{getPrice(tier).toLocaleString()}</span>
-                    <span className="text-gray-600 ml-2">{getPeriod()}</span>
-                  </div>
-                  {billingCycle === 'yearly' && getSavings(tier) > 0 && (
-                    <div className="mt-2">
-                      <span className="text-sm text-green-600 font-medium">
-                        Save {getSavings(tier)}% vs monthly
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {tier.features.map((feature, fIdx) => (
-                    <li key={fIdx} className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link 
-                  href={tier.name === 'Enterprise Plan' ? '#contact' : '/auth/signup'}
-                  className={`w-full py-3 rounded-lg font-semibold transition-all inline-block text-center ${
-                    tier.popular
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {tier.cta}
-                </Link>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Choose the plan that fits your agency size. All plans include a 14-day free trial.
+          </p>
+          <Link 
+            href="/pricing" 
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2"
+          >
+            <span>View Pricing Plans</span>
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
       </section>
 
@@ -1307,28 +425,21 @@ export default function ImmigrationAILanding() {
               Frequently Asked Questions
             </h2>
             <p className="text-xl text-gray-600">
-              Everything you need to know about Immigration AI
+              Everything you need to know about our platform
             </p>
           </div>
           <div className="space-y-4">
             {faqs.map((faq, idx) => (
               <div key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-semibold text-gray-900">{faq.question}</span>
-                  {openFAQ === idx ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  )}
-                </button>
-                {openFAQ === idx && (
+                <details className="group">
+                  <summary className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors cursor-pointer">
+                    <span className="font-semibold text-gray-900">{faq.question}</span>
+                    <ArrowRight className="w-5 h-5 text-gray-500 transform group-open:rotate-90 transition-transform" />
+                  </summary>
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <p className="text-gray-700">{faq.answer}</p>
                   </div>
-                )}
+                </details>
               </div>
             ))}
           </div>
@@ -1336,18 +447,21 @@ export default function ImmigrationAILanding() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
-            Ready to Start Your Journey?
+          <h2 className="text-4xl font-bold mb-6">
+            Ready to Transform Your Immigration Practice?
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Join thousands of successful applicants who trust Immigration AI
+          <p className="text-xl text-blue-100 mb-8">
+            Join leading agencies who are managing cases more efficiently
           </p>
-          <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2">
-            <span>Get Started</span>
+          <Link href="/auth/signup" className="bg-white text-blue-600 px-10 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2">
+            <span>Start Free Trial</span>
             <ArrowRight className="w-5 h-5" />
           </Link>
+          <p className="text-blue-100 text-sm mt-4">
+            No credit card required • 14-day free trial • Cancel anytime
+          </p>
         </div>
       </section>
 
@@ -1358,21 +472,21 @@ export default function ImmigrationAILanding() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-white" />
+                  <Briefcase className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold text-white">Immigration AI</span>
+                <span className="text-lg font-bold text-white">Immigration Platform</span>
               </div>
               <p className="text-sm text-gray-400">
-                AI-powered immigration document assistance for your success.
+                The all-in-one case management platform for immigration professionals.
               </p>
             </div>
 
             <div>
               <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
 
@@ -1380,7 +494,7 @@ export default function ImmigrationAILanding() {
               <h4 className="font-semibold text-white mb-4">Company</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">For Applicants</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
@@ -1396,123 +510,10 @@ export default function ImmigrationAILanding() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-            © 2024 Immigration AI. All rights reserved.
+            © 2024 Immigration Platform. All rights reserved.
           </div>
         </div>
       </footer>
-
-      {/* Structured Data for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'SoftwareApplication',
-            name: 'Immigration AI',
-            applicationCategory: 'TravelApplication',
-            description: 'AI-powered visa document generation and eligibility checking for African applicants',
-            url: 'https://www.immigrationai.co.za',
-            offers: {
-              '@type': 'Offer',
-              price: '149',
-              priceCurrency: 'ZAR',
-              priceSpecification: {
-                '@type': 'UnitPriceSpecification',
-                price: '149',
-                priceCurrency: 'ZAR',
-                unitText: 'MONTH',
-              },
-            },
-            aggregateRating: {
-              '@type': 'AggregateRating',
-              ratingValue: '4.8',
-              ratingCount: '1250',
-              bestRating: '5',
-              worstRating: '1',
-            },
-            operatingSystem: 'Web Browser',
-            featureList: [
-              'SOP Generator',
-              'Cover Letter Writer',
-              'Visa Eligibility Checker',
-              'Document Checklist',
-              'Interview Practice',
-              'English Test Practice',
-            ],
-          }),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: 'Immigration AI',
-            url: 'https://www.immigrationai.co.za',
-            logo: 'https://www.immigrationai.co.za/logo.png',
-            sameAs: [],
-            contactPoint: [
-              {
-                '@type': 'ContactPoint',
-                contactType: 'Customer Service',
-                email: 'support@immigrationai.co.za',
-                availableLanguage: ['English'],
-              },
-              {
-                '@type': 'ContactPoint',
-                contactType: 'Technical Support',
-                email: 'support@immigrationai.co.za',
-                availableLanguage: ['English'],
-              },
-            ],
-            address: {
-              '@type': 'PostalAddress',
-              addressCountry: 'ZA',
-            },
-            foundingDate: '2024',
-            numberOfEmployees: {
-              '@type': 'QuantitativeValue',
-              value: '10-50',
-            },
-          }),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: [
-              {
-                '@type': 'Question',
-                name: 'What is Immigration AI?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Immigration AI is an AI-powered platform that helps African applicants generate professional visa documents including SOPs, cover letters, and check visa eligibility for UK, USA, Canada, and other countries.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'How much does Immigration AI cost?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Immigration AI offers plans starting from R149/month for the Starter plan, with Entry plan at R299/month, Professional at R699/month, and Enterprise at R1499/month.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'Which countries does Immigration AI support?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Immigration AI supports visa applications for UK, USA, Canada, Ireland, Germany, Schengen countries, and UAE.',
-                },
-              },
-            ],
-          }),
-        }}
-      />
     </div>
   );
 }

@@ -31,32 +31,32 @@ export default function SignupPage() {
     {
       id: 'starter',
       name: 'Starter',
-      price: 'R149',
+      price: 'R499',
       period: '/month',
-      description: 'Perfect for individuals getting started',
-      features: ['3 document checks/month', 'Basic SOP generator', 'Email support'],
+      description: 'Perfect for solo practitioners',
+      features: ['Up to 10 active cases', 'Basic case management', 'Client portal', 'Email support'],
       icon: <Check className="w-5 h-5" />,
       color: 'from-blue-500 to-blue-600',
       popular: false
     },
     {
-      id: 'entry',
-      name: 'Entry',
-      price: 'R299',
+      id: 'professional',
+      name: 'Professional',
+      price: 'R999',
       period: '/month',
-      description: 'For serious applicants',
-      features: ['5 document types', 'IELTS practice', 'Priority support'],
+      description: 'For small to medium agencies',
+      features: ['Unlimited cases', 'Team collaboration', 'Lead routing', 'Analytics', 'Priority support'],
       icon: <Star className="w-5 h-5" />,
       color: 'from-green-500 to-green-600',
       popular: true
     },
     {
-      id: 'professional',
-      name: 'Professional',
-      price: 'R699',
+      id: 'agency',
+      name: 'Agency',
+      price: 'R1,999',
       period: '/month',
-      description: 'For agents and consultants',
-      features: ['Unlimited documents', 'All features', 'Mock interviews', 'Analytics'],
+      description: 'For growing agencies',
+      features: ['Unlimited cases & team members', 'Advanced analytics', 'Custom branding', 'API access', 'Dedicated support'],
       icon: <Zap className="w-5 h-5" />,
       color: 'from-purple-500 to-purple-600',
       popular: false
@@ -64,10 +64,10 @@ export default function SignupPage() {
     {
       id: 'enterprise',
       name: 'Enterprise',
-      price: 'R1,499',
-      period: '/month',
-      description: 'For large agencies',
-      features: ['Team management', 'Bulk processing', 'Advanced analytics', 'Dedicated support'],
+      price: 'Custom',
+      period: '',
+      description: 'For large organizations',
+      features: ['Everything in Agency', 'White-label options', 'Custom integrations', 'SLA guarantee', 'Account manager'],
       icon: <Crown className="w-5 h-5" />,
       color: 'from-amber-500 to-orange-600',
       popular: false
@@ -158,12 +158,12 @@ export default function SignupPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">
-              {currentStep === 1 ? 'Choose Your Plan' : 'Create Account'}
+              {currentStep === 1 ? 'Choose Your Agency Plan' : 'Create Agency Account'}
             </CardTitle>
             <CardDescription>
               {currentStep === 1 
-                ? 'Select the plan that best fits your needs' 
-                : 'Complete your account setup'
+                ? 'Select the plan that best fits your agency size' 
+                : 'Set up your organization account'
               }
             </CardDescription>
           </CardHeader>

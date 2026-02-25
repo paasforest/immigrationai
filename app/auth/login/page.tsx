@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { immigrationApi } from '@/lib/api/immigration';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,10 +30,24 @@ export default function LoginPage() {
     const result = await login(formData);
 
     if (result.success) {
-      // Redirect admin users to admin dashboard
+      // Check onboarding status before redirecting
+      try {
+        const onboardingResponse = await immigrationApi.checkOnboardingStatus();
+        if (onboardingResponse.success && onboardingResponse.data) {
+          if (onboardingResponse.data.needsOnboarding) {
+            router.push('/onboarding');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check onboarding status:', error);
+      }
+
+      // Redirect based on role/admin status
       if (formData.email === 'admin@immigrationai.co.za' || formData.email === 'testadmin@immigrationai.co.za') {
         router.push('/admin');
       } else {
+        // Default redirect - dashboard/portal will handle role-based redirect
         router.push('/dashboard');
       }
     } else {
@@ -58,7 +73,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your account to continue
+              Sign in to your agency account to manage cases
             </CardDescription>
           </CardHeader>
           <CardContent>
