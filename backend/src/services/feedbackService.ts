@@ -62,30 +62,40 @@ export const updateApplicationOutcome = async (data: ApplicationOutcomeData) => 
       userId: data.userId 
     });
 
-    const outcome = await prisma.applicationOutcome.upsert({
+    // Find existing outcome by userId, country, and visaType
+    const existing = await prisma.applicationOutcome.findFirst({
       where: {
-        id: data.documentId || 'temp-id',
-      },
-      update: {
-        status: data.status,
-        outcome: data.outcome,
-        outcomeDate: data.outcomeDate,
-        processingTimeDays: data.processingTimeDays,
-        notes: data.notes,
-        documentId: data.documentId,
-      },
-      create: {
         userId: data.userId,
-        status: data.status,
         country: data.country,
         visaType: data.visaType,
-        outcome: data.outcome,
-        outcomeDate: data.outcomeDate,
-        processingTimeDays: data.processingTimeDays,
-        notes: data.notes,
-        documentId: data.documentId,
       },
     });
+
+    const outcome = existing
+      ? await prisma.applicationOutcome.update({
+          where: { id: existing.id },
+          data: {
+            status: data.status,
+            outcome: data.outcome,
+            outcomeDate: data.outcomeDate,
+            processingTimeDays: data.processingTimeDays,
+            notes: data.notes,
+            documentId: data.documentId,
+          },
+        })
+      : await prisma.applicationOutcome.create({
+          data: {
+            userId: data.userId,
+            status: data.status,
+            country: data.country,
+            visaType: data.visaType,
+            outcome: data.outcome,
+            outcomeDate: data.outcomeDate,
+            processingTimeDays: data.processingTimeDays,
+            notes: data.notes,
+            documentId: data.documentId,
+          },
+        });
 
     logger.info('Application outcome updated successfully', { outcomeId: outcome.id });
     return outcome;
@@ -207,22 +217,30 @@ export const getKnowledgeBase = async (topic?: string) => {
 // Update knowledge base entry
 export const updateKnowledgeBase = async (topic: string, content: string, source: string, confidence: number = 0.9) => {
   try {
-    const entry = await prisma.knowledgeBase.upsert({
-      where: { id: topic },
-      update: {
-        content,
-        source,
-        confidence,
-        lastVerified: new Date(),
-      },
-      create: {
-        topic,
-        content,
-        source,
-        confidence,
-        lastVerified: new Date(),
-      },
+    // Find existing entry by topic
+    const existing = await prisma.knowledgeBase.findFirst({
+      where: { topic },
     });
+
+    const entry = existing
+      ? await prisma.knowledgeBase.update({
+          where: { id: existing.id },
+          data: {
+            content,
+            source,
+            confidence,
+            lastVerified: new Date(),
+          },
+        })
+      : await prisma.knowledgeBase.create({
+          data: {
+            topic,
+            content,
+            source,
+            confidence,
+            lastVerified: new Date(),
+          },
+        });
 
     logger.info('Knowledge base updated', { topic, source });
     return entry;

@@ -184,7 +184,7 @@ export const databaseService = {
   getUserChecklists: async (userId: string) => {
     return prisma.checklist.findMany({
       where: {},
-      orderBy: { lastUpdated: 'desc' }
+      orderBy: { lastUpdated: 'desc' as const }
     });
   },
 

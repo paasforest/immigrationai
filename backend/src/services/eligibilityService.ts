@@ -345,15 +345,15 @@ ${supplementalSection}
         last24h: parseInt(totalsResult.rows[0]?.last_24h || '0', 10),
         avgConfidence: parseFloat(totalsResult.rows[0]?.avg_confidence || '0'),
       },
-      topCountries: topCountries.rows.map((row) => ({
+      topCountries: topCountries.rows.map((row: any) => ({
         country: row.country,
         checks: Number(row.checks),
       })),
-      topVisaTypes: topVisaTypes.rows.map((row) => ({
+      topVisaTypes: topVisaTypes.rows.map((row: any) => ({
         visaType: row.visa_type,
         checks: Number(row.checks),
       })),
-      recent: recentChecks.rows.map((row) => ({
+      recent: recentChecks.rows.map((row: any) => ({
         country: row.country,
         visaType: row.visa_type,
         verdict: row.verdict,
