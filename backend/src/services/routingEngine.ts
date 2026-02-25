@@ -254,6 +254,103 @@ export async function reassignIntake(intakeId: string): Promise<any | null> {
 }
 
 /**
+ * Ensure a professional has an organization
+ * Creates a personal organization for independent professionals if needed
+ */
+async function ensurePersonalOrganization(professionalId: string): Promise<string> {
+  // Fetch professional with full details
+  const professional = await prisma.user.findUnique({
+    where: { id: professionalId },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      organizationId: true,
+      isIndependentProfessional: true,
+    },
+  });
+
+  if (!professional) {
+    throw new Error('Professional not found');
+  }
+
+  // If professional already has an organization, return it
+  if (professional.organizationId) {
+    return professional.organizationId;
+  }
+
+  // If not an independent professional, throw error (they should have an organization)
+  if (!professional.isIndependentProfessional) {
+    throw new Error('Professional must be part of an organization');
+  }
+
+  // Create personal organization for independent professional
+  const orgName = professional.fullName || professional.email.split('@')[0] || 'Independent Professional';
+  
+  // Generate slug from name
+  let slug = orgName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // Ensure slug is unique
+  let uniqueSlug = slug;
+  let counter = 1;
+  while (await prisma.organization.findUnique({ where: { slug: uniqueSlug } })) {
+    uniqueSlug = `${slug}-${counter}`;
+    counter++;
+  }
+
+  // Calculate trial end date (14 days from now)
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+  // Create personal organization
+  const organization = await prisma.organization.create({
+    data: {
+      name: `${orgName} (Independent)`,
+      slug: uniqueSlug,
+      billingEmail: professional.email,
+      plan: 'starter',
+      planStatus: 'trial',
+      trialEndsAt,
+      isActive: true,
+    },
+  });
+
+  // Create trial subscription
+  await prisma.subscription.create({
+    data: {
+      organizationId: organization.id,
+      plan: 'starter',
+      status: 'trial',
+      billingCycle: 'monthly',
+      currency: 'ZAR',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: trialEndsAt,
+    },
+  });
+
+  // Update professional's organizationId
+  await prisma.user.update({
+    where: { id: professionalId },
+    data: {
+      organizationId: organization.id,
+      role: 'org_admin', // Independent professionals become org_admin of their personal org
+    },
+  });
+
+  logger.info('Created personal organization for independent professional', {
+    professionalId,
+    organizationId: organization.id,
+    organizationName: organization.name,
+  });
+
+  return organization.id;
+}
+
+/**
  * Convert intake to a case
  */
 export async function convertIntakeToCase(intakeId: string, professionalId: string): Promise<any> {
@@ -303,17 +400,8 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
       applicantId = newUser.id;
     }
 
-    // Fetch professional to get organizationId
-    const professional = await prisma.user.findUnique({
-      where: { id: professionalId },
-      select: {
-        organizationId: true,
-      },
-    });
-
-    if (!professional || !professional.organizationId) {
-      throw new Error('Professional not found or not in organization');
-    }
+    // Ensure professional has an organization (creates one for independent professionals if needed)
+    const organizationId = await ensurePersonalOrganization(professionalId);
 
     // Generate case reference
     const referenceNumber = await generateCaseReference();
@@ -321,7 +409,7 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
     // Create case
     const newCase = await prisma.case.create({
       data: {
-        organizationId: professional.organizationId,
+        organizationId: organizationId,
         assignedProfessionalId: professionalId,
         applicantId: applicantId,
         referenceNumber,
