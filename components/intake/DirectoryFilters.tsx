@@ -38,9 +38,9 @@ const destinationCountries = [
 
 export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersProps) {
   const [services, setServices] = useState<Service[]>([]);
-  const [serviceFilter, setServiceFilter] = useState<string>('');
-  const [originFilter, setOriginFilter] = useState<string>('');
-  const [destinationFilter, setDestinationFilter] = useState<string>('');
+  const [serviceFilter, setServiceFilter] = useState<string>('all');
+  const [originFilter, setOriginFilter] = useState<string>('all');
+  const [destinationFilter, setDestinationFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchServices();
@@ -48,9 +48,9 @@ export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersPr
 
   useEffect(() => {
     onFiltersChange({
-      service: serviceFilter || undefined,
-      originCountry: originFilter || undefined,
-      destinationCountry: destinationFilter || undefined,
+      service: serviceFilter === 'all' ? undefined : serviceFilter,
+      originCountry: originFilter === 'all' ? undefined : originFilter,
+      destinationCountry: destinationFilter === 'all' ? undefined : destinationFilter,
     });
   }, [serviceFilter, originFilter, destinationFilter, onFiltersChange]);
 
@@ -63,12 +63,12 @@ export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersPr
     }
   };
 
-  const hasActiveFilters = serviceFilter || originFilter || destinationFilter;
+  const hasActiveFilters = serviceFilter !== 'all' || originFilter !== 'all' || destinationFilter !== 'all';
 
   const clearFilters = () => {
-    setServiceFilter('');
-    setOriginFilter('');
-    setDestinationFilter('');
+    setServiceFilter('all');
+    setOriginFilter('all');
+    setDestinationFilter('all');
   };
 
   return (
@@ -82,7 +82,7 @@ export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersPr
                 <SelectValue placeholder="All Services" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Services</SelectItem>
+                <SelectItem value="all">All Services</SelectItem>
                 {services.map((service) => (
                   <SelectItem key={service.id} value={service.caseType}>
                     {service.name}
@@ -99,7 +99,7 @@ export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersPr
                 <SelectValue placeholder="Any Origin Country" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Origin Country</SelectItem>
+                <SelectItem value="all">Any Origin Country</SelectItem>
                 {originCountries.map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
@@ -116,7 +116,7 @@ export default function DirectoryFilters({ onFiltersChange }: DirectoryFiltersPr
                 <SelectValue placeholder="Any Destination" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Destination</SelectItem>
+                <SelectItem value="all">Any Destination</SelectItem>
                 {destinationCountries.map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
