@@ -1,32 +1,40 @@
-import winston from 'winston';
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.splat(),
-  winston.format.json()
-);
-
-export const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: logFormat,
-  defaultMeta: { service: 'immigration-ai-backend' },
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-  ],
-});
-
-// Add console transport in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    })
-  );
+interface LogEntry {
+  level: LogLevel;
+  message: string;
+  metadata?: any;
+  timestamp: string;
 }
 
+class Logger {
+  private formatTimestamp(): string {
+    return new Date().toISOString();
+  }
 
+  private formatMessage(level: LogLevel, message: string, metadata?: any): string {
+    const timestamp = this.formatTimestamp();
+    const metaStr = metadata ? ` ${JSON.stringify(metadata)}` : '';
+    return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaStr}`;
+  }
+
+  info(message: string, metadata?: any): void {
+    console.log(this.formatMessage('info', message, metadata));
+  }
+
+  warn(message: string, metadata?: any): void {
+    console.warn(this.formatMessage('warn', message, metadata));
+  }
+
+  error(message: string, metadata?: any): void {
+    console.error(this.formatMessage('error', message, metadata));
+  }
+
+  debug(message: string, metadata?: any): void {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(this.formatMessage('debug', message, metadata));
+    }
+  }
+}
+
+export const logger = new Logger();

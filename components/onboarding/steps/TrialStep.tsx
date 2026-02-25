@@ -45,7 +45,7 @@ export default function TrialStep({ organizationName }: TrialStepProps) {
 
       {/* What's Included */}
       <div className="bg-white rounded-lg border p-8 text-left max-w-md mx-auto">
-        <h3 className="font-semibold text-lg mb-4">What's included:</h3>
+        <h3 className="font-semibold text-lg mb-4">What&apos;s included:</h3>
         <ul className="space-y-3">
           <li className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />

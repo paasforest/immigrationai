@@ -1,23 +1,26 @@
 import { Router } from 'express';
-import { documentController } from '../controllers/documentController';
-import { authenticateJWT } from '../middleware/auth';
-import { documentLimiter } from '../middleware/rateLimit';
+import { auth } from '../middleware/auth';
+import { organizationContext } from '../middleware/organizationContext';
+import {
+  uploadDocument,
+  getDocumentsByCase,
+  updateDocument,
+  deleteDocument,
+  getDocumentDownload,
+  uploadMiddleware,
+} from '../controllers/documentController';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticateJWT);
+// All document routes require authentication and organization context
+router.use(auth);
+router.use(organizationContext);
 
-// Document generation routes (with rate limiting)
-router.post('/generate-sop', documentLimiter, documentController.generateSOP);
-router.post('/generate-cover-letter', documentLimiter, documentController.generateCoverLetter);
-router.post('/review-sop', documentLimiter, documentController.reviewSOP);
-
-// Document management routes
-router.get('/', documentController.getUserDocuments);
-router.get('/:id', documentController.getDocument);
-router.delete('/:id', documentController.deleteDocument);
+// Document routes
+router.post('/upload', uploadMiddleware.single('file'), uploadDocument); // POST /api/documents/upload
+router.get('/case/:caseId', getDocumentsByCase); // GET /api/documents/case/:caseId
+router.put('/:id', updateDocument); // PUT /api/documents/:id
+router.delete('/:id', deleteDocument); // DELETE /api/documents/:id
+router.get('/:id/download', getDocumentDownload); // GET /api/documents/:id/download
 
 export default router;
-
-

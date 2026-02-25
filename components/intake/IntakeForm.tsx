@@ -95,6 +95,7 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
   }, [preferredSpecialist]);
 
   const fetchSpecialistName = async () => {
+    if (!preferredSpecialist) return;
     try {
       const profile = await getPublicProfile(preferredSpecialist);
       setSpecialistName(profile.displayName);

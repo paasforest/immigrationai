@@ -1,11 +1,24 @@
 import { Router } from 'express';
-import { checklistController } from '../controllers/checklistController';
+import { auth } from '../middleware/auth';
+import { organizationContext } from '../middleware/organizationContext';
+import {
+  createChecklist,
+  getChecklistsByCase,
+  updateChecklistItem,
+  deleteChecklist,
+} from '../controllers/checklistController';
 
 const router = Router();
 
-// Public routes (no authentication required for checklists)
-router.get('/', checklistController.getChecklist);
-router.get('/all', checklistController.getAllChecklists);
+// All checklist routes require authentication and organization context
+router.use(auth);
+router.use(organizationContext);
+
+// Checklist routes
+router.post('/', createChecklist); // POST /api/checklists
+router.get('/case/:caseId', getChecklistsByCase); // GET /api/checklists/case/:caseId
+router.put('/items/:id', updateChecklistItem); // PUT /api/checklists/items/:id
+router.delete('/:id', deleteChecklist); // DELETE /api/checklists/:id
 
 export default router;
 

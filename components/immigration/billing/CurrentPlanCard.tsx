@@ -127,7 +127,7 @@ export default function CurrentPlanCard({ subscription, onUpgrade, onCancel }: C
                   <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Your subscription will remain active until {subscription?.currentPeriodEnd ? format(new Date(subscription.currentPeriodEnd), 'MMMM d, yyyy') : 'the end of your billing period'}. 
-                    You'll lose access to premium features after that date.
+                    You&apos;ll lose access to premium features after that date.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

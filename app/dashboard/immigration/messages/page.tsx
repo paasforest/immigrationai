@@ -173,7 +173,7 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Messages Tab Component */}
-                <MessagesTab caseId={selectedCaseId} onRefresh={fetchCases} />
+                <MessagesTab caseId={selectedCaseId} />
               </CardContent>
             </Card>
           ) : (

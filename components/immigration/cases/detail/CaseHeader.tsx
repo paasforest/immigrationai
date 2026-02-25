@@ -79,7 +79,7 @@ export default function CaseHeader({ caseData, onUpdate }: CaseHeaderProps) {
   const handleStatusChange = async (newStatus: string) => {
     try {
       setIsUpdating(true);
-      const response = await immigrationApi.updateCase(caseData.id, { status: newStatus as any });
+      const response = await immigrationApi.updateCase(caseData.id, { status: newStatus } as any);
       
       if (response.success) {
         toast.success('Case status updated');

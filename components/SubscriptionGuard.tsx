@@ -62,7 +62,7 @@ export function SubscriptionGuard({
         {hasLimit ? (
           <div className="space-y-2">
             <p className="text-amber-700">
-              You've used all {plan === 'starter' ? '3' : 'your'} monthly document generations.
+              You&apos;ve used all {plan === 'starter' ? '3' : 'your'} monthly document generations.
             </p>
             <p className="text-sm text-amber-600">
               Upgrade to Pro for unlimited generations or wait until next month.

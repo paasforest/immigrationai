@@ -558,7 +558,7 @@ export default function PricingPage() {
                   ))}
                 </div>
                 <p className="text-sm text-gray-700 mb-4 italic">
-                  "Saved me R8,000 compared to hiring a consultant. Got my UK visa approved on first try!"
+                  &quot;Saved me R8,000 compared to hiring a consultant. Got my UK visa approved on first try!&quot;
                 </p>
                 <div className="text-xs text-gray-600">
                   - Sarah M., UK Student Visa
@@ -573,7 +573,7 @@ export default function PricingPage() {
                   ))}
                 </div>
                 <p className="text-sm text-gray-700 mb-4 italic">
-                  "The SOP generator is amazing! Created a professional document in 10 minutes. Best investment for my visa journey."
+                  &quot;The SOP generator is amazing! Created a professional document in 10 minutes. Best investment for my visa journey.&quot;
                 </p>
                 <div className="text-xs text-gray-600">
                   - John D., Canada Express Entry
@@ -588,7 +588,7 @@ export default function PricingPage() {
                   ))}
                 </div>
                 <p className="text-sm text-gray-700 mb-4 italic">
-                  "Interview practice helped me so much! The AI feedback was spot-on. Highly recommend!"
+                  &quot;Interview practice helped me so much! The AI feedback was spot-on. Highly recommend!&quot;
                 </p>
                 <div className="text-xs text-gray-600">
                   - Maria K., USA H1B Visa
@@ -608,7 +608,7 @@ export default function PricingPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">
-                  What's the difference between monthly and annual billing?
+                  What&apos;s the difference between monthly and annual billing?
                 </h3>
                 <p className="text-gray-600">
                   Annual billing offers the same features as monthly billing but with up to 17% savings. 
@@ -641,7 +641,7 @@ export default function PricingPage() {
                   Do you offer refunds?
                 </h3>
                 <p className="text-gray-600">
-                  Yes! We offer a <strong>100% money-back guarantee within 7 days</strong> if you're not completely satisfied. 
+                  Yes! We offer a <strong>100% money-back guarantee within 7 days</strong> if you&apos;re not completely satisfied. 
                   No questions asked. Simply contact support for a full refund.
                 </p>
               </div>

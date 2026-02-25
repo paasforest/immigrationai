@@ -300,7 +300,7 @@ export default function CoverLetterPage() {
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No Cover Letter Generated Yet</h4>
-                  <p className="text-gray-600 text-sm mb-4">Fill in your information and click "Generate Cover Letter"</p>
+                  <p className="text-gray-600 text-sm mb-4">Fill in your information and click &quot;Generate Cover Letter&quot;</p>
                   <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto">
                     <p className="text-sm text-blue-900">
                       <strong>Tip:</strong> A professional cover letter helps visa officers understand your application clearly and demonstrates your seriousness.

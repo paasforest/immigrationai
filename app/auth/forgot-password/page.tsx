@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
             </div>
             <CardTitle className="text-2xl">Forgot Password?</CardTitle>
             <CardDescription>
-              No worries! Enter your email address and we'll send you a password reset link.
+              No worries! Enter your email address and we&apos;ll send you a password reset link.
             </CardDescription>
           </CardHeader>
 
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
                   If an account exists with <strong>{email}</strong>, you will receive a password reset link shortly.
                 </p>
                 <p className="text-sm text-gray-500 mb-4">
-                  Didn't receive the email? Check your spam folder or try again.
+                  Didn&apos;t receive the email? Check your spam folder or try again.
                 </p>
                 <Button
                   variant="outline"

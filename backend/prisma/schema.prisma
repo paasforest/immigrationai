@@ -11,33 +11,60 @@ datasource db {
 }
 
 model User {
-  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String         @unique @db.VarChar(255)
-  passwordHash        String         @map("password_hash") @db.VarChar(255)
-  fullName            String?        @map("full_name") @db.VarChar(255)
-  companyName         String?        @map("company_name") @db.VarChar(255)
-  role                String?        @default("user") @db.VarChar(50)
-  subscriptionPlan    String         @default("starter") @map("subscription_plan") @db.VarChar(50)
-  subscriptionStatus  String         @default("inactive") @map("subscription_status") @db.VarChar(50)
-  accountNumber       String?        @unique @map("account_number") @db.VarChar(50)
-  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+  id                 String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String  @unique @db.VarChar(255)
+  passwordHash       String  @map("password_hash") @db.VarChar(255)
+  fullName           String? @map("full_name") @db.VarChar(255)
+  companyName        String? @map("company_name") @db.VarChar(255)
+  role               String? @default("user") @db.VarChar(50)
+  subscriptionPlan   String  @default("starter") @map("subscription_plan") @db.VarChar(50)
+  subscriptionStatus String  @default("inactive") @map("subscription_status") @db.VarChar(50)
+  accountNumber      String? @unique @map("account_number") @db.VarChar(50)
+
+  // NEW: Organization fields
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // NEW: Additional fields
+  phone     String? @db.VarChar(50)
+  avatarUrl String? @map("avatar_url") @db.VarChar(500)
+  isActive  Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
   // Relations
   documents           Document[]
   apiUsage            ApiUsage[]
-  subscriptions       Subscription[]
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   documentFeedback    DocumentFeedback[]
   applicationOutcomes ApplicationOutcome[]
   userTracking        UserTracking?
-  
-  // Interview Coach Relations
-  mockInterviews      MockInterview[]
-  interviewSessions   InterviewSession[]
-  interviewProgress   UserInterviewProgress[]
+  pendingPayments     PendingPayment[]
 
+  // Interview Coach Relations
+  mockInterviews    MockInterview[]
+  interviewSessions InterviewSession[]
+  interviewProgress UserInterviewProgress[]
+
+  // NEW: Multi-tenant Relations
+  assignedCases     Case[]         @relation("AssignedCases")
+  applicantCases    Case[]         @relation("ApplicantCases")
+  assignedTasks     Task[]         @relation("AssignedTasks")
+  createdTasks      Task[]         @relation("CreatedTasks")
+  sentMessages      Message[]      @relation("SentMessages")
+  uploadedDocuments CaseDocument[]
+  auditLogs         AuditLog[]
+
+  // Marketplace Intake Relations
+  isIndependentProfessional Boolean                      @default(false) @map("is_independent_professional")
+  specializations           ProfessionalSpecialization[]
+  intakeAssignments         IntakeAssignment[]
+  professionalProfile       ProfessionalProfile?
+  Notification              Notification[]
+
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -82,22 +109,36 @@ model ApiUsage {
 }
 
 model Subscription {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId               String    @map("user_id") @db.Uuid
-  plan                 String    @db.VarChar(50)
-  stripeSubscriptionId String?   @unique @map("stripe_subscription_id") @db.VarChar(255)
-  stripeCustomerId     String?   @map("stripe_customer_id") @db.VarChar(255)
-  status               String    @default("active") @db.VarChar(50)
-  currentPeriodStart   DateTime? @map("current_period_start") @db.Date
-  currentPeriodEnd     DateTime? @map("current_period_end") @db.Date
-  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // CHANGED: From userId to organizationId
+  organizationId String       @unique @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  plan          String   @db.VarChar(50)
+  status        String   @default("trial") @db.VarChar(50)
+  paymentMethod String?  @map("payment_method") @db.VarChar(50)
+  amount        Decimal? @db.Decimal(10, 2)
+  currency      String   @default("ZAR") @db.VarChar(10)
+  billingCycle  String   @default("monthly") @map("billing_cycle") @db.VarChar(20)
+
+  // Existing payment gateway fields
+  stripeSubscriptionId String? @unique @map("stripe_subscription_id") @db.VarChar(255)
+  stripeCustomerId     String? @map("stripe_customer_id") @db.VarChar(255)
+
+  // NEW: Additional payment methods
+  payfastSubscriptionId String? @map("payfast_subscription_id") @db.VarChar(255)
+  yocoSubscriptionId    String? @map("yoco_subscription_id") @db.VarChar(255)
+  accountNumber         String? @map("account_number") @db.VarChar(50)
+
+  currentPeriodStart DateTime? @map("current_period_start") @db.Timestamp(6)
+  currentPeriodEnd   DateTime? @map("current_period_end") @db.Timestamp(6)
+  cancelledAt        DateTime? @map("cancelled_at") @db.Timestamp(6)
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([organizationId])
   @@index([stripeSubscriptionId])
   @@index([status])
   @@map("subscriptions")
@@ -156,7 +197,7 @@ model DocumentFeedback {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   documentId   String   @map("document_id") @db.Uuid
   userId       String   @map("user_id") @db.Uuid
-  rating       Int      // 1-5 stars
+  rating       Int // 1-5 stars
   comment      String?  @db.Text
   documentType String   @map("document_type") @db.VarChar(50) // 'sop', 'email', 'support_letter', etc.
   country      String?  @db.VarChar(100)
@@ -174,18 +215,18 @@ model DocumentFeedback {
 
 // Success Tracking System
 model ApplicationOutcome {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  documentId        String?   @map("document_id") @db.Uuid
-  userId            String    @map("user_id") @db.Uuid
-  status            String    @db.VarChar(50) // 'preparing', 'submitted', 'interview', 'approved', 'rejected'
-  country           String    @db.VarChar(100)
-  visaType          String    @map("visa_type") @db.VarChar(100)
-  outcome           String?   @db.VarChar(50) // 'approved', 'rejected', 'pending'
-  outcomeDate       DateTime? @map("outcome_date") @db.Date
-  processingTimeDays Int?     @map("processing_time_days")
-  notes             String?   @db.Text
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId         String?   @map("document_id") @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  status             String    @db.VarChar(50) // 'preparing', 'submitted', 'interview', 'approved', 'rejected'
+  country            String    @db.VarChar(100)
+  visaType           String    @map("visa_type") @db.VarChar(100)
+  outcome            String?   @db.VarChar(50) // 'approved', 'rejected', 'pending'
+  outcomeDate        DateTime? @map("outcome_date") @db.Date
+  processingTimeDays Int?      @map("processing_time_days")
+  notes              String?   @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -199,15 +240,15 @@ model ApplicationOutcome {
 
 // Knowledge Base for Updates
 model KnowledgeBase {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  topic        String    @db.VarChar(255) // "USA-F1-2024", "Canada-Study-2024"
-  content      String    @db.Text
-  source       String    @db.VarChar(255) // "USCIS.gov", "IRCC.ca"
-  confidence   Decimal   @db.Decimal(3,2) // 0.00-1.00
-  lastVerified DateTime  @map("last_verified") @db.Date
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topic        String   @db.VarChar(255) // "USA-F1-2024", "Canada-Study-2024"
+  content      String   @db.Text
+  source       String   @db.VarChar(255) // "USCIS.gov", "IRCC.ca"
+  confidence   Decimal  @db.Decimal(3, 2) // 0.00-1.00
+  lastVerified DateTime @map("last_verified") @db.Date
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
   @@index([topic])
   @@index([isActive])
@@ -230,7 +271,7 @@ model InterviewQuestion {
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
   // Relations
-  mockInterviews    MockInterview[]
+  mockInterviews MockInterview[]
 
   @@index([visaType])
   @@index([category])
@@ -239,22 +280,22 @@ model InterviewQuestion {
 }
 
 model MockInterview {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
-  questionId        String   @map("question_id") @db.Uuid
-  visaType          String   @map("visa_type") @db.VarChar(50)
-  userAnswer        String   @map("user_answer") @db.Text
-  answerAudioUrl    String?  @map("answer_audio_url") @db.VarChar(500)
-  transcription     String?  @db.Text
-  durationSeconds   Int?     @map("duration_seconds")
-  aiFeedback        Json     @map("ai_feedback") @db.JsonB
-  score             Int      // 1-10
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  questionId      String   @map("question_id") @db.Uuid
+  visaType        String   @map("visa_type") @db.VarChar(50)
+  userAnswer      String   @map("user_answer") @db.Text
+  answerAudioUrl  String?  @map("answer_audio_url") @db.VarChar(500)
+  transcription   String?  @db.Text
+  durationSeconds Int?     @map("duration_seconds")
+  aiFeedback      Json     @map("ai_feedback") @db.JsonB
+  score           Int // 1-10
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   // Relations
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  question          InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  feedbackHistory   InterviewFeedbackHistory[]
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question        InterviewQuestion          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  feedbackHistory InterviewFeedbackHistory[]
 
   @@index([userId])
   @@index([visaType])
@@ -263,19 +304,19 @@ model MockInterview {
 }
 
 model InterviewSession {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
-  visaType          String   @map("visa_type") @db.VarChar(50)
-  sessionName       String?  @map("session_name") @db.VarChar(255)
-  questionsAttempted Int     @map("questions_attempted")
-  averageScore      Decimal  @map("average_score") @db.Decimal(3,2)
-  durationMinutes   Int?     @map("duration_minutes")
-  startedAt         DateTime @map("started_at") @db.Timestamp(6)
-  completedAt       DateTime? @map("completed_at") @db.Timestamp(6)
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  visaType           String    @map("visa_type") @db.VarChar(50)
+  sessionName        String?   @map("session_name") @db.VarChar(255)
+  questionsAttempted Int       @map("questions_attempted")
+  averageScore       Decimal   @map("average_score") @db.Decimal(3, 2)
+  durationMinutes    Int?      @map("duration_minutes")
+  startedAt          DateTime  @map("started_at") @db.Timestamp(6)
+  completedAt        DateTime? @map("completed_at") @db.Timestamp(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
 
   // Relations
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([visaType])
@@ -283,20 +324,20 @@ model InterviewSession {
 }
 
 model UserInterviewProgress {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
-  visaType          String   @map("visa_type") @db.VarChar(50)
-  questionsPracticed Int     @default(0) @map("questions_practiced")
-  averageScore      Decimal  @default(0) @map("average_score") @db.Decimal(3,2)
-  weakestCategory   String?  @map("weakest_category") @db.VarChar(50)
-  strongestCategory String?  @map("strongest_category") @db.VarChar(50)
-  readinessScore    Int      @default(0) @map("readiness_score")
-  lastPracticeDate  DateTime? @map("last_practice_date") @db.Timestamp(6)
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  visaType           String    @map("visa_type") @db.VarChar(50)
+  questionsPracticed Int       @default(0) @map("questions_practiced")
+  averageScore       Decimal   @default(0) @map("average_score") @db.Decimal(3, 2)
+  weakestCategory    String?   @map("weakest_category") @db.VarChar(50)
+  strongestCategory  String?   @map("strongest_category") @db.VarChar(50)
+  readinessScore     Int       @default(0) @map("readiness_score")
+  lastPracticeDate   DateTime? @map("last_practice_date") @db.Timestamp(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
 
   // Relations
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, visaType])
   @@index([userId])
@@ -305,18 +346,18 @@ model UserInterviewProgress {
 }
 
 model InterviewFeedbackHistory {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  mockInterviewId   String   @map("mock_interview_id") @db.Uuid
-  feedbackText      String   @map("feedback_text") @db.Text
-  keyStrengths      String[] @map("key_strengths")
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mockInterviewId     String   @map("mock_interview_id") @db.Uuid
+  feedbackText        String   @map("feedback_text") @db.Text
+  keyStrengths        String[] @map("key_strengths")
   areasForImprovement String[] @map("areas_for_improvement")
-  suggestions       String?  @db.Text
-  consistencyWithSop Boolean @map("consistency_with_sop")
-  redFlagsDetected  String[] @map("red_flags_detected")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  suggestions         String?  @db.Text
+  consistencyWithSop  Boolean  @map("consistency_with_sop")
+  redFlagsDetected    String[] @map("red_flags_detected")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   // Relations
-  mockInterview     MockInterview @relation(fields: [mockInterviewId], references: [id], onDelete: Cascade)
+  mockInterview MockInterview @relation(fields: [mockInterviewId], references: [id], onDelete: Cascade)
 
   @@index([mockInterviewId])
   @@map("interview_feedback_history")
@@ -324,22 +365,22 @@ model InterviewFeedbackHistory {
 
 // UTM Tracking for Marketing Attribution
 model UserTracking {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @unique @map("user_id") @db.Uuid
-  utmSource    String?  @map("utm_source") @db.VarChar(100)      // e.g., "proconnectsa"
-  utmMedium    String?  @map("utm_medium") @db.VarChar(100)      // e.g., "website", "email"
-  utmCampaign  String?  @map("utm_campaign") @db.VarChar(100)    // e.g., "immigration_integration"
-  utmContent   String?  @map("utm_content") @db.VarChar(255)     // e.g., "hero_banner"
-  utmTerm      String?  @map("utm_term") @db.VarChar(255)        // e.g., "visa_assistance"
-  referrer     String?  @db.VarChar(500)                         // Full referrer URL
-  landingPage  String?  @map("landing_page") @db.VarChar(500)   // First page visited
-  sessionId    String?  @map("session_id") @db.VarChar(100)      // Browser session ID
-  ipAddress    String?  @map("ip_address") @db.VarChar(45)       // User IP (optional)
-  userAgent    String?  @map("user_agent") @db.Text              // Browser info
-  converted    Boolean  @default(false)                          // Did they subscribe?
-  convertedAt  DateTime? @map("converted_at") @db.Timestamp(6)   // When they subscribed
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  utmSource   String?   @map("utm_source") @db.VarChar(100) // e.g., "proconnectsa"
+  utmMedium   String?   @map("utm_medium") @db.VarChar(100) // e.g., "website", "email"
+  utmCampaign String?   @map("utm_campaign") @db.VarChar(100) // e.g., "immigration_integration"
+  utmContent  String?   @map("utm_content") @db.VarChar(255) // e.g., "hero_banner"
+  utmTerm     String?   @map("utm_term") @db.VarChar(255) // e.g., "visa_assistance"
+  referrer    String?   @db.VarChar(500) // Full referrer URL
+  landingPage String?   @map("landing_page") @db.VarChar(500) // First page visited
+  sessionId   String?   @map("session_id") @db.VarChar(100) // Browser session ID
+  ipAddress   String?   @map("ip_address") @db.VarChar(45) // User IP (optional)
+  userAgent   String?   @map("user_agent") @db.Text // Browser info
+  converted   Boolean   @default(false) // Did they subscribe?
+  convertedAt DateTime? @map("converted_at") @db.Timestamp(6) // When they subscribed
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -350,4 +391,474 @@ model UserTracking {
   @@index([converted])
   @@index([createdAt])
   @@map("user_tracking")
+}
+
+// Eligibility Checks (Homepage Quick Assessment)
+model EligibilityCheck {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String?  @map("user_id") @db.Uuid
+  email                String?  @db.VarChar(255)
+  country              String   @db.VarChar(100)
+  visaType             String   @map("visa_type") @db.VarChar(100)
+  answers              Json     @db.JsonB
+  verdict              String   @db.VarChar(50)
+  confidence           Decimal? @db.Decimal(5, 2)
+  summary              String?  @db.Text
+  riskNotes            String?  @map("risk_notes") @db.Text
+  recommendedDocuments Json?    @map("recommended_documents") @db.JsonB
+  recommendedSteps     Json?    @map("recommended_steps") @db.JsonB
+  shouldFollowUp       Boolean  @default(false) @map("should_follow_up")
+  utmSource            String?  @map("utm_source") @db.VarChar(100)
+  utmMedium            String?  @map("utm_medium") @db.VarChar(100)
+  utmCampaign          String?  @map("utm_campaign") @db.VarChar(100)
+  utmContent           String?  @map("utm_content") @db.VarChar(255)
+  utmTerm              String?  @map("utm_term") @db.VarChar(255)
+  sessionId            String?  @map("session_id") @db.VarChar(100)
+  referrer             String?  @db.VarChar(500)
+  landingPage          String?  @map("landing_page") @db.VarChar(500)
+  ipAddress            String?  @map("ip_address") @db.VarChar(45)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([country])
+  @@index([visaType])
+  @@index([createdAt])
+  @@index([utmSource])
+  @@map("eligibility_checks")
+}
+
+// Marketing Sessions (UTM Tracking)
+model MarketingSession {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId   String    @unique @map("session_id") @db.VarChar(100)
+  utmSource   String?   @map("utm_source") @db.VarChar(100)
+  utmMedium   String?   @map("utm_medium") @db.VarChar(100)
+  utmCampaign String?   @map("utm_campaign") @db.VarChar(100)
+  utmContent  String?   @map("utm_content") @db.VarChar(255)
+  utmTerm     String?   @map("utm_term") @db.VarChar(255)
+  referrer    String?   @db.VarChar(500)
+  landingPage String?   @map("landing_page") @db.VarChar(500)
+  ipAddress   String?   @map("ip_address") @db.VarChar(45)
+  userAgent   String?   @map("user_agent") @db.Text
+  converted   Boolean   @default(false)
+  convertedAt DateTime? @map("converted_at") @db.Timestamp(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([sessionId])
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([createdAt])
+  @@map("marketing_sessions")
+}
+
+// Pending Payments (Bank Transfer Tracking)
+model PendingPayment {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  accountNumber String    @unique @map("account_number") @db.VarChar(50)
+  plan          String    @db.VarChar(50)
+  billingCycle  String    @map("billing_cycle") @db.VarChar(20)
+  amount        Int
+  status        String    @default("pending") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  completedAt   DateTime? @map("completed_at") @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("pending_payments")
+}
+
+// ============================================
+// MULTI-TENANT MODELS
+// ============================================
+
+// ============================================
+// ORGANIZATION MODEL
+// ============================================
+model Organization {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String    @db.VarChar(255)
+  slug               String    @unique @db.VarChar(255)
+  plan               String    @default("starter") @db.VarChar(50)
+  planStatus         String    @default("trial") @map("plan_status") @db.VarChar(50)
+  trialEndsAt        DateTime? @map("trial_ends_at") @db.Timestamp(6)
+  billingEmail       String?   @map("billing_email") @db.VarChar(255)
+  country            String?   @db.VarChar(100)
+  phone              String?   @db.VarChar(50)
+  logoUrl            String?   @map("logo_url") @db.VarChar(500)
+  isActive           Boolean   @default(true) @map("is_active")
+  sentTrialWarning7d Boolean   @default(false) @map("sent_trial_warning_7d")
+  sentTrialWarning1d Boolean   @default(false) @map("sent_trial_warning_1d")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  users         User[]
+  cases         Case[]
+  caseDocuments CaseDocument[]
+  tasks         Task[]
+  messages      Message[]
+  subscriptions Subscription[]
+  auditLogs     AuditLog[]
+
+  // Marketplace Intake Relations
+  specializations     ProfessionalSpecialization[]
+  intakeAssignments   IntakeAssignment[]
+  Notification        Notification[]
+  ProfessionalProfile ProfessionalProfile[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("organizations")
+}
+
+// ============================================
+// CASE MODEL
+// ============================================
+model Case {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String       @map("organization_id") @db.Uuid
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedProfessionalId String?      @map("assigned_professional_id") @db.Uuid
+  assignedProfessional   User?        @relation("AssignedCases", fields: [assignedProfessionalId], references: [id])
+  applicantId            String?      @map("applicant_id") @db.Uuid
+  applicant              User?        @relation("ApplicantCases", fields: [applicantId], references: [id])
+  referenceNumber        String       @unique @map("reference_number") @db.VarChar(50)
+  status                 String       @default("open") @db.VarChar(50)
+  visaType               String?      @map("visa_type") @db.VarChar(100)
+  originCountry          String?      @map("origin_country") @db.VarChar(100)
+  destinationCountry     String?      @map("destination_country") @db.VarChar(100)
+  title                  String       @db.VarChar(255)
+  notes                  String?      @db.Text
+  priority               String       @default("normal") @db.VarChar(50)
+  submissionDeadline     DateTime?    @map("submission_deadline") @db.Timestamp(6)
+  submittedAt            DateTime?    @map("submitted_at") @db.Timestamp(6)
+  decisionAt             DateTime?    @map("decision_at") @db.Timestamp(6)
+  outcome                String?      @db.VarChar(50)
+  createdAt              DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt              DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  caseDocuments CaseDocument[]
+  tasks         Task[]
+  messages      Message[]
+  checklists    DocumentChecklist[]
+
+  @@index([organizationId])
+  @@index([assignedProfessionalId])
+  @@index([applicantId])
+  @@index([referenceNumber])
+  @@index([status])
+  @@map("cases")
+}
+
+// ============================================
+// CASE DOCUMENT MODEL (File Uploads)
+// Separate from existing Document model (AI-generated)
+// ============================================
+model CaseDocument {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId         String       @map("case_id") @db.Uuid
+  case           Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedById   String       @map("uploaded_by_id") @db.Uuid
+  uploadedBy     User         @relation(fields: [uploadedById], references: [id])
+  name           String       @db.VarChar(255)
+  category       String?      @db.VarChar(100)
+  fileUrl        String       @map("file_url") @db.VarChar(500)
+  fileSize       BigInt?      @map("file_size")
+  fileType       String?      @map("file_type") @db.VarChar(100)
+  status         String       @default("pending_review") @db.VarChar(50)
+  expiryDate     DateTime?    @map("expiry_date") @db.Timestamp(6)
+  notes          String?      @db.Text
+  version        Int          @default(1)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  checklistItems ChecklistItem[]
+
+  @@index([caseId])
+  @@index([organizationId])
+  @@index([uploadedById])
+  @@map("case_documents")
+}
+
+// ============================================
+// TASK MODEL
+// ============================================
+model Task {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId         String       @map("case_id") @db.Uuid
+  case           Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedToId   String?      @map("assigned_to_id") @db.Uuid
+  assignedTo     User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdById    String       @map("created_by_id") @db.Uuid
+  createdBy      User         @relation("CreatedTasks", fields: [createdById], references: [id])
+  title          String       @db.VarChar(255)
+  description    String?      @db.Text
+  status         String       @default("pending") @db.VarChar(50)
+  priority       String       @default("normal") @db.VarChar(50)
+  dueDate        DateTime?    @map("due_date") @db.Timestamp(6)
+  completedAt    DateTime?    @map("completed_at") @db.Timestamp(6)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([caseId])
+  @@index([organizationId])
+  @@index([assignedToId])
+  @@index([status])
+  @@map("tasks")
+}
+
+// ============================================
+// MESSAGE MODEL
+// ============================================
+model Message {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId         String       @map("case_id") @db.Uuid
+  case           Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  senderId       String       @map("sender_id") @db.Uuid
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  content        String       @db.Text
+  isInternal     Boolean      @default(false) @map("is_internal")
+  readAt         DateTime?    @map("read_at") @db.Timestamp(6)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([caseId])
+  @@index([organizationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ============================================
+// DOCUMENT CHECKLIST MODEL
+// ============================================
+model DocumentChecklist {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId             String   @map("case_id") @db.Uuid
+  case               Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  organizationId     String   @map("organization_id") @db.Uuid
+  name               String   @db.VarChar(255)
+  visaType           String?  @map("visa_type") @db.VarChar(100)
+  originCountry      String?  @map("origin_country") @db.VarChar(100)
+  destinationCountry String?  @map("destination_country") @db.VarChar(100)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  items ChecklistItem[]
+
+  @@index([caseId])
+  @@index([organizationId])
+  @@map("document_checklists")
+}
+
+// ============================================
+// CHECKLIST ITEM MODEL
+// ============================================
+model ChecklistItem {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checklistId String            @map("checklist_id") @db.Uuid
+  checklist   DocumentChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  name        String            @db.VarChar(255)
+  description String?           @db.Text
+  isRequired  Boolean           @default(true) @map("is_required")
+  isCompleted Boolean           @default(false) @map("is_completed")
+  documentId  String?           @map("document_id") @db.Uuid
+  document    CaseDocument?     @relation(fields: [documentId], references: [id])
+  completedAt DateTime?         @map("completed_at") @db.Timestamp(6)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([checklistId])
+  @@index([documentId])
+  @@map("checklist_items")
+}
+
+// ============================================
+// AUDIT LOG MODEL
+// ============================================
+model AuditLog {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  userId         String?       @map("user_id") @db.Uuid
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         String        @db.VarChar(100)
+  resourceType   String?       @map("resource_type") @db.VarChar(100)
+  resourceId     String?       @map("resource_id") @db.Uuid
+  metadata       Json?         @db.JsonB
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// NOTIFICATION MODEL
+// ============================================
+model Notification {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String       @map("user_id") @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           String       @db.VarChar(50) // new_message, task_due, case_update, document_uploaded, deadline_approaching
+  title          String       @db.VarChar(255)
+  body           String       @db.Text
+  resourceType   String?      @map("resource_type") @db.VarChar(50) // case, task, document, message
+  resourceId     String?      @map("resource_id") @db.Uuid
+  isRead         Boolean      @default(false) @map("is_read")
+  readAt         DateTime?    @map("read_at") @db.Timestamp(6)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isRead])
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ============================================
+// MARKETPLACE INTAKE MODELS
+// ============================================
+
+model ServiceCatalog {
+  id                String   @id @default(cuid())
+  name              String   @db.VarChar(255)
+  slug              String   @unique @db.VarChar(100)
+  description       String   @db.Text
+  longDescription   String?  @map("long_description") @db.Text
+  caseType          String   @map("case_type") @db.VarChar(100)
+  icon              String?  @db.VarChar(100)
+  isActive          Boolean  @default(true) @map("is_active")
+  sortOrder         Int      @default(0) @map("sort_order")
+  estimatedTimeline String?  @map("estimated_timeline") @db.VarChar(100)
+  startingPrice     String?  @map("starting_price") @db.VarChar(50)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  intakes         CaseIntake[]
+  specializations ProfessionalSpecialization[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("service_catalog")
+}
+
+model ProfessionalSpecialization {
+  id                   String         @id @default(cuid())
+  userId               String         @map("user_id") @db.Uuid
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId       String?        @map("organization_id") @db.Uuid
+  organization         Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  serviceId            String         @map("service_id")
+  service              ServiceCatalog @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  originCorridors      String[]       @map("origin_corridors")
+  destinationCorridors String[]       @map("destination_corridors")
+  maxConcurrentLeads   Int            @default(10) @map("max_concurrent_leads")
+  isAcceptingLeads     Boolean        @default(true) @map("is_accepting_leads")
+  yearsExperience      Int?           @map("years_experience")
+  bio                  String?        @db.Text
+  successRate          Int?           @map("success_rate")
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@unique([userId, serviceId])
+  @@index([userId])
+  @@index([serviceId])
+  @@index([isAcceptingLeads])
+  @@map("professional_specializations")
+}
+
+model CaseIntake {
+  id                 String         @id @default(cuid())
+  referenceNumber    String         @unique @map("reference_number") @db.VarChar(50)
+  serviceId          String         @map("service_id")
+  service            ServiceCatalog @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  status             String         @default("pending_assignment") @db.VarChar(50)
+  applicantName      String         @map("applicant_name") @db.VarChar(255)
+  applicantEmail     String         @map("applicant_email") @db.VarChar(255)
+  applicantPhone     String?        @map("applicant_phone") @db.VarChar(50)
+  applicantCountry   String         @map("applicant_country") @db.VarChar(100)
+  destinationCountry String         @map("destination_country") @db.VarChar(100)
+  urgencyLevel       String         @default("normal") @map("urgency_level") @db.VarChar(50)
+  description        String         @db.Text
+  additionalData     Json?          @map("additional_data") @db.JsonB
+  ipAddress          String?        @map("ip_address") @db.VarChar(45)
+  submittedAt        DateTime       @default(now()) @map("submitted_at") @db.Timestamp(6)
+  expiresAt          DateTime       @map("expires_at") @db.Timestamp(6)
+  convertedCaseId    String?        @map("converted_case_id") @db.Uuid
+  notifiedAt         DateTime?      @map("notified_at") @db.Timestamp(6)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  assignments IntakeAssignment[]
+
+  @@index([referenceNumber])
+  @@index([serviceId])
+  @@index([status])
+  @@index([applicantEmail])
+  @@index([submittedAt(sort: Desc)])
+  @@map("case_intakes")
+}
+
+model IntakeAssignment {
+  id             String        @id @default(cuid())
+  intakeId       String        @map("intake_id")
+  intake         CaseIntake    @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  professionalId String        @map("professional_id") @db.Uuid
+  professional   User          @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status         String        @default("pending") @db.VarChar(50)
+  attemptNumber  Int           @default(1) @map("attempt_number")
+  assignedAt     DateTime      @default(now()) @map("assigned_at") @db.Timestamp(6)
+  respondedAt    DateTime?     @map("responded_at") @db.Timestamp(6)
+  declinedReason String?       @map("declined_reason") @db.Text
+  expiresAt      DateTime      @map("expires_at") @db.Timestamp(6)
+
+  @@index([intakeId])
+  @@index([professionalId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("intake_assignments")
+}
+
+model ProfessionalProfile {
+  id                String        @id @default(cuid())
+  userId            String        @unique @map("user_id") @db.Uuid
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId    String?       @map("organization_id") @db.Uuid
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  displayName       String        @map("display_name") @db.VarChar(255)
+  title             String?       @db.VarChar(255)
+  bio               String?       @db.Text
+  avatarUrl         String?       @map("avatar_url") @db.VarChar(500)
+  languages         String[]
+  isPublic          Boolean       @default(false) @map("is_public")
+  isVerified        Boolean       @default(false) @map("is_verified")
+  verificationDoc   String?       @map("verification_doc") @db.VarChar(500)
+  rating            Float?        @db.DoublePrecision
+  totalReviews      Int           @default(0) @map("total_reviews")
+  totalCasesHandled Int           @default(0) @map("total_cases_handled")
+  responseTimeHours Int?          @map("response_time_hours")
+  locationCity      String?       @map("location_city") @db.VarChar(100)
+  locationCountry   String?       @map("location_country") @db.VarChar(100)
+  linkedinUrl       String?       @map("linkedin_url") @db.VarChar(500)
+  websiteUrl        String?       @map("website_url") @db.VarChar(500)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([userId])
+  @@index([isPublic])
+  @@index([isVerified])
+  @@map("professional_profiles")
 }

@@ -18,7 +18,9 @@ import {
   analyzeVisaRejection,
   buildReapplicationStrategy,
   checkDocumentConsistency,
-  generateStudentVisaPackage
+  generateStudentVisaPackage,
+  generateChecklistItems,
+  improveDocument
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -817,6 +819,332 @@ export const generateStudentVisaPackageController = async (req: AuthRequest, res
   } catch (error: any) {
     logger.error('Student visa package endpoint error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to generate student visa package', 500);
+  }
+};
+
+// ============================================
+// AI CHECKLIST GENERATION
+// ============================================
+
+export const generateAIChecklist = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+    const organizationRole = (req as any).organizationRole;
+
+    // Only professional and org_admin can use AI checklist generation
+    if (organizationRole !== 'org_admin' && organizationRole !== 'professional') {
+      return sendError(res, 'access_denied', 'Only professionals and administrators can generate AI checklists', 403);
+    }
+
+    const { visaType, originCountry, destinationCountry, caseId, additionalContext } = req.body;
+
+    if (!visaType || !originCountry || !destinationCountry) {
+      return sendError(res, 'validation_error', 'visaType, originCountry, and destinationCountry are required', 400);
+    }
+
+    const items = await generateChecklistItems({
+      visaType,
+      originCountry,
+      destinationCountry,
+      additionalContext,
+    });
+
+    // If caseId provided, create checklist and save items
+    if (caseId) {
+      const prisma = (await import('../config/prisma')).default;
+      const organizationId = (req as any).organizationId;
+      const { getCaseById } = await import('../helpers/prismaScopes');
+
+      // Validate case belongs to organization
+      const caseData = await getCaseById(organizationId, caseId);
+      if (!caseData) {
+        return sendError(res, 'not_found', 'Case not found or access denied', 404);
+      }
+
+      // Create checklist
+      const checklist = await prisma.documentChecklist.create({
+        data: {
+          caseId,
+          organizationId,
+          name: `${visaType} - ${destinationCountry}`,
+          visaType,
+          originCountry,
+          destinationCountry,
+        },
+      });
+
+      // Create checklist items
+      await Promise.all(
+        items.map((item) =>
+          prisma.checklistItem.create({
+            data: {
+              checklistId: checklist.id,
+              name: item.name,
+              description: item.description
+                ? `Category: ${item.category}\n${item.description}${item.notes ? `\n\nNotes: ${item.notes}` : ''}`
+                : `Category: ${item.category}${item.notes ? `\n\nNotes: ${item.notes}` : ''}`,
+              isRequired: item.isRequired,
+            },
+          })
+        )
+      );
+
+      // Log to audit
+      await prisma.auditLog.create({
+        data: {
+          organizationId,
+          userId: user?.id || '',
+          action: 'ai_checklist_generated',
+          resourceType: 'document_checklist',
+          resourceId: checklist.id,
+          metadata: {
+            caseId,
+            itemCount: items.length,
+            visaType,
+            originCountry,
+            destinationCountry,
+          },
+        },
+      });
+    }
+
+    return sendSuccess(res, { items }, 'Checklist items generated successfully');
+  } catch (error: any) {
+    logger.error('AI checklist generation error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate checklist', 500);
+  }
+};
+
+// ============================================
+// DOCUMENT IMPROVEMENT
+// ============================================
+
+export const improveDocumentController = async (req: AuthRequest, res: Response) => {
+  try {
+    const { documentType, currentContent, visaType, destinationCountry, originCountry } = req.body;
+
+    if (!documentType || !currentContent || !visaType || !destinationCountry || !originCountry) {
+      return sendError(res, 'validation_error', 'All fields are required', 400);
+    }
+
+    const result = await improveDocument({
+      documentType,
+      currentContent,
+      visaType,
+      destinationCountry,
+      originCountry,
+    });
+
+    return sendSuccess(res, result, 'Document improvement generated');
+  } catch (error: any) {
+    logger.error('Document improvement error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to improve document', 500);
+  }
+};
+
+// ============================================
+// FINANCIAL DOCUMENTATION ASSISTANT
+// ============================================
+
+export const analyzeFinancialDocs = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      monthlyIncome,
+      incomeType,
+      bankStatementMonths,
+      destinationCountry,
+      visaType,
+      currency,
+      sponsorRelationship,
+    } = req.body;
+
+    if (!monthlyIncome || !incomeType || !destinationCountry || !visaType || !currency) {
+      return sendError(res, 'validation_error', 'Required fields missing', 400);
+    }
+
+    // Currency conversion rates (simplified - in production, use a real API)
+    const conversionRates: Record<string, Record<string, number>> = {
+      NGN: { USD: 0.0012, GBP: 0.00095, CAD: 0.0016, EUR: 0.0011 },
+      GHS: { USD: 0.08, GBP: 0.063, CAD: 0.11, EUR: 0.074 },
+      KES: { USD: 0.007, GBP: 0.0055, CAD: 0.0095, EUR: 0.0065 },
+      ZAR: { USD: 0.054, GBP: 0.043, CAD: 0.074, EUR: 0.05 },
+      USD: { USD: 1, GBP: 0.79, CAD: 1.36, EUR: 0.92 },
+      GBP: { USD: 1.27, GBP: 1, CAD: 1.72, EUR: 1.17 },
+      EUR: { USD: 1.09, GBP: 0.85, CAD: 1.48, EUR: 1 },
+      CAD: { USD: 0.74, GBP: 0.58, CAD: 1, EUR: 0.68 },
+    };
+
+    // Minimum requirements by destination and visa type (simplified)
+    const minimumRequirements: Record<string, Record<string, number>> = {
+      'United Kingdom': {
+        student: 12000,
+        skilled_worker: 1270,
+        visitor: 2000,
+      },
+      'Canada': {
+        student: 10000,
+        skilled_worker: 0, // Points-based
+        visitor: 5000,
+      },
+      'United States': {
+        student: 25000,
+        skilled_worker: 0, // Employer-sponsored
+        visitor: 5000,
+      },
+    };
+
+    const minRequired = minimumRequirements[destinationCountry]?.[visaType] || 5000;
+    const rate = conversionRates[currency]?.['USD'] || 1;
+    const currentAmountUSD = monthlyIncome * rate * (bankStatementMonths || 1);
+
+    // Generate AI analysis
+    const prompt = `You are an expert immigration financial consultant. Analyze this financial profile for a visa application:
+
+Monthly Income: ${monthlyIncome} ${currency}
+Income Type: ${incomeType}
+Bank Statement Months Available: ${bankStatementMonths}
+Destination Country: ${destinationCountry}
+Visa Type: ${visaType}
+Sponsor Relationship: ${sponsorRelationship || 'N/A'}
+
+Estimated USD Equivalent: $${currentAmountUSD.toFixed(2)}
+Minimum Required: $${minRequired}
+
+Provide a JSON response with:
+{
+  "meetsRequirements": boolean,
+  "minimumRequired": ${minRequired},
+  "currentAmount": ${currentAmountUSD.toFixed(2)},
+  "gaps": ["gap1", "gap2"],
+  "recommendations": ["rec1", "rec2", "rec3"],
+  "warningFlags": ["flag1", "flag2"],
+  "coverLetterTemplate": "template text here"
+}
+
+Focus on:
+- African applicant financial documentation standards
+- Cash-heavy economy considerations
+- Bank statement requirements
+- Sponsor letter requirements if applicable
+- Common red flags for ${destinationCountry} visas`;
+
+    // Use OpenAI from environment
+    const OpenAI = (await import('openai')).default;
+    const openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert immigration financial consultant. Return only valid JSON.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    let result: any;
+
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        result = JSON.parse(responseText);
+      }
+    } catch (error) {
+      // Fallback response
+      result = {
+        meetsRequirements: currentAmountUSD >= minRequired,
+        minimumRequired: minRequired,
+        currentAmount: currentAmountUSD,
+        gaps: currentAmountUSD < minRequired ? [`Shortfall of $${(minRequired - currentAmountUSD).toFixed(2)}`] : [],
+        recommendations: [
+          'Ensure bank statements cover required period',
+          'Provide clear source of funds documentation',
+          'Include sponsor letter if applicable',
+        ],
+        warningFlags: [],
+        coverLetterTemplate: 'Financial support letter template...',
+      };
+    }
+
+    return sendSuccess(res, result, 'Financial analysis completed');
+  } catch (error: any) {
+    logger.error('Financial analysis error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to analyze financial documents', 500);
+  }
+};
+
+export const generateSponsorLetter = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      sponsorName,
+      sponsorRelationship,
+      sponsorOccupation,
+      sponsorCountry,
+      applicantName,
+      visaType,
+      destinationCountry,
+      travelPurpose,
+      travelDuration,
+    } = req.body;
+
+    if (!sponsorName || !applicantName || !destinationCountry || !visaType) {
+      return sendError(res, 'validation_error', 'Required fields missing', 400);
+    }
+
+    const prompt = `Generate a professional sponsor/financial support letter for a visa application:
+
+Sponsor Name: ${sponsorName}
+Sponsor Relationship: ${sponsorRelationship}
+Sponsor Occupation: ${sponsorOccupation}
+Sponsor Country: ${sponsorCountry}
+Applicant Name: ${applicantName}
+Visa Type: ${visaType}
+Destination Country: ${destinationCountry}
+Travel Purpose: ${travelPurpose}
+Travel Duration: ${travelDuration}
+
+Generate a formal, professional sponsor letter tailored to ${destinationCountry}'s expected format. Include:
+- Clear statement of financial support
+- Relationship to applicant
+- Sponsor's financial capacity
+- Purpose of visit
+- Duration of support
+- Contact information
+
+Return only the letter text, no JSON, no explanations.`;
+
+    const OpenAI = (await import('openai')).default;
+    const openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert immigration document writer. Generate professional sponsor letters.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 1000,
+    });
+
+    const letter = response.choices[0]?.message?.content || '';
+
+    return sendSuccess(res, { letter }, 'Sponsor letter generated');
+  } catch (error: any) {
+    logger.error('Sponsor letter generation error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate sponsor letter', 500);
   }
 };
 

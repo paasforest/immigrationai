@@ -6,7 +6,8 @@ import {
   Briefcase, Users, FileCheck, MessageSquare, Bell, 
   TrendingUp, Shield, Zap, Globe, ArrowRight, 
   Menu, X, CheckCircle, Building, Target, 
-  Clock, BarChart3, Lock, Cloud, Smartphone, Sparkles
+  Clock, BarChart3, Lock, Cloud, Smartphone, Sparkles,
+  FolderOpen
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -387,7 +388,7 @@ export default function HomePage() {
                     <CheckCircle key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
+                <p className="text-gray-700 mb-4 italic">&quot;{testimonial.text}&quot;</p>
                 <div className="border-t border-gray-200 pt-4">
                   <p className="font-semibold text-gray-900">{testimonial.name}</p>
                   <p className="text-sm text-gray-600">{testimonial.role}</p>

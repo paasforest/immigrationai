@@ -13,7 +13,7 @@ export default function AnalyticsPage() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && user && user.organizationRole !== 'org_admin') {
+    if (!loading && user && user.role !== 'org_admin') {
       router.push('/dashboard/immigration');
     }
   }, [user, loading, router]);
@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (!user || user.organizationRole !== 'org_admin') {
+  if (!user || user.role !== 'org_admin') {
     return null;
   }
 

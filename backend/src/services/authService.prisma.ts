@@ -49,15 +49,22 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
     
-    // Create user first
+    // Marketing Test Mode: If enabled, all new signups get 'marketing_test' plan regardless of selection
+    // To enable: Set MARKETING_TEST_MODE=true in .env
+    // To disable: Set MARKETING_TEST_MODE=false or remove it (normal sales mode resumes)
+    const marketingTestMode = process.env.MARKETING_TEST_MODE === 'true';
+    const finalPlan = marketingTestMode ? 'marketing_test' : 'starter'; // Default to starter if no plan selected
+    const finalStatus = marketingTestMode ? 'active' : 'pending'; // Marketing test users get immediate access
+    
+    // Create user with appropriate plan based on mode
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         fullName: fullName || null,
         companyName: companyName || null,
-        subscriptionPlan: 'free',
-        subscriptionStatus: 'active',
+        subscriptionPlan: finalPlan,
+        subscriptionStatus: finalStatus,
       },
     });
 

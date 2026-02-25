@@ -643,7 +643,7 @@ export default function ChecklistPage() {
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <CheckCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No Checklist Generated Yet</h4>
-                  <p className="text-gray-600 text-sm mb-4">Select your country and visa type, then click "Generate Checklist"</p>
+                  <p className="text-gray-600 text-sm mb-4">Select your country and visa type, then click &quot;Generate Checklist&quot;</p>
                   <div className="bg-yellow-50 rounded-lg p-4 max-w-md mx-auto">
                     <p className="text-sm text-yellow-900">
                       <strong>Important:</strong> This checklist includes all required documents, processing times, fees, and country-specific requirements to help you prepare a complete application.

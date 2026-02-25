@@ -122,7 +122,7 @@ export default function ServiceDetailPage() {
 
                 <div className="mt-6">
                   <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
-                    What's included
+                    What&apos;s included
                   </h3>
                   <div className="space-y-3">
                     {[

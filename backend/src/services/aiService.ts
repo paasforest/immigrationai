@@ -2186,4 +2186,197 @@ Always speak directly to the applicant and give tactical steps.`;
   }
 };
 
+// ============================================
+// CHECKLIST GENERATION
+// ============================================
+
+export interface ChecklistItemSuggestion {
+  name: string;
+  description: string;
+  category: 'identity' | 'financial' | 'educational' | 'employment' | 'travel' | 'supporting';
+  isRequired: boolean;
+  notes?: string;
+}
+
+export const generateChecklistItems = async (params: {
+  visaType: string;
+  originCountry: string;
+  destinationCountry: string;
+  additionalContext?: string;
+}): Promise<ChecklistItemSuggestion[]> => {
+  try {
+    logger.info('Generating checklist items', {
+      visaType: params.visaType,
+      originCountry: params.originCountry,
+      destinationCountry: params.destinationCountry,
+    });
+
+    const prompt = `You are an expert immigration consultant specializing in African immigration cases. Generate a comprehensive document checklist for the following visa application:
+
+Visa Type: ${params.visaType}
+Applicant's Country: ${params.originCountry}
+Destination Country: ${params.destinationCountry}
+Additional Context: ${params.additionalContext || 'None'}
+
+Generate a JSON array of required and recommended documents. For each document include:
+- name: clear document name
+- description: brief explanation of what this document is and why needed
+- category: one of identity|financial|educational|employment|travel|supporting
+- isRequired: true if mandatory, false if optional
+- notes: any special requirements specific to ${params.originCountry} applicants
+
+Pay special attention to:
+1. Country-specific requirements (e.g. NYSC for Nigeria, apostille requirements, specific bank statement formats)
+2. African university credential evaluation requirements
+3. Financial documentation standards for applicants from cash-heavy economies
+4. Language proficiency requirements
+5. Any bilateral agreements between the countries
+
+Return ONLY a valid JSON array with no other text.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert immigration consultant. Return only valid JSON arrays.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    // Parse JSON from response
+    let items: ChecklistItemSuggestion[];
+    try {
+      // Try to extract JSON array from response
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        items = JSON.parse(jsonMatch[0]);
+      } else {
+        // Try parsing the whole response
+        items = JSON.parse(responseText);
+      }
+
+      // Validate items structure
+      if (!Array.isArray(items)) {
+        throw new Error('Response is not an array');
+      }
+
+      // Validate each item has required fields
+      items = items.filter((item) => {
+        return (
+          item.name &&
+          item.description &&
+          item.category &&
+          typeof item.isRequired === 'boolean'
+        );
+      });
+    } catch (error) {
+      logger.error('Failed to parse checklist items', { responseText, error });
+      throw new Error('Failed to parse AI response. Please try again.');
+    }
+
+    logger.info('Checklist items generated', {
+      tokensUsed,
+      itemCount: items.length,
+    });
+
+    return items;
+  } catch (error: any) {
+    logger.error('Checklist generation error', { error: error.message });
+    throw new Error('Failed to generate checklist items. Please try again.');
+  }
+};
+
+// ============================================
+// DOCUMENT IMPROVEMENT
+// ============================================
+
+export const improveDocument = async (params: {
+  documentType: string;
+  currentContent: string;
+  visaType: string;
+  destinationCountry: string;
+  originCountry: string;
+}): Promise<{ suggestions: string[]; improvedVersion: string }> => {
+  try {
+    logger.info('Improving document', {
+      documentType: params.documentType,
+      visaType: params.visaType,
+      destinationCountry: params.destinationCountry,
+    });
+
+    const prompt = `You are an expert immigration consultant specializing in African immigration cases. Review and improve the following ${params.documentType} for a visa application:
+
+Visa Type: ${params.visaType}
+Destination Country: ${params.destinationCountry}
+Applicant's Country: ${params.originCountry}
+
+Current Document:
+${params.currentContent}
+
+Provide:
+1. Specific improvement suggestions (as a JSON array of strings)
+2. An improved version of the document
+
+Focus on:
+- Clarity and professionalism
+- Addressing common concerns for applicants from ${params.originCountry}
+- Meeting ${params.destinationCountry} visa requirements
+- Strengthening weak points
+- Cultural sensitivity and appropriate tone
+
+Return a JSON object with:
+{
+  "suggestions": ["suggestion1", "suggestion2", ...],
+  "improvedVersion": "improved document text here"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert immigration document reviewer. Return only valid JSON.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 2000,
+    });
+
+    const responseText = response.choices[0]?.message?.content || '';
+    const tokensUsed = response.usage?.total_tokens || 0;
+
+    let result: { suggestions: string[]; improvedVersion: string };
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        result = JSON.parse(responseText);
+      }
+
+      if (!result.suggestions || !result.improvedVersion) {
+        throw new Error('Invalid response structure');
+      }
+    } catch (error) {
+      logger.error('Failed to parse document improvement', { responseText, error });
+      throw new Error('Failed to parse AI response. Please try again.');
+    }
+
+    logger.info('Document improved', { tokensUsed });
+
+    return result;
+  } catch (error: any) {
+    logger.error('Document improvement error', { error: error.message });
+    throw new Error('Failed to improve document. Please try again.');
+  }
+};
+
 

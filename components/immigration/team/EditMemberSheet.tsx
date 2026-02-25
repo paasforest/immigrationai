@@ -37,10 +37,14 @@ export default function EditMemberSheet({
   onSuccess,
 }: EditMemberSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    fullName: string;
+    role: 'org_admin' | 'professional' | 'applicant';
+    isActive: boolean;
+  }>({
     fullName: member.fullName || '',
-    role: member.role,
-    isActive: member.isActive,
+    role: member.organizationRole,
+    isActive: (member as any).isActive ?? true,
   });
 
   const handleSubmit = async () => {
@@ -91,7 +95,7 @@ export default function EditMemberSheet({
             <Label>Role</Label>
             <Select
               value={formData.role}
-              onValueChange={(value) => setFormData({ ...formData, role: value })}
+              onValueChange={(value) => setFormData({ ...formData, role: value as 'org_admin' | 'professional' | 'applicant' })}
             >
               <SelectTrigger>
                 <SelectValue />

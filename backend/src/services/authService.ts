@@ -28,12 +28,19 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
     
-    // Create user with inactive status (payment required before access)
+    // Marketing Test Mode: If enabled, all new signups get 'marketing_test' plan regardless of selection
+    // To enable: Set MARKETING_TEST_MODE=true in .env
+    // To disable: Set MARKETING_TEST_MODE=false or remove it (normal sales mode resumes)
+    const marketingTestMode = process.env.MARKETING_TEST_MODE === 'true';
+    const finalPlan = marketingTestMode ? 'marketing_test' : (subscriptionPlan || 'starter');
+    const finalStatus = marketingTestMode ? 'active' : 'pending'; // Marketing test users get immediate access
+    
+    // Create user with appropriate plan based on mode
     const result = await query(
       `INSERT INTO users (email, password_hash, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
        RETURNING id, email, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at`,
-      [email, password_hash, fullName || null, companyName || null, subscriptionPlan || 'starter', 'inactive']
+      [email, password_hash, fullName || null, companyName || null, finalPlan, finalStatus]
     );
     
     const user = result.rows[0];

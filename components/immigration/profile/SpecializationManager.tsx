@@ -42,7 +42,7 @@ export default function SpecializationManager() {
       ]);
 
       if (servicesData) {
-        setServices(servicesData);
+        setServices(servicesData as unknown as Service[]);
       }
       if (specsData.success && specsData.data) {
         setSpecializations(specsData.data);

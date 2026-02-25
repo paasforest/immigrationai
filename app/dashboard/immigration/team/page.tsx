@@ -47,9 +47,9 @@ export default function TeamManagementPage() {
   };
 
   // Group members by role
-  const admins = teamMembers.filter((m) => m.role === 'org_admin');
-  const professionals = teamMembers.filter((m) => m.role === 'professional');
-  const applicants = teamMembers.filter((m) => m.role === 'applicant');
+  const admins = teamMembers.filter((m) => m.organizationRole === 'org_admin');
+  const professionals = teamMembers.filter((m) => m.organizationRole === 'professional');
+  const applicants = teamMembers.filter((m) => m.organizationRole === 'applicant');
 
   return (
     <div className="space-y-6">

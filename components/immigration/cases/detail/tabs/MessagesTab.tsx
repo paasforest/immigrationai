@@ -44,7 +44,7 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
   const [isInternal, setIsInternal] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isApplicant = user?.organizationRole === 'applicant';
+  const isApplicant = user?.role === 'applicant';
 
   useEffect(() => {
     fetchMessages();

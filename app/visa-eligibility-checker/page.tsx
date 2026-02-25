@@ -117,7 +117,7 @@ export default function VisaEligibilityCheckerLanding() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Select Country & Visa Type</h3>
                 <p className="text-gray-600">
-                  Choose your destination country and the type of visa you're applying for (student, work, family, etc.).
+                  Choose your destination country and the type of visa you&apos;re applying for (student, work, family, etc.).
                 </p>
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function VisaEligibilityCheckerLanding() {
               <CardContent>
                 <p className="text-gray-600">
                   Our AI-powered visa eligibility checker analyzes your profile against official visa requirements and 
-                  provides a comprehensive assessment. While it's highly accurate, final decisions are always made by 
+                  provides a comprehensive assessment. While it&apos;s highly accurate, final decisions are always made by 
                   immigration authorities. Our tool helps you understand your chances and prepare better.
                 </p>
               </CardContent>
@@ -254,7 +254,7 @@ export default function VisaEligibilityCheckerLanding() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  You'll need to provide basic information about your education, work experience, financial situation, 
+                  You&apos;ll need to provide basic information about your education, work experience, financial situation, 
                   travel history, and visa goals. All information is kept confidential and secure.
                 </p>
               </CardContent>

@@ -1,83 +1,124 @@
 import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { sendError } from '../utils/helpers';
 
-// Custom error class
 export class AppError extends Error {
   statusCode: number;
-  isOperational: boolean;
+  code?: string;
 
-  constructor(message: string, statusCode: number = 500) {
+  constructor(message: string, statusCode: number = 500, code?: string) {
     super(message);
     this.statusCode = statusCode;
-    this.isOperational = true;
+    this.code = code;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
-// Global error handler middleware
-export const errorHandler = (
+/**
+ * Global error handler middleware
+ */
+export function errorHandler(
   err: any,
   req: Request,
   res: Response,
-  _next: NextFunction
-): Response => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Internal Server Error';
-  
+  next: NextFunction
+): void {
   // Log error
-  logger.error({
+  logger.error('Error occurred', {
     message: err.message,
-    stack: err.stack,
-    statusCode,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     path: req.path,
     method: req.method,
+    statusCode: err.statusCode || 500,
   });
-  
-  // Handle specific error types
+
+  // Handle Prisma errors
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    handlePrismaError(err, res);
+    return;
+  }
+
+  // Handle AppError
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      success: false,
+      error: err.message,
+      code: err.code,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+    return;
+  }
+
+  // Handle validation errors
   if (err.name === 'ValidationError') {
-    statusCode = 400;
-    message = 'Validation Error';
+    res.status(400).json({
+      success: false,
+      error: err.message || 'Validation error',
+      code: 'VALIDATION_ERROR',
+    });
+    return;
   }
-  
-  if (err.name === 'JsonWebTokenError') {
-    statusCode = 401;
-    message = 'Invalid token';
-  }
-  
-  if (err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    message = 'Token expired';
-  }
-  
-  if (err.code === '23505') { // PostgreSQL unique violation
-    statusCode = 409;
-    message = 'Resource already exists';
-  }
-  
-  if (err.code === '23503') { // PostgreSQL foreign key violation
-    statusCode = 400;
-    message = 'Invalid reference';
-  }
-  
-  // Don't expose internal errors in production
-  if (process.env.NODE_ENV === 'production' && statusCode === 500) {
-    message = 'An unexpected error occurred';
-  }
-  
-  return sendError(res, err.name || 'Error', message, statusCode);
-};
 
-// Async error wrapper
-export const asyncHandler = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-};
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    res.status(401).json({
+      success: false,
+      error: 'Invalid or expired token',
+      code: 'AUTH_ERROR',
+    });
+    return;
+  }
 
-// 404 handler
-export const notFound = (req: Request, _res: Response, next: NextFunction) => {
-  const error = new AppError(`Route ${req.originalUrl} not found`, 404);
-  next(error);
-};
+  // Default error response
+  const statusCode = err.statusCode || 500;
+  const message =
+    process.env.NODE_ENV === 'production'
+      ? 'An error occurred. Please try again later.'
+      : err.message || 'Internal server error';
 
+  res.status(statusCode).json({
+    success: false,
+    error: message,
+    code: err.code || 'INTERNAL_ERROR',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
+}
+
+/**
+ * Handle Prisma-specific errors
+ */
+function handlePrismaError(err: Prisma.PrismaClientKnownRequestError, res: Response): void {
+  switch (err.code) {
+    case 'P2002':
+      // Unique constraint violation
+      res.status(409).json({
+        success: false,
+        error: 'A record with this value already exists',
+        code: 'DUPLICATE_ENTRY',
+      });
+      break;
+    case 'P2025':
+      // Record not found
+      res.status(404).json({
+        success: false,
+        error: 'Record not found',
+        code: 'NOT_FOUND',
+      });
+      break;
+    case 'P2003':
+      // Foreign key constraint violation
+      res.status(400).json({
+        success: false,
+        error: 'Invalid reference to related record',
+        code: 'FOREIGN_KEY_ERROR',
+      });
+      break;
+    default:
+      logger.error('Unhandled Prisma error', { code: err.code, message: err.message });
+      res.status(500).json({
+        success: false,
+        error: 'Database error occurred',
+        code: 'DATABASE_ERROR',
+      });
+  }
+}

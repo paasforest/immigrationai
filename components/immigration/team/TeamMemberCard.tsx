@@ -12,7 +12,7 @@ import { immigrationApi } from '@/lib/api/immigration';
 import { toast } from 'sonner';
 
 interface TeamMemberCardProps {
-  member: OrgUser;
+  member: OrgUser & { isActive?: boolean };
   onEdit: () => void;
   onToggleStatus: () => void;
 }
@@ -43,6 +43,8 @@ export default function TeamMemberCard({
   onEdit,
   onToggleStatus,
 }: TeamMemberCardProps) {
+  const isActive = member.isActive !== false; // Default to true if not specified
+
   const handleToggleStatus = async (checked: boolean) => {
     try {
       const response = await immigrationApi.updateOrgUser(member.id, {
@@ -59,7 +61,7 @@ export default function TeamMemberCard({
     }
   };
 
-  const RoleIcon = roleIcons[member.role as keyof typeof roleIcons] || User;
+  const RoleIcon = roleIcons[member.organizationRole as keyof typeof roleIcons] || User;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -86,10 +88,10 @@ export default function TeamMemberCard({
 
           {/* Role Badge */}
           <div>
-            <Badge className={roleColors[member.role as keyof typeof roleColors] || ''}>
-              {member.role === 'org_admin'
+            <Badge className={roleColors[member.organizationRole as keyof typeof roleColors] || ''}>
+              {member.organizationRole === 'org_admin'
                 ? 'Administrator'
-                : member.role === 'professional'
+                : member.organizationRole === 'professional'
                 ? 'Professional'
                 : 'Applicant'}
             </Badge>
@@ -99,14 +101,14 @@ export default function TeamMemberCard({
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <p className="text-sm font-medium">Status</p>
-              <p className={`text-xs ${member.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                {member.isActive ? 'Active' : 'Inactive'}
+              <p className={`text-xs ${isActive ? 'text-green-600' : 'text-red-600'}`}>
+                {isActive ? 'Active' : 'Inactive'}
               </p>
             </div>
             <Switch
-              checked={member.isActive}
+              checked={isActive}
               onCheckedChange={handleToggleStatus}
-              disabled={member.role === 'org_admin'} // Can't deactivate yourself if admin
+              disabled={member.organizationRole === 'org_admin'} // Can't deactivate yourself if admin
             />
           </div>
 

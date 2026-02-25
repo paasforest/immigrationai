@@ -18,9 +18,15 @@ import {
   analyzeVisaRejectionController,
   buildReapplicationStrategyController,
   checkDocumentConsistencyController,
-  generateStudentVisaPackageController
+  generateStudentVisaPackageController,
+  generateAIChecklist,
+  improveDocumentController,
+  analyzeFinancialDocs,
+  generateSponsorLetter
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
+import { auth } from '../middleware/auth';
+import { organizationContext } from '../middleware/organizationContext';
 
 const router = Router();
 
@@ -81,6 +87,16 @@ router.post('/ai/document-consistency', authenticateJWT, requirePlan('profession
 
 // Student Visa Package Generator (Professional+ required)
 router.post('/ai/student-visa-package', authenticateJWT, requirePlan('professional', 'enterprise'), generateStudentVisaPackageController);
+
+// AI Checklist Generation (Professional+ required, requires organization context)
+router.post('/ai/generate-checklist', auth, organizationContext, generateAIChecklist);
+
+// Document Improvement (Professional+ required)
+router.post('/ai/improve-document', authenticateJWT, requirePlan('professional', 'enterprise'), improveDocumentController);
+
+// Financial Documentation Assistant (Professional+ required, requires organization context)
+router.post('/ai/analyze-financial', auth, organizationContext, analyzeFinancialDocs);
+router.post('/ai/sponsor-letter', auth, organizationContext, generateSponsorLetter);
 
 export default router;
 

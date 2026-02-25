@@ -108,7 +108,7 @@ export default function ProofKitPage() {
                 📋 Document Checklist
               </h2>
               <p className="text-xl text-gray-600">
-                Here's exactly what you need for {visaTypes.find(v => v.id === selectedVisaType)?.name}
+                Here&apos;s exactly what you need for {visaTypes.find(v => v.id === selectedVisaType)?.name}
               </p>
             </div>
 

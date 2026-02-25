@@ -674,7 +674,7 @@ export default function MockInterviewPage() {
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Client's Answer:</h4>
+                        <h4 className="font-semibold text-gray-900 mb-2">Client&apos;s Answer:</h4>
                         <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">{response.userAnswer}</p>
                       </div>
 
@@ -972,7 +972,7 @@ export default function MockInterviewPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Client's Answer:</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Client&apos;s Answer:</h4>
                     <Textarea
                       value={currentAnswer}
                       onChange={(e) => setCurrentAnswer(e.target.value)}
@@ -1164,7 +1164,7 @@ export default function MockInterviewPage() {
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">What you'll get:</h3>
+                <h3 className="font-semibold text-blue-900 mb-2">What you&apos;ll get:</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Real interview questions from actual consulate officers</li>
                   <li>• AI-powered analysis of your responses</li>

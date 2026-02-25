@@ -36,6 +36,7 @@ export const authenticateJWT = (
 
 // Require auth middleware (alias)
 export const requireAuth = authenticateJWT;
+export const auth = authenticateJWT;
 
 // Optional auth middleware (doesn't fail if no token)
 export const optionalAuth = (

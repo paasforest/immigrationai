@@ -7,6 +7,7 @@ export interface User {
   companyName: string | null;
   subscriptionPlan: string;
   subscriptionStatus: string;
+  role?: string; // organizationRole: 'org_admin' | 'professional' | 'applicant'
   createdAt: string;
 }
 

@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import { initializeTracking, captureUTMParameters } from '@/lib/utm-tracker';
 import GoogleAnalytics, { trackUTMCampaign } from '@/components/GoogleAnalytics';
 
@@ -34,9 +35,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <SubscriptionProvider>
-            {children}
-          </SubscriptionProvider>
+          <OrganizationProvider>
+            <SubscriptionProvider>
+              {children}
+            </SubscriptionProvider>
+          </OrganizationProvider>
         </AuthProvider>
       </body>
     </html>

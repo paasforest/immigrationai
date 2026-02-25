@@ -225,7 +225,7 @@ export default function SOPReviewerPage() {
                 <div className="text-center py-12">
                   <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No Analysis Yet</h4>
-                  <p className="text-gray-600 text-sm">Paste your SOP and click "Analyze with AI"</p>
+                  <p className="text-gray-600 text-sm">Paste your SOP and click &quot;Analyze with AI&quot;</p>
                 </div>
               )}
             </CardContent>

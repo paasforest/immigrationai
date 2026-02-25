@@ -184,7 +184,7 @@ export default function PurposeOfVisitPage() {
                   rows={3}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Important: Visa officers want to ensure you'll return home
+                  Important: Visa officers want to ensure you&apos;ll return home
                 </p>
               </div>
 

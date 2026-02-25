@@ -120,7 +120,7 @@ export default function VisaInterviewPracticeLanding() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Select Visa Type & Country</h3>
                 <p className="text-gray-600">
-                  Choose your destination country and visa type. We'll provide questions specific to your visa category.
+                  Choose your destination country and visa type. We&apos;ll provide questions specific to your visa category.
                 </p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function VisaInterviewPracticeLanding() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Get AI Feedback</h3>
                 <p className="text-gray-600">
-                  Receive detailed feedback on your answers. Learn what works, what doesn't, and how to improve 
+                  Receive detailed feedback on your answers. Learn what works, what doesn&apos;t, and how to improve 
                   your responses using the STAR method.
                 </p>
               </div>
@@ -154,7 +154,7 @@ export default function VisaInterviewPracticeLanding() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Track Your Progress</h3>
                 <p className="text-gray-600">
-                  Monitor your improvement over time. See which areas you've mastered and which need more practice.
+                  Monitor your improvement over time. See which areas you&apos;ve mastered and which need more practice.
                 </p>
               </div>
             </div>

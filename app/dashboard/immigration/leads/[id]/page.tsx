@@ -235,11 +235,11 @@ export default function LeadDetailPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap">{assignment.intake.description}</p>
-              {assignment.intake.additionalData && (
+              {(assignment.intake as any).additionalData && (
                 <div className="mt-4 pt-4 border-t">
                   <p className="text-xs text-gray-500 mb-2">Additional Information:</p>
                   <pre className="text-xs text-gray-600">
-                    {JSON.stringify(assignment.intake.additionalData, null, 2)}
+                    {JSON.stringify((assignment.intake as any).additionalData, null, 2)}
                   </pre>
                 </div>
               )}

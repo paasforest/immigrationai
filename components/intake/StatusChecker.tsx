@@ -124,7 +124,7 @@ export default function StatusChecker({ initialRef }: StatusCheckerProps) {
               <div className="flex items-start gap-4">
                 <Info className="w-6 h-6 text-[#0F2557] flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-[#0F2557] mb-2">We're Working On It</h3>
+                  <h3 className="font-semibold text-[#0F2557] mb-2">We&apos;re Working On It</h3>
                   <p className="text-gray-700 text-sm">
                     Our team is personally reviewing your request. We will contact you directly.
                   </p>
@@ -143,7 +143,7 @@ export default function StatusChecker({ initialRef }: StatusCheckerProps) {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Status: {result.status}</h3>
                   <p className="text-gray-700 text-sm">
-                    Your request is being processed. We'll update you soon.
+                    Your request is being processed. We&apos;ll update you soon.
                   </p>
                 </div>
               </div>

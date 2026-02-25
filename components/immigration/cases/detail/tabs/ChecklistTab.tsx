@@ -21,7 +21,7 @@ export default function ChecklistTab({ caseId, onRefresh }: ChecklistTabProps) {
   const [checklists, setChecklists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAdmin = user?.organizationRole === 'org_admin';
+  const isAdmin = user?.role === 'org_admin';
 
   useEffect(() => {
     fetchChecklists();

@@ -108,7 +108,7 @@ export default function NotificationPanel() {
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center">
               <Bell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-sm text-gray-600">You're all caught up</p>
+              <p className="text-sm text-gray-600">You&apos;re all caught up</p>
             </div>
           ) : (
             <div className="divide-y">

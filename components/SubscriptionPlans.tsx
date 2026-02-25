@@ -248,7 +248,7 @@ export default function SubscriptionPlans({ onSelectPlan, currentPlan }: Subscri
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <Check className="w-5 h-5 text-green-500 mr-2" />
-                  What's Included:
+                  What&apos;s Included:
                 </h4>
                 <ul className="space-y-2">
                   {plan.features.map((feature, index) => (

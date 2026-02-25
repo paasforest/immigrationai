@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt, ClipboardCheck, ClipboardList, AlertTriangle, GraduationCap } from 'lucide-react';
+import { FileText, FileCheck, CheckCircle, List, LogOut, User, Mail, Plane, DollarSign, Target, MessageSquare, BarChart3, Heart, Package, Camera, Mic, BookOpen, Globe, Award, Users, Zap, Shield, Home, MapPin, Calculator, Receipt, ClipboardCheck, ClipboardList, AlertTriangle, GraduationCap, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import AccountNumberCard from '@/components/AccountNumberCard';
 
@@ -16,6 +16,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login');
+    } else if (user && user.role === 'applicant') {
+      // Redirect applicants to portal
+      router.push('/portal');
     }
   }, [user, loading, router]);
 
@@ -122,6 +125,14 @@ export default function DashboardPage() {
   };
 
 const features = [
+    // CASE MANAGEMENT
+    {
+      icon: <FolderOpen className="w-8 h-8" />,
+      title: "Case Management",
+      description: "Manage immigration cases, documents, and clients",
+      href: "/dashboard/immigration",
+      color: "from-blue-500 to-indigo-500",
+    },
     // STARTER PLAN ONLY (basic tier)
     {
       icon: <FileText className="w-8 h-8" />,
@@ -433,7 +444,7 @@ const features = [
             Welcome back, {user.fullName || 'there'}! 👋
           </h2>
           <p className="text-gray-600">
-            You're on the <span className="font-semibold">{user.subscriptionPlan || 'Entry'}</span> plan
+            You&apos;re on the <span className="font-semibold">{user.subscriptionPlan || 'Entry'}</span> plan
           </p>
         </div>
 

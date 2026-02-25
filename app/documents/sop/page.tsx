@@ -537,7 +537,7 @@ export default function SOPGeneratorPage() {
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <Sparkles className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No SOP Generated Yet</h4>
-                  <p className="text-gray-600 text-sm">Fill the form and click "Generate SOP with AI"</p>
+                  <p className="text-gray-600 text-sm">Fill the form and click &quot;Generate SOP with AI&quot;</p>
                 </div>
               )}
             </CardContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ import {
   Landmark,
   Inbox,
   UserCircle,
+  BarChart2,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,6 @@ import TrialBanner from '@/components/immigration/TrialBanner';
 import NotificationPanel from '@/components/immigration/notifications/NotificationPanel';
 import { Badge } from '@/components/ui/badge';
 import { immigrationApi } from '@/lib/api/immigration';
-import { useEffect, useState } from 'react';
 
 const navigation = [
   {
@@ -85,10 +85,10 @@ export default function ImmigrationLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingLeadsCount, setPendingLeadsCount] = useState(0);
 
-  const isAdmin = user?.organizationRole === 'org_admin';
+  const isAdmin = user?.role === 'org_admin';
 
   useEffect(() => {
-    if (user && user.organizationRole !== 'applicant') {
+    if (user && user.role !== 'applicant') {
       fetchPendingLeads();
       const interval = setInterval(fetchPendingLeads, 5 * 60 * 1000); // Every 5 minutes
       return () => clearInterval(interval);
@@ -132,7 +132,7 @@ export default function ImmigrationLayout({
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
-                  const showBadge = item.badge && pendingLeadsCount > 0;
+                  const showBadge = (item as any).badge && pendingLeadsCount > 0;
                   const isSubItem = (item as any).subItem;
                   
                   return (

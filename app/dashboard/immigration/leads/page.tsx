@@ -11,7 +11,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      if (user.organizationRole === 'applicant') {
+      if (user.role === 'applicant') {
         router.push('/dashboard/immigration');
       }
     }

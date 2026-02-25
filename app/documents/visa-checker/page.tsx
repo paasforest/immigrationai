@@ -1139,7 +1139,7 @@ export default function VisaCheckerPage() {
                 <div className="text-center py-12">
                   <CheckCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No Assessment Yet</h4>
-                  <p className="text-gray-600 text-sm">Fill in your profile and click "Check Eligibility"</p>
+                  <p className="text-gray-600 text-sm">Fill in your profile and click &quot;Check Eligibility&quot;</p>
                 </div>
               )}
             </CardContent>

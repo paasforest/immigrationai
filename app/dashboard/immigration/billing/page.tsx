@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { immigrationApi } from '@/lib/api/immigration';
 import CurrentPlanCard from '@/components/immigration/billing/CurrentPlanCard';
 import PricingPlans from '@/components/immigration/billing/PricingPlans';

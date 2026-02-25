@@ -148,7 +148,7 @@ export default function PaymentModal({ isOpen, onClose, accountNumber: propAccou
                 <h4 className="font-semibold text-green-900 mb-1">100% Money-Back Guarantee</h4>
                 <p className="text-sm text-green-800">
                   Not satisfied with our service? Get a full refund within 7 days, no questions asked. 
-                  We're confident you'll love our platform, or your money back.
+                  We&apos;re confident you&apos;ll love our platform, or your money back.
                 </p>
               </div>
             </div>

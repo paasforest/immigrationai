@@ -106,7 +106,7 @@ export default function EnglishTestPracticePage() {
               Monthly Limit Reached
             </h1>
             <p className="text-xl text-gray-600">
-              You've used all 5 practice sessions this month
+              You&apos;ve used all 5 practice sessions this month
             </p>
           </div>
 

@@ -63,7 +63,7 @@ export default function TasksTab({ caseId, onRefresh }: TasksTabProps) {
     dueDate: '',
   });
 
-  const isAdmin = user?.organizationRole === 'org_admin';
+  const isAdmin = user?.role === 'org_admin';
   const [orgUsers, setOrgUsers] = useState<any[]>([]);
 
   useEffect(() => {

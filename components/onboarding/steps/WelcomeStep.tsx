@@ -16,7 +16,7 @@ export default function WelcomeStep({ onNext }: WelcomeStepProps) {
           Welcome to Immigration AI
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Let's set up your immigration workspace in 2 minutes
+          Let&apos;s set up your immigration workspace in 2 minutes
         </p>
       </div>
 

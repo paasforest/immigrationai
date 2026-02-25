@@ -212,7 +212,7 @@ export default function InterviewResponseBuilder() {
                   <span>Step 1: Select Your Visa Type</span>
                 </CardTitle>
                 <p className="text-gray-600">
-                  Choose the visa type you're applying for to get relevant questions
+                  Choose the visa type you&apos;re applying for to get relevant questions
                 </p>
               </CardHeader>
               <CardContent>
@@ -428,7 +428,7 @@ export default function InterviewResponseBuilder() {
                   <span>Your Personalized Response</span>
                 </CardTitle>
                 <p className="text-gray-600">
-                  Here's your AI-generated response for the interview question
+                  Here&apos;s your AI-generated response for the interview question
                 </p>
               </CardHeader>
               <CardContent>

@@ -86,7 +86,7 @@ export default function CoverLetterGeneratorLanding() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Each cover letter follows the preferred format and style for your destination country's 
+                  Each cover letter follows the preferred format and style for your destination country&apos;s 
                   embassy or consulate.
                 </p>
               </CardContent>

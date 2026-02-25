@@ -305,7 +305,7 @@ export default function EmailGeneratorPage() {
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No Email Generated Yet</h4>
-                  <p className="text-gray-600 text-sm">Fill the form and click "Generate Professional Email"</p>
+                  <p className="text-gray-600 text-sm">Fill the form and click &quot;Generate Professional Email&quot;</p>
                   <div className="mt-4 bg-blue-50 rounded-lg p-4">
                     <p className="text-sm text-blue-900">
                       <strong>Tip:</strong> Provide as many details as possible for a more personalized and effective email.

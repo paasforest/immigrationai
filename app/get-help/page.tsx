@@ -16,7 +16,7 @@ export default function GetHelpPage() {
             Find Your Immigration Specialist
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Tell us what you need. We'll match you with a verified professional who specializes in
+            Tell us what you need. We&apos;ll match you with a verified professional who specializes in
             your exact situation — at no cost to you.
           </p>
 

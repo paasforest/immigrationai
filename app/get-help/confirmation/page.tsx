@@ -48,7 +48,7 @@ export default function ConfirmationPage() {
           <CardContent className="p-8">
             <h1 className="text-2xl font-bold text-center mb-2">Request Submitted!</h1>
             <p className="text-gray-600 text-center mb-6">
-              We're finding your specialist
+              We&apos;re finding your specialist
             </p>
 
             {/* Reference Box */}

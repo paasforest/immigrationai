@@ -58,14 +58,15 @@ export default function ClientsPage() {
       ]);
 
       if (usersResponse.success && usersResponse.data) {
-        const applicants = usersResponse.data.filter((u: any) => u.role === 'applicant');
+        const applicants = usersResponse.data.filter((u: any) => u.organizationRole === 'applicant' || u.role === 'applicant');
         
         if (casesResponse.success && casesResponse.data?.data) {
-          setAllCases(casesResponse.data.data);
+          const casesData = casesResponse.data.data;
+          setAllCases(casesData);
           
           // Calculate case counts and last activity
-          const clientsWithStats = applicants.map((client: Client) => {
-            const clientCases = casesResponse.data.data.filter(
+          const clientsWithStats = applicants.map((client: any) => {
+            const clientCases = casesData.filter(
               (c: any) => c.applicantId === client.id && c.status !== 'closed'
             );
             const lastCase = clientCases.sort(
@@ -74,15 +75,25 @@ export default function ClientsPage() {
             )[0];
             
             return {
-              ...client,
+              id: client.id,
+              fullName: client.fullName,
+              email: client.email,
+              role: client.organizationRole || client.role || 'applicant',
               activeCaseCount: clientCases.length,
               lastActivity: lastCase?.updatedAt || null,
-            };
+            } as ClientWithCases;
           });
           
           setClients(clientsWithStats);
         } else {
-          setClients(applicants.map((c: Client) => ({ ...c, activeCaseCount: 0, lastActivity: null })));
+          setClients(applicants.map((c: any) => ({ 
+            id: c.id,
+            fullName: c.fullName,
+            email: c.email,
+            role: c.organizationRole || c.role || 'applicant',
+            activeCaseCount: 0, 
+            lastActivity: null 
+          } as ClientWithCases)));
         }
       }
     } catch (error) {

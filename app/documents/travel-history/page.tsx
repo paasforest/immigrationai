@@ -198,10 +198,10 @@ export default function TravelHistoryPage() {
                 <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
                   <Plane className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No History Formatted Yet</h4>
-                  <p className="text-gray-600 text-sm mb-4">Enter your travel history and click "Format"</p>
+                  <p className="text-gray-600 text-sm mb-4">Enter your travel history and click &quot;Format&quot;</p>
                   <div className="bg-green-50 rounded-lg p-4 max-w-md mx-auto">
                     <p className="text-sm text-green-900">
-                      <strong>What you'll get:</strong> Professional table with dates, countries, durations, and a summary - ready for your visa application!
+                      <strong>What you&apos;ll get:</strong> Professional table with dates, countries, durations, and a summary - ready for your visa application!
                     </p>
                   </div>
                 </div>

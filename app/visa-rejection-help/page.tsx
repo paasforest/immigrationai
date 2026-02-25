@@ -40,7 +40,7 @@ export default function VisaRejectionHelpLanding() {
             Visa Rejection Help - Analyze & Create Winning Reapplication Strategy
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Got your visa rejected? Don't give up! Our AI-powered visa rejection analyzer helps you understand 
+            Got your visa rejected? Don&apos;t give up! Our AI-powered visa rejection analyzer helps you understand 
             the reasons, decode your refusal letter, and create a winning reapplication strategy.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -227,7 +227,7 @@ export default function VisaRejectionHelpLanding() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Our document consistency checker helps ensure all your documents align and don't contradict 
+                  Our document consistency checker helps ensure all your documents align and don&apos;t contradict 
                   each other.
                 </p>
               </CardContent>
@@ -261,7 +261,7 @@ export default function VisaRejectionHelpLanding() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  First, don't panic. Use our visa rejection analyzer to understand the specific reasons. Then 
+                  First, don&apos;t panic. Use our visa rejection analyzer to understand the specific reasons. Then 
                   create a reapplication strategy that addresses each issue. Many applicants succeed on their 
                   second attempt with proper preparation.
                 </p>
@@ -286,7 +286,7 @@ export default function VisaRejectionHelpLanding() {
               <CardContent>
                 <p className="text-gray-600">
                   It depends on the rejection reasons. If it was due to missing documents, you can reapply 
-                  immediately after addressing the issues. For more complex reasons, wait until you've 
+                  immediately after addressing the issues. For more complex reasons, wait until you&apos;ve 
                   strengthened your application. Our reapplication strategy provides timeline recommendations.
                 </p>
               </CardContent>
@@ -297,7 +297,7 @@ export default function VisaRejectionHelpLanding() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Previous rejections are noted, but they don't automatically mean your new application will 
+                  Previous rejections are noted, but they don&apos;t automatically mean your new application will 
                   be rejected. The key is addressing the previous rejection reasons and submitting a stronger 
                   application. Our tools help you do exactly that.
                 </p>
@@ -311,7 +311,7 @@ export default function VisaRejectionHelpLanding() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-red-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Don't Give Up - Get Help with Your Visa Rejection
+            Don&apos;t Give Up - Get Help with Your Visa Rejection
           </h2>
           <p className="text-xl text-red-100 mb-8">
             Many applicants succeed on their second attempt. Get the help you need to create a winning 
@@ -364,7 +364,7 @@ export default function VisaRejectionHelpLanding() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600">
-                    Ensure all your documents are consistent and don't contradict each other.
+                    Ensure all your documents are consistent and don&apos;t contradict each other.
                   </p>
                 </CardContent>
               </Card>

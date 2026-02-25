@@ -87,7 +87,7 @@ export default function DocumentsTab({ caseId, onRefresh }: DocumentsTabProps) {
     expiryDate: '',
   });
 
-  const isAdminOrProfessional = user?.organizationRole === 'org_admin' || user?.organizationRole === 'professional';
+  const isAdminOrProfessional = user?.role === 'org_admin' || user?.role === 'professional';
 
   useEffect(() => {
     fetchDocuments();
@@ -165,14 +165,14 @@ export default function DocumentsTab({ caseId, onRefresh }: DocumentsTabProps) {
     }
   };
 
-  const handleDownload = async (document: CaseDocument) => {
+  const handleDownload = async (doc: CaseDocument) => {
     try {
-      const blob = await immigrationApi.downloadDocument(document.id);
+      const blob = await immigrationApi.downloadDocument(doc.id);
       if (blob) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = document.name;
+        a.download = doc.name;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
