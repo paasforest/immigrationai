@@ -597,11 +597,6 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
         planStatus: 'trial',
         trialEndsAt,
         isActive: true,
-        metadata: {
-          teamSize: teamSize || null,
-          primaryUseCase: primaryUseCase || null,
-          hearAboutUs: hearAboutUs || null,
-        },
       },
     });
 
@@ -625,7 +620,6 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
         billingCycle: 'monthly',
         currentPeriodStart: new Date(),
         currentPeriodEnd: trialEndsAt,
-        trialEndsAt,
       },
     });
 
