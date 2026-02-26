@@ -7,7 +7,7 @@ import { apiClient } from '@/lib/api/client';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: LoginData) => Promise<{ success: boolean; error?: string }>;
+  login: (data: LoginData) => Promise<{ success: boolean; user?: User; error?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
           localStorage.setItem('refresh_token', response.data.refreshToken);
         }
-        return { success: true };
+        return { success: true, user: response.data.user };
       }
       
       return { success: false, error: response.error || 'Login failed' };

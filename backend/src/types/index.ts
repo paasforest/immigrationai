@@ -18,6 +18,8 @@ export interface UserPublic {
   companyName: string | null;
   subscriptionPlan: string;
   subscriptionStatus: string;
+  role: string | null;
+  organizationId: string | null;
   createdAt: Date;
 }
 

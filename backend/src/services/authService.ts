@@ -105,8 +105,10 @@ export class AuthService {
         companyName: true,
         subscriptionPlan: true,
         subscriptionStatus: true,
+        role: true,
+        organizationId: true,
         createdAt: true
-      }
+      } as any
     });
     
     if (!user) {
@@ -136,7 +138,7 @@ export class AuthService {
     await this.storeRefreshToken(user.id, refreshToken);
     
     return {
-      user: user as UserPublic,
+      user: user as unknown as UserPublic,
       token,
       refreshToken,
     };
@@ -214,15 +216,17 @@ export class AuthService {
         companyName: true,
         subscriptionPlan: true,
         subscriptionStatus: true,
+        role: true,
+        organizationId: true,
         createdAt: true
-      }
+      } as any
     });
     
     if (!user) {
       throw new AppError('User not found', 404);
     }
     
-    return user;
+    return user as unknown as UserPublic;
   }
   
   // Request password reset
