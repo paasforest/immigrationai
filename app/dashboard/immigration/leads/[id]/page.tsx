@@ -31,7 +31,8 @@ function getUrgencyBadge(urgencyLevel: string) {
   }
 }
 
-function getPrivacyName(name: string): string {
+function getPrivacyName(name: string | null | undefined): string {
+  if (!name) return 'Unknown';
   const parts = name.split(' ');
   if (parts.length === 1) return parts[0];
   const firstName = parts[0];
@@ -39,13 +40,15 @@ function getPrivacyName(name: string): string {
   return `${firstName} ${lastName[0]}.`;
 }
 
-function maskEmail(email: string): string {
+function maskEmail(email: string | null | undefined): string {
+  if (!email) return '***';
   const [local, domain] = email.split('@');
   if (!local || !domain) return email;
   return `${local[0]}***@${domain}`;
 }
 
-function maskPhone(phone: string): string {
+function maskPhone(phone: string | null | undefined): string {
+  if (!phone) return '***';
   if (phone.length <= 4) return phone;
   return `${phone.slice(0, 2)}***${phone.slice(-2)}`;
 }

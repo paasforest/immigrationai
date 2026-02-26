@@ -35,7 +35,8 @@ interface RespondToLeadDialogProps {
   onSuccess: (data?: any) => void;
 }
 
-function getPrivacyName(name: string): string {
+function getPrivacyName(name: string | null | undefined): string {
+  if (!name) return 'Unknown';
   const parts = name.split(' ');
   if (parts.length === 1) return parts[0];
   const firstName = parts[0];
