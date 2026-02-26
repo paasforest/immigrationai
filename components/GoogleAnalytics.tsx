@@ -12,11 +12,8 @@ export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps)
   const GA_MEASUREMENT_ID = measurementId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   useEffect(() => {
-    // Log if GA is properly configured
     if (GA_MEASUREMENT_ID) {
       console.log('📊 Google Analytics initialized:', GA_MEASUREMENT_ID);
-    } else {
-      console.warn('⚠️ Google Analytics not configured. Set NEXT_PUBLIC_GA_MEASUREMENT_ID in environment variables.');
     }
   }, [GA_MEASUREMENT_ID]);
 
