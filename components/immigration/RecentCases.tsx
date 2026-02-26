@@ -75,7 +75,7 @@ export default function RecentCases() {
         setIsLoading(true);
         const response = await immigrationApi.getCases({}, 1, 5);
         if (response.success && response.data) {
-          setCases(response.data.data);
+          setCases(response.data.data || []);
         }
       } catch (error) {
         console.error('Failed to fetch cases:', error);

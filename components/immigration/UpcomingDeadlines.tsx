@@ -47,7 +47,7 @@ export default function UpcomingDeadlines() {
         setIsLoading(true);
         const response = await immigrationApi.getUpcomingDeadlines();
         if (response.success && response.data) {
-          setTasks(response.data.slice(0, 5)); // Limit to 5
+          setTasks((Array.isArray(response.data) ? response.data : []).slice(0, 5));
         }
       } catch (error) {
         console.error('Failed to fetch deadlines:', error);
