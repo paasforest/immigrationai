@@ -104,14 +104,15 @@ export async function createOrganization(req: Request, res: Response): Promise<v
  */
 export async function getMyOrganization(req: Request, res: Response): Promise<void> {
   try {
-    const user = (req as any).user;
+    const jwtUser = (req as any).user;
+    const dbUser = await prisma.user.findUnique({ where: { id: jwtUser.userId } });
 
-    if (!user.organizationId) {
+    if (!dbUser || !dbUser.organizationId) {
       throw new AppError('User is not associated with an organization', 404);
     }
 
     const organization = await prisma.organization.findUnique({
-      where: { id: user.organizationId },
+      where: { id: dbUser.organizationId },
       include: {
         subscriptions: {
           orderBy: { createdAt: 'desc' },
@@ -471,11 +472,10 @@ export async function updateOrganizationUser(
  */
 export async function checkOnboardingStatus(req: Request, res: Response): Promise<void> {
   try {
-    const user = (req as any).user;
-
-    if (!user) {
-      throw new AppError('Authentication required', 401);
-    }
+    const jwtUser = (req as any).user;
+    if (!jwtUser) throw new AppError('Authentication required', 401);
+    const user = await prisma.user.findUnique({ where: { id: jwtUser.userId } });
+    if (!user) throw new AppError('User not found', 404);
 
     // If user is applicant, they don't need onboarding
     if (user.role === 'applicant') {
