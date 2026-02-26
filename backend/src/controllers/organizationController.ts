@@ -536,10 +536,16 @@ export async function checkOnboardingStatus(req: Request, res: Response): Promis
  */
 export async function completeOnboarding(req: Request, res: Response): Promise<void> {
   try {
-    const user = (req as any).user;
+    const jwtUser = (req as any).user;
 
-    if (!user) {
+    if (!jwtUser) {
       throw new AppError('Authentication required', 401);
+    }
+
+    // Fetch full user from DB to get organizationId and role
+    const user = await prisma.user.findUnique({ where: { id: jwtUser.userId } });
+    if (!user) {
+      throw new AppError('User not found', 404);
     }
 
     // Cannot onboard if already part of organization
@@ -602,7 +608,7 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
 
     // Update user to be org_admin and link to organization
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: user.id }, // user is fetched from DB above
       data: {
         organizationId: organization.id,
         role: 'org_admin',
@@ -643,7 +649,7 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
     // Send welcome email
     try {
       const { sendWelcomeEmail } = await import('../services/emailService');
-      const firstName = user.fullName?.split(' ')[0] || 'there';
+      const firstName = (user as any).fullName?.split(' ')[0] || 'there';
       await sendWelcomeEmail({
         toEmail: user.email,
         firstName,
@@ -671,7 +677,6 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
           plan: subscription.plan,
           status: subscription.status,
           currentPeriodEnd: subscription.currentPeriodEnd,
-          trialEndsAt: subscription.trialEndsAt,
         },
       },
       message: 'Onboarding completed successfully',
