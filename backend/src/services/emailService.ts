@@ -5,8 +5,14 @@ if (!process.env.RESEND_API_KEY) {
   logger.warn('RESEND_API_KEY not set - email service will not work');
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@immigrationai.co.za';
+
+function getResend(): Resend {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 /**
@@ -99,7 +105,7 @@ export async function sendInvitationEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `You've been invited to join ${organizationName} on Immigration AI`,
@@ -187,7 +193,7 @@ export async function sendCaseUpdateEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `Update on your case ${caseReference}`,
@@ -267,7 +273,7 @@ export async function sendDocumentRequestEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `Document requested for case ${caseReference}`,
@@ -350,7 +356,7 @@ export async function sendTrialExpiryEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: daysRemaining === 0
@@ -441,7 +447,7 @@ export async function sendWelcomeEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `Welcome to Immigration AI — your workspace is ready`,
@@ -547,7 +553,7 @@ export async function sendLeadNotificationEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `New Lead: ${serviceName} — ${urgencyLevel} priority`,
@@ -646,7 +652,7 @@ export async function sendApplicantConfirmationEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `Request Received — ${referenceNumber}`,
@@ -740,7 +746,7 @@ export async function sendProfessionalContactEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: `Your Immigration Specialist Has Been Assigned`,
@@ -817,7 +823,7 @@ export async function sendVerificationApprovedEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: 'Your profile has been verified ✓',
@@ -898,7 +904,7 @@ export async function sendVerificationRejectedEmail({
 </html>
     `;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: 'Verification update required',
