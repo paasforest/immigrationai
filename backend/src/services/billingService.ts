@@ -104,9 +104,9 @@ export class BillingService {
 
   // Get user's usage and limits
   async getUserUsage(userId: string): Promise<any> {
-    // Get user's plan
+    // Get user's plan and organizationId
     const userResult = await query(
-      'SELECT subscription_plan, subscription_status FROM users WHERE id = $1',
+      'SELECT subscription_plan, subscription_status, organization_id FROM users WHERE id = $1',
       [userId]
     );
 
@@ -114,21 +114,28 @@ export class BillingService {
       throw new AppError('User not found', 404);
     }
 
-    const { subscription_plan, subscription_status } = userResult.rows[0];
+    const { subscription_plan, subscription_status, organization_id } = userResult.rows[0];
 
-    // Get usage
-    const usage = await openaiService.getUserMonthlyUsage(userId);
+    // Get usage (graceful fallback if api_usage has no rows)
+    let usage = { documents: 0, tokensUsed: 0, costUsd: 0 };
+    try {
+      usage = await openaiService.getUserMonthlyUsage(userId);
+    } catch (_) {}
 
     // Get limits
     const limits = getSubscriptionLimits(subscription_plan);
 
-    // Get subscription details
-    const subResult = await query(
-      'SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
-      [userId]
-    );
-
-    const subscription = subResult.rows[0] || null;
+    // Get subscription details — subscriptions table uses organization_id
+    let subscription = null;
+    try {
+      if (organization_id) {
+        const subResult = await query(
+          'SELECT * FROM subscriptions WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 1',
+          [organization_id]
+        );
+        subscription = subResult.rows[0] || null;
+      }
+    } catch (_) {}
 
     return {
       currentUsage: {
