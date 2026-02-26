@@ -46,12 +46,10 @@ export default function LoginPage() {
       // Redirect based on role/admin status
       if (formData.email === 'admin@immigrationai.co.za' || formData.email === 'testadmin@immigrationai.co.za') {
         router.push('/admin');
-      } else if (result.data?.user?.organizationId || result.data?.user?.role === 'org_admin' || result.data?.user?.role === 'professional') {
-        router.push('/dashboard/immigration');
-      } else if (result.data?.user?.role === 'applicant') {
+      } else if (result.user?.role === 'applicant') {
         router.push('/portal');
       } else {
-        router.push('/dashboard');
+        router.push('/dashboard/immigration');
       }
     } else {
       setError(result.error || 'Login failed');

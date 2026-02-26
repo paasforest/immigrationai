@@ -18,8 +18,8 @@ export default function DashboardPage() {
       router.push('/auth/login');
     } else if (user && user.role === 'applicant') {
       router.push('/portal');
-    } else if (user && (user.organizationId || user.role === 'org_admin' || user.role === 'professional')) {
-      // Org users go to the new agency dashboard
+    } else if (user) {
+      // All authenticated non-applicant users go to the new agency dashboard
       router.push('/dashboard/immigration');
     }
   }, [user, loading, router]);
