@@ -207,10 +207,10 @@ process.on('uncaughtException', (error: Error) => {
   gracefulShutdown('uncaughtException');
 });
 
-// Handle unhandled rejections
+// Handle unhandled rejections — log only, do NOT shut down
+// (route handler errors that escape asyncHandler should not kill the server)
 process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  gracefulShutdown('unhandledRejection');
+  logger.error('Unhandled Rejection (non-fatal)', { reason: reason?.message || reason, promise });
 });
 
 // ============================================================================
