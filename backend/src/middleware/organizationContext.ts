@@ -23,23 +23,31 @@ export async function organizationContext(
   next: NextFunction
 ): Promise<void> {
   try {
-    // Get authenticated user from JWT middleware
+    // Get authenticated user from JWT middleware (only has userId + email)
     const user = (req as any).user;
     
     if (!user) {
       throw new AppError('Authentication required', 401);
     }
 
-    // Get user's organizationId
-    const organizationId = user.organizationId;
+    // JWT payload only contains userId — fetch full user from DB
+    const userId = user.userId || user.id;
+    if (!userId) {
+      throw new AppError('Authentication required', 401);
+    }
 
-    if (!organizationId) {
+    const dbUser = await (prisma as any).user.findUnique({
+      where: { id: userId },
+      select: { id: true, organizationId: true, role: true },
+    });
+
+    if (!dbUser?.organizationId) {
       throw new AppError('User is not associated with an organization', 403);
     }
 
     // Fetch organization and verify it exists and is active
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
+    const organization = await (prisma as any).organization.findUnique({
+      where: { id: dbUser.organizationId },
       select: {
         id: true,
         name: true,
@@ -59,19 +67,10 @@ export async function organizationContext(
       throw new AppError('Organization is inactive', 403);
     }
 
-    // Get user's role in the organization
-    const userInOrg = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        role: true,
-        organizationId: true,
-      },
-    });
-
     // Attach organization context to request
     req.organizationId = organization.id;
     req.organization = organization;
-    req.organizationRole = userInOrg?.role || 'user';
+    req.organizationRole = dbUser.role || 'user';
 
     next();
   } catch (error) {

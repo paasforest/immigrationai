@@ -253,7 +253,7 @@ export default function CreateCaseForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {orgUsers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
