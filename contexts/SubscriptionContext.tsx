@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { billingApi } from '@/lib/api/billing';
 import { 
   SubscriptionPlan, 
   SubscriptionStatus, 
@@ -53,17 +54,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     
     try {
       setLoading(true);
-      const response = await fetch('/api/billing/usage', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setUsage(calculateUsageStats(data.data.currentMonth, plan));
-        }
+      const data = await billingApi.getUsage();
+      if (data.success && data.data) {
+        setUsage(calculateUsageStats((data.data as any).currentMonth, plan));
       }
     } catch (error) {
       console.error('Failed to load usage:', error);
