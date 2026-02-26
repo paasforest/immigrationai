@@ -178,12 +178,14 @@ router.post('/payment-proof', upload.single('proof'), async (req: AuthRequest, r
       url: result.url,
       path: result.path 
     });
+    return;
   } catch (error: any) {
     logger.error('Payment proof upload failed', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Failed to upload payment proof' 
     });
+    return;
   }
 });
 
@@ -218,12 +220,14 @@ router.get('/files', async (req: AuthRequest, res: Response): Promise<void> => {
       success: true, 
       files 
     });
+    return;
   } catch (error: any) {
     logger.error('List files failed', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Failed to list files' 
     });
+    return;
   }
 });
 
@@ -269,12 +273,14 @@ router.delete('/file', async (req: AuthRequest, res: Response): Promise<void> =>
       success: true, 
       message: 'File deleted successfully' 
     });
+    return;
   } catch (error: any) {
     logger.error('File deletion failed', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Failed to delete file' 
     });
+    return;
   }
 });
 

@@ -1,6 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
+
+export function asyncHandler(fn: (...args: any[]) => Promise<any>): RequestHandler {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
 
 export class AppError extends Error {
   statusCode: number;

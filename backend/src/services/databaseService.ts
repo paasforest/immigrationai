@@ -145,20 +145,20 @@ export const databaseService = {
   },
 
   // Subscriptions
-  createSubscription: async (userId: string, plan: string, status: string, stripeCustomerId?: string) => {
+  createSubscription: async (organizationId: string, plan: string, status: string, stripeCustomerId?: string) => {
     return prisma.subscription.create({
       data: {
-        userId,
+        organizationId,
         plan,
         status,
         stripeCustomerId
-      }
+      } as any
     });
   },
 
-  getUserSubscription: async (userId: string) => {
+  getUserSubscription: async (organizationId: string) => {
     return prisma.subscription.findFirst({
-      where: { userId },
+      where: { organizationId } as any,
       orderBy: { createdAt: 'desc' }
     });
   },
@@ -171,7 +171,7 @@ export const databaseService = {
   },
 
   // Checklists
-  createChecklist: async (userId: string, country: string, visaType: string, items: any[]) => {
+  createChecklist: async (_userId: string, country: string, visaType: string, items: any[]) => {
     return prisma.checklist.create({
       data: {
         country,
@@ -181,7 +181,7 @@ export const databaseService = {
     });
   },
 
-  getUserChecklists: async (userId: string) => {
+  getUserChecklists: async (_userId: string) => {
     return prisma.checklist.findMany({
       where: {},
       orderBy: { lastUpdated: 'desc' as const }

@@ -62,7 +62,6 @@ export const updateApplicationOutcome = async (data: ApplicationOutcomeData) => 
       userId: data.userId 
     });
 
-    // Find existing outcome by userId, country, and visaType
     const existing = await prisma.applicationOutcome.findFirst({
       where: {
         userId: data.userId,
