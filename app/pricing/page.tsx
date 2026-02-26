@@ -127,11 +127,13 @@ export default function PricingPage() {
       description: 'Perfect for solo practitioners',
       features: [
         'Up to 10 active cases',
-        'Basic case management',
-        'Client portal access',
-        'Document uploads',
-        'Task management',
-        'Email support'
+        'Client portal — secure document uploads',
+        'Task & deadline tracking',
+        'AI document checklist generator',
+        'SOP & cover letter generator (3/month)',
+        'Visa eligibility checks (3/month)',
+        'PDF export',
+        'Email support',
       ],
       popular: false,
     },
@@ -144,12 +146,15 @@ export default function PricingPage() {
       features: [
         'Unlimited cases',
         'Team collaboration (up to 5 members)',
-        'Automated lead routing',
+        'Automated lead routing from marketplace',
         'Client messaging system',
         'Analytics dashboard',
-        'Document checklists',
-        'Deadline tracking',
-        'Priority support'
+        'AI document checklist generator',
+        'VAC appointment tracker',
+        'Credential evaluation guide',
+        'Financial documentation assistant',
+        'Deadline tracking & alerts',
+        'Priority support',
       ],
       popular: true,
     },
@@ -162,12 +167,12 @@ export default function PricingPage() {
       features: [
         'Everything in Professional',
         'Unlimited team members',
-        'Advanced analytics & reporting',
-        'Custom branding',
-        'API access',
+        'Advanced analytics & performance reports',
+        'Custom branding on client portal',
         'Bulk case operations',
         'White-label client portal',
-        'Dedicated support'
+        'API access',
+        'Dedicated support',
       ],
       popular: false,
     },
@@ -176,17 +181,17 @@ export default function PricingPage() {
       id: 'enterprise',
       monthlyPrice: 0,
       annualPrice: 0,
-      description: 'For large organizations',
+      description: 'For large organisations',
       features: [
         'Everything in Agency',
         'Custom integrations',
         'SLA guarantee (99.9% uptime)',
         'Dedicated account manager',
         'On-premise deployment options',
-        'Custom training & onboarding'
+        'Custom training & onboarding',
       ],
       popular: false,
-    }
+    },
   ];
 
   const getCurrentPrice = (plan: any) => {

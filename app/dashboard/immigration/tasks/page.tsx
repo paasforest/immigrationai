@@ -14,10 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Calendar, User } from 'lucide-react';
+import { CheckCircle2, Calendar, User, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Task {
   id: string;
@@ -76,10 +86,22 @@ export default function TasksPage() {
     assignedToId: 'all',
   });
   const [orgUsers, setOrgUsers] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newTask, setNewTask] = useState({
+    caseId: '',
+    title: '',
+    description: '',
+    assignedToId: '',
+    priority: 'normal' as const,
+    dueDate: '',
+  });
 
   useEffect(() => {
     fetchData();
     fetchUsers();
+    fetchCases();
   }, [filters]);
 
   const fetchData = async () => {
@@ -110,6 +132,64 @@ export default function TasksPage() {
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
+    }
+  };
+
+  const fetchCases = async () => {
+    try {
+      const response = await immigrationApi.getCases(
+        { status: 'open' },
+        1,
+        100
+      );
+      if (response.success && response.data?.data) {
+        setCases(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cases:', error);
+    }
+  };
+
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
+    if (!newTask.caseId) {
+      toast.error('Please select a case for this task');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await immigrationApi.createTask({
+        caseId: newTask.caseId,
+        title: newTask.title.trim(),
+        description: newTask.description || undefined,
+        assignedToId: newTask.assignedToId || undefined,
+        priority: newTask.priority,
+        dueDate: newTask.dueDate || undefined,
+      });
+
+      if (response.success) {
+        toast.success('Task created successfully');
+        setIsCreateOpen(false);
+        setNewTask({
+          caseId: '',
+          title: '',
+          description: '',
+          assignedToId: '',
+          priority: 'normal',
+          dueDate: '',
+        });
+        fetchData();
+      } else {
+        toast.error(response.error || 'Failed to create task');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create task');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -193,9 +273,127 @@ export default function TasksPage() {
           <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
           <p className="text-gray-600 mt-1">Manage tasks across all cases</p>
         </div>
-        <Badge variant="outline" className="text-sm">
-          {tasks.length} total
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="text-sm">
+            {tasks.length} total
+          </Badge>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#0F2557] hover:bg-[#0a1d42]">
+                <Plus className="w-4 h-4 mr-2" />
+                New Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create Task</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label>Case *</Label>
+                  <Select
+                    value={newTask.caseId}
+                    onValueChange={(value) => setNewTask({ ...newTask, caseId: value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a case" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cases.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="font-mono text-xs mr-2 text-gray-500">
+                            {c.referenceNumber}
+                          </span>
+                          {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Title *</Label>
+                  <Input
+                    className="mt-1"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    placeholder="e.g. Collect bank statements"
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    className="mt-1"
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    placeholder="Optional details..."
+                    rows={2}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Assigned To</Label>
+                    <Select
+                      value={newTask.assignedToId}
+                      onValueChange={(value) => setNewTask({ ...newTask, assignedToId: value })}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Unassigned</SelectItem>
+                        {orgUsers
+                          .filter((u) => u.organizationRole !== 'applicant')
+                          .map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.fullName || u.email}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Priority</Label>
+                    <Select
+                      value={newTask.priority}
+                      onValueChange={(value: any) =>
+                        setNewTask({ ...newTask, priority: value })
+                      }
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="urgent">🔴 Urgent</SelectItem>
+                        <SelectItem value="high">🟠 High</SelectItem>
+                        <SelectItem value="normal">🔵 Normal</SelectItem>
+                        <SelectItem value="low">⚪ Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Due Date</Label>
+                  <Input
+                    type="date"
+                    className="mt-1"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateTask} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Create Task
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}

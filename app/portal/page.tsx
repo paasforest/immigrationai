@@ -60,12 +60,25 @@ export default function PortalDashboardPage() {
   const firstName = user?.fullName?.split(' ')[0] || 'there';
   const greeting = getGreeting();
 
-  // Calculate overall progress
-  const totalChecklistItems = dashboardData?.pendingChecklistItems?.length || 0;
-  const completedItems = 0; // Would calculate from completed items
-  const overallProgress = totalChecklistItems > 0 
-    ? Math.round((completedItems / (totalChecklistItems + completedItems)) * 100)
-    : 100;
+  // Calculate overall progress based on case stages
+  // Each case moves through 4 stages: created(0%) → in_progress(33%) → submitted(67%) → approved/decided(100%)
+  const activeCases = dashboardData?.activeCases || [];
+  const overallProgress = (() => {
+    if (activeCases.length === 0) return 0;
+    const stageScore: Record<string, number> = {
+      open: 10,
+      in_progress: 33,
+      submitted: 67,
+      approved: 100,
+      refused: 100,
+      closed: 100,
+    };
+    const total = activeCases.reduce(
+      (sum: number, c: any) => sum + (stageScore[c.status] ?? 10),
+      0
+    );
+    return Math.round(total / activeCases.length);
+  })();
 
   return (
     <div className="space-y-8">
@@ -151,7 +164,7 @@ export default function PortalDashboardPage() {
               Recent Messages
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/portal/messages">View all</Link>
+              <Link href="/portal/messages">View all →</Link>
             </Button>
           </CardHeader>
           <CardContent>
