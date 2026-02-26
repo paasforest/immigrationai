@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import prisma from './config/prisma';
+import { generalLimiter, aiLimiter } from './middleware/rateLimiter';
+import { errorHandler } from './middleware/errorHandler';
+import { logger } from './utils/logger';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -49,10 +52,16 @@ app.use(helmet());
 
 // SECURITY: Strict CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL].filter(Boolean) // Only production frontend
+  ? [
+      process.env.FRONTEND_URL,
+      'https://www.immigrationai.co.za',
+      'https://immigrationai.co.za',
+    ].filter(Boolean) as string[]
   : [
       process.env.FRONTEND_URL || 'http://localhost:3000',
-      'http://localhost:3001'
+      'http://localhost:3001',
+      'https://www.immigrationai.co.za',
+      'https://immigrationai.co.za',
     ];
 
 app.use(cors({

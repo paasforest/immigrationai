@@ -5,6 +5,7 @@ import fs from 'fs';
 import prisma from '../config/prisma';
 import { AppError } from '../middleware/errorHandler';
 import { getCaseById } from '../helpers/prismaScopes';
+import { createSOP } from './aiController';
 
 // Note: This controller is for Case Documents (file uploads)
 // Separate from AI-generated Document model
@@ -64,6 +65,7 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
   try {
     const user = (req as any).user;
     const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
     const { caseId, name, category, notes, expiryDate, checklistItemId } = req.body;
 
     if (!req.file) {
@@ -166,6 +168,18 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
     throw new AppError(error.message || 'Failed to upload document', 500);
   }
 }
+
+export const generateSOP = createSOP;
+
+export const documentController = {
+  uploadDocument,
+  getDocumentsByCase,
+  updateDocument,
+  deleteDocument,
+  getDocumentDownload,
+  uploadMiddleware,
+  generateSOP,
+};
 
 /**
  * Get all documents for a case
