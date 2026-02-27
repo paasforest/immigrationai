@@ -12,16 +12,27 @@ import { Progress } from '@/components/ui/progress';
 import { FolderOpen, MessageSquare, Upload, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
-function getGreeting(): string {
+function getGreeting(lang: string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  const greetings: Record<string, [string, string, string]> = {
+    en: ['Good morning', 'Good afternoon', 'Good evening'],
+    fr: ['Bonjour', 'Bonjour', 'Bonsoir'],
+    pt: ['Bom dia', 'Boa tarde', 'Boa noite'],
+    ar: ['صباح الخير', 'مساء الخير', 'مساء الخير'],
+    es: ['Buenos días', 'Buenas tardes', 'Buenas noches'],
+    zh: ['早上好', '下午好', '晚上好'],
+  };
+  const parts = greetings[lang] ?? greetings['en'];
+  if (hour < 12) return parts[0];
+  if (hour < 18) return parts[1];
+  return parts[2];
 }
 
 export default function PortalDashboardPage() {
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,12 +64,13 @@ export default function PortalDashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0F2557]"></div>
+        <span className="ml-3 text-gray-500">{t('ui.loading')}</span>
       </div>
     );
   }
 
   const firstName = user?.fullName?.split(' ')[0] || 'there';
-  const greeting = getGreeting();
+  const greeting = getGreeting(lang);
 
   // Calculate overall progress based on case stages
   // Each case moves through 4 stages: created(0%) → in_progress(33%) → submitted(67%) → approved/decided(100%)
@@ -93,7 +105,7 @@ export default function PortalDashboardPage() {
       {/* Active Cases */}
       {dashboardData?.activeCases && dashboardData.activeCases.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">My Active Cases</h2>
+          <h2 className="text-xl font-semibold">{t('case.myCase')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {dashboardData.activeCases.map((caseItem: any) => (
               <PortalCaseCard key={caseItem.id} caseData={caseItem} />
@@ -104,10 +116,8 @@ export default function PortalDashboardPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-xl font-semibold mb-2">No cases yet</h3>
-            <p className="text-gray-600">
-              Your consultant will create your case. Nothing to do yet!
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{t('portal.noCasesTitle')}</h3>
+            <p className="text-gray-600">{t('portal.noCasesBody')}</p>
           </CardContent>
         </Card>
       )}
@@ -118,7 +128,7 @@ export default function PortalDashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="w-5 h-5" />
-              Pending Documents
+              {t('portal.pendingDocs')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -140,14 +150,14 @@ export default function PortalDashboardPage() {
                     className="bg-[#0F2557] hover:bg-[#0a1d42]"
                   >
                     <Link href={`/portal/cases/${item.case.id}?tab=documents&item=${item.id}`}>
-                      Upload
+                      {t('case.uploadDoc')}
                     </Link>
                   </Button>
                 </div>
               ))}
               {dashboardData.pendingChecklistItems.length > 5 && (
                 <p className="text-sm text-gray-500 text-center">
-                  +{dashboardData.pendingChecklistItems.length - 5} more items
+                  +{dashboardData.pendingChecklistItems.length - 5} {t('portal.moreItems')}
                 </p>
               )}
             </div>
@@ -161,10 +171,10 @@ export default function PortalDashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
-              Recent Messages
+              {t('case.messages')}
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/portal/messages">View all →</Link>
+              <Link href="/portal/messages">{t('ui.viewAll')} →</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -185,13 +195,13 @@ export default function PortalDashboardPage() {
       {/* Progress Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Application Progress</CardTitle>
+          <CardTitle>{t('portal.appProgress')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Overall Progress</span>
+                <span className="text-sm font-medium">{t('portal.overallProgress')}</span>
                 <span className="text-sm text-gray-600">{overallProgress}%</span>
               </div>
               <Progress value={overallProgress} className="h-3" />
@@ -201,19 +211,19 @@ export default function PortalDashboardPage() {
                 <p className="text-2xl font-bold text-[#0F2557]">
                   {dashboardData?.activeCases?.length || 0}
                 </p>
-                <p className="text-xs text-gray-600">Active Cases</p>
+                <p className="text-xs text-gray-600">{t('portal.activeCases')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-amber-600">
                   {dashboardData?.pendingChecklistItems?.length || 0}
                 </p>
-                <p className="text-xs text-gray-600">Pending Items</p>
+                <p className="text-xs text-gray-600">{t('portal.pendingItems')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-blue-600">
                   {dashboardData?.unreadMessages || 0}
                 </p>
-                <p className="text-xs text-gray-600">Unread Messages</p>
+                <p className="text-xs text-gray-600">{t('portal.unreadMessages')}</p>
               </div>
             </div>
           </div>

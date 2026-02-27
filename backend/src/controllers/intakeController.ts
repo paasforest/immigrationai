@@ -6,6 +6,7 @@ import {
   assignIntake,
   reassignIntake,
   convertIntakeToCase,
+  getLeadUsageForUser,
 } from '../services/routingEngine';
 import {
   sendApplicantConfirmationEmail,
@@ -189,12 +190,15 @@ export async function submitIntake(req: Request, res: Response): Promise<void> {
 
     setImmediate(async () => {
       try {
+        // preferredLanguage is stored in additionalData by the IntakeForm
+        const preferredLang = (additionalData as any)?.preferredLanguage ?? null;
         await sendApplicantConfirmationEmail({
           toEmail: intake.applicantEmail,
           applicantName: intake.applicantName,
           referenceNumber: intake.referenceNumber,
           serviceName: intake.service.name,
           statusUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/intake-status?ref=${intake.referenceNumber}`,
+          preferredLanguage: preferredLang,
         });
       } catch (error: any) {
         logger.error('Confirmation email failed', {
@@ -508,6 +512,8 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
           });
 
           if (professional) {
+            // Retrieve preferredLanguage from the intake's additionalData
+            const intakeAdditional = (assignment.intake.additionalData as any) || {};
             await sendProfessionalContactEmail({
               toEmail: assignment.intake.applicantEmail,
               applicantName: assignment.intake.applicantName,
@@ -517,6 +523,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
               professionalPhone: professional.phone || undefined,
               serviceName: assignment.intake.service.name,
               caseReference: newCase.referenceNumber,
+              preferredLanguage: intakeAdditional.preferredLanguage ?? null,
             });
           }
         } catch (emailError: any) {
@@ -1747,5 +1754,20 @@ export async function submitVerificationDoc(req: Request, res: Response): Promis
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     logger.error('submitVerificationDoc failed', { error: error.message });
     res.status(500).json({ success: false, message: error.message || 'Upload failed' });
+  }
+}
+
+/**
+ * GET /api/intake/lead-usage
+ * Returns how many leads the authenticated professional has received this month
+ * and their tier limit, so the frontend can display a usage meter.
+ */
+export async function getLeadUsage(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const usage = await getLeadUsageForUser(user.userId);
+    res.json({ success: true, data: usage });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to get lead usage', 500);
   }
 }

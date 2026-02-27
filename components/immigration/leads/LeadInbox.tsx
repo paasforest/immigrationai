@@ -6,13 +6,27 @@ import { type IntakeAssignment } from '@/types/immigration';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Inbox, Clock, CheckCircle2, X, TrendingUp } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Inbox, Clock, CheckCircle2, X, TrendingUp, Zap, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
 import LeadCard from './LeadCard';
 import RespondToLeadDialog from './RespondToLeadDialog';
 import Link from 'next/link';
 
 type TabType = 'all' | 'pending' | 'accepted' | 'declined';
+
+interface LeadUsage {
+  used: number;
+  limit: number; // -1 = unlimited
+  plan: string;
+  resetDate: string;
+}
+
+const PLAN_DISPLAY: Record<string, string> = {
+  starter: 'Starter',
+  professional: 'Professional',
+  agency: 'Agency',
+};
 
 export default function LeadInbox() {
   const [leads, setLeads] = useState<IntakeAssignment[]>([]);
@@ -22,6 +36,7 @@ export default function LeadInbox() {
     assignment: IntakeAssignment;
     action: 'accept' | 'decline';
   } | null>(null);
+  const [usage, setUsage] = useState<LeadUsage | null>(null);
   const previousPendingCount = useRef(0);
 
   const fetchLeads = async () => {
@@ -66,6 +81,13 @@ export default function LeadInbox() {
     }
   };
 
+  // Fetch lead usage (tier meter)
+  useEffect(() => {
+    immigrationApi.getLeadUsage()
+      .then((r) => { if (r.success && r.data) setUsage(r.data); })
+      .catch(() => {}); // non-critical
+  }, []);
+
   useEffect(() => {
     fetchLeads();
   }, [activeTab]);
@@ -100,8 +122,61 @@ export default function LeadInbox() {
           return true;
         });
 
+  // Derived usage values
+  const isUnlimited = usage?.limit === -1;
+  const usagePct = isUnlimited ? 0 : Math.min(100, ((usage?.used ?? 0) / (usage?.limit ?? 5)) * 100);
+  const atLimit = !isUnlimited && (usage?.used ?? 0) >= (usage?.limit ?? 5);
+  const nearLimit = !isUnlimited && usagePct >= 80 && !atLimit;
+  const resetLabel = usage?.resetDate
+    ? new Date(usage.resetDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })
+    : '';
+
   return (
     <div className="space-y-6">
+      {/* ── Lead Usage Meter ─────────────────────────────────────────────── */}
+      {usage && (
+        <Card className={`border-l-4 ${atLimit ? 'border-l-red-500 bg-red-50' : nearLimit ? 'border-l-amber-500 bg-amber-50' : 'border-l-[#0F2557] bg-blue-50'}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className={`w-4 h-4 ${atLimit ? 'text-red-500' : nearLimit ? 'text-amber-500' : 'text-[#0F2557]'}`} />
+                  <span className="text-sm font-semibold text-gray-800">
+                    {isUnlimited
+                      ? `Unlimited leads · ${PLAN_DISPLAY[usage.plan] ?? usage.plan} plan`
+                      : `${usage.used} of ${usage.limit} leads used this month`}
+                  </span>
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {PLAN_DISPLAY[usage.plan] ?? usage.plan}
+                  </Badge>
+                </div>
+                {!isUnlimited && (
+                  <Progress
+                    value={usagePct}
+                    className={`h-2 ${atLimit ? '[&>div]:bg-red-500' : nearLimit ? '[&>div]:bg-amber-500' : '[&>div]:bg-[#0F2557]'}`}
+                  />
+                )}
+                {!isUnlimited && resetLabel && (
+                  <p className="text-xs text-gray-500 mt-1">Resets {resetLabel}</p>
+                )}
+              </div>
+              {(atLimit || nearLimit) && (
+                <Button asChild size="sm" className="bg-[#0F2557] text-white gap-1 shrink-0">
+                  <Link href="/dashboard/immigration/billing">
+                    Upgrade Plan <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+            {atLimit && (
+              <p className="text-xs text-red-600 mt-2 font-medium">
+                ⚠️ You've reached your monthly lead limit. Upgrade to receive more leads this month.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-4">
         <Card className="bg-gray-50">

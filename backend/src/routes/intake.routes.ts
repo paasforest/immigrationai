@@ -23,6 +23,7 @@ import {
   patchEligibilityScore,
   submitVerificationDoc,
   verificationUpload,
+  getLeadUsage,
 } from '../controllers/intakeController';
 
 const router = Router();
@@ -46,7 +47,8 @@ router.post('/specializations', upsertSpecialization); // POST /api/intake/speci
 router.delete('/specializations/:id', deleteSpecialization); // DELETE /api/intake/specializations/:id
 router.post('/profile', upsertPublicProfile); // POST /api/intake/profile
 router.get('/profile', getMyProfile); // GET /api/intake/profile
-router.get('/my-stats', getMyLeadStats); // GET /api/intake/my-stats
+router.get('/my-stats', getMyLeadStats);    // GET /api/intake/my-stats
+router.get('/lead-usage', getLeadUsage);    // GET /api/intake/lead-usage
 router.post('/profile/upload-verification', verificationUpload, submitVerificationDoc); // POST /api/intake/profile/upload-verification
 
 // Admin routes (require admin role)

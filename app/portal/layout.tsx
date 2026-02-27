@@ -6,31 +6,29 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu, FolderOpen, Upload, MessageSquare, User } from 'lucide-react';
+import { LogOut, Menu, FolderOpen, Upload, MessageSquare, User, Globe } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { LanguageProvider, useLanguage } from '@/lib/i18n/LanguageContext';
+import { SUPPORTED_LANGUAGES, type LanguageCode } from '@/lib/i18n/translations';
 
-const navigation = [
-  { href: '/portal', label: 'My Cases', icon: FolderOpen },
-  { href: '/portal/upload', label: 'Upload Documents', icon: Upload },
-  { href: '/portal/messages', label: 'Messages', icon: MessageSquare },
-  { href: '/portal/profile', label: 'My Profile', icon: User },
-];
-
-export default function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Inner layout that has access to LanguageContext
+function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { organization } = useOrganization();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { lang, setLang, t } = useLanguage();
+
+  const navigation = [
+    { href: '/portal', label: t('case.myCase'), icon: FolderOpen },
+    { href: '/portal/upload', label: t('case.uploadDoc'), icon: Upload },
+    { href: '/portal/messages', label: t('case.messages'), icon: MessageSquare },
+    { href: '/portal/profile', label: 'My Profile', icon: User },
+  ];
 
   const isActive = (href: string) => {
-    if (href === '/portal') {
-      return pathname === href;
-    }
+    if (href === '/portal') return pathname === href;
     return pathname.startsWith(href);
   };
 
@@ -108,8 +106,23 @@ export default function PortalLayout({
               })}
             </nav>
 
-            {/* User Info and Logout */}
-            <div className="flex items-center gap-4">
+            {/* Language selector + User Info + Logout */}
+            <div className="flex items-center gap-3">
+              {/* Language picker */}
+              <div className="flex items-center gap-1 hidden sm:flex">
+                <Globe className="w-4 h-4 text-gray-400" />
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value as LanguageCode)}
+                  className="text-xs text-gray-600 border-none bg-transparent focus:outline-none cursor-pointer"
+                  aria-label="Select language"
+                >
+                  {SUPPORTED_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>{l.nativeLabel}</option>
+                  ))}
+                </select>
+              </div>
+
               <span className="text-sm text-gray-700 hidden sm:inline">
                 {user?.fullName || user?.email}
               </span>
@@ -127,5 +140,14 @@ export default function PortalLayout({
         {children}
       </main>
     </div>
+  );
+}
+
+// Outer export — wraps with LanguageProvider so all portal pages get translations
+export default function PortalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <PortalLayoutInner>{children}</PortalLayoutInner>
+    </LanguageProvider>
   );
 }

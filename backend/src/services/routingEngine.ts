@@ -4,6 +4,65 @@ import { sendLeadNotificationEmail } from './emailService';
 import { generateCaseReference } from '../utils/referenceNumber';
 import bcrypt from 'bcryptjs';
 
+// ─── Tier Lead Limits ────────────────────────────────────────────────────────
+// These are the monthly inbound-lead limits per subscription tier.
+// Agency is unlimited (we use Infinity so the comparison always passes).
+// These limits apply to NEW leads being ROUTED to a professional.
+// Accepted leads already in progress do not count toward the cap.
+export const TIER_LEAD_LIMITS: Record<string, number> = {
+  starter:      5,
+  professional: 20,
+  agency:       Infinity,
+};
+
+/**
+ * Get monthly lead count for a professional.
+ * Counts IntakeAssignment records created since the start of the current month.
+ */
+export async function getMonthlyLeadCount(professionalId: string): Promise<number> {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  return prisma.intakeAssignment.count({
+    where: {
+      professionalId,
+      assignedAt: { gte: startOfMonth },
+    },
+  });
+}
+
+/**
+ * Returns { used, limit, plan, resetDate } for a professional.
+ * Used by the /api/intake/lead-usage endpoint.
+ */
+export async function getLeadUsageForUser(userId: string): Promise<{
+  used: number;
+  limit: number;
+  plan: string;
+  resetDate: string;
+}> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionPlan: true },
+  });
+
+  const plan = user?.subscriptionPlan || 'starter';
+  const limit = TIER_LEAD_LIMITS[plan] ?? 5;
+  const used = await getMonthlyLeadCount(userId);
+
+  // Reset date = first day of next month
+  const now = new Date();
+  const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
+  return {
+    used,
+    limit: limit === Infinity ? -1 : limit, // -1 = unlimited in API response
+    plan,
+    resetDate,
+  };
+}
+
 interface MatchedProfessional {
   user: {
     id: string;
@@ -12,6 +71,7 @@ interface MatchedProfessional {
     isActive: boolean;
     isIndependentProfessional: boolean;
     fullName: string | null;
+    subscriptionPlan: string;
   };
   spec: {
     id: string;
@@ -44,6 +104,7 @@ export async function findMatchingProfessionals(intake: any): Promise<MatchedPro
             isActive: true,
             isIndependentProfessional: true,
             fullName: true,
+            subscriptionPlan: true,   // needed for tier limit check
           },
         },
       },
@@ -66,19 +127,29 @@ export async function findMatchingProfessionals(intake: any): Promise<MatchedPro
     const matches: MatchedProfessional[] = [];
 
     for (const spec of corridorMatches) {
-      // Count active assignments
+      // Count active concurrent assignments
       const activeAssignments = await prisma.intakeAssignment.count({
         where: {
           professionalId: spec.userId,
-          status: {
-            in: ['pending', 'accepted'],
-          },
+          status: { in: ['pending', 'accepted'] },
         },
       });
 
-      // Filter out if at capacity
+      // Filter out if at concurrent capacity
       if (activeAssignments >= spec.maxConcurrentLeads) {
         continue;
+      }
+
+      // ── Tier Monthly Lead Limit ─────────────────────────────────────────
+      const plan = (spec.user as any).subscriptionPlan || 'starter';
+      const tierLimit = TIER_LEAD_LIMITS[plan] ?? TIER_LEAD_LIMITS['starter'];
+
+      if (tierLimit !== Infinity) {
+        const monthlyLeads = await getMonthlyLeadCount(spec.userId);
+        if (monthlyLeads >= tierLimit) {
+          logger.info(`Routing skip: ${spec.userId} on ${plan} plan has hit monthly limit (${monthlyLeads}/${tierLimit})`);
+          continue; // Skip this professional — they've hit their limit
+        }
       }
 
       // Calculate score
@@ -96,9 +167,18 @@ export async function findMatchingProfessionals(intake: any): Promise<MatchedPro
       if (spec.user.isIndependentProfessional) {
         score += 15;
       }
+      // Agency gets priority routing bonus — float to the top of matched list
+      if (plan === 'agency') {
+        score += 50;
+      } else if (plan === 'professional') {
+        score += 20;
+      }
 
       matches.push({
-        user: spec.user,
+        user: {
+          ...spec.user,
+          subscriptionPlan: (spec.user as any).subscriptionPlan || 'starter',
+        },
         spec: {
           id: spec.id,
           originCorridors: spec.originCorridors,

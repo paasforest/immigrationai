@@ -98,6 +98,20 @@ export const translations: Record<string, Record<LanguageCode, string>> = {
   'notif.statusChanged':    { en: 'Your case status has been updated', fr: 'Le statut de votre dossier a été mis à jour', pt: 'O status do seu caso foi atualizado', ar: 'تم تحديث حالة قضيتك', es: 'El estado de su caso ha sido actualizado', zh: '您的案例状态已更新' },
   'notif.newMessage':       { en: 'You have a new message', fr: 'Vous avez un nouveau message', pt: 'Você tem uma nova mensagem', ar: 'لديك رسالة جديدة', es: 'Tiene un nuevo mensaje', zh: '您有一条新消息' },
 
+  // ── Portal Dashboard ─────────────────────────────────────────────────────
+  'portal.noCasesTitle':    { en: 'No cases yet', fr: 'Aucun dossier pour l\'instant', pt: 'Nenhum caso ainda', ar: 'لا توجد قضايا بعد', es: 'Aún no hay casos', zh: '暂无案例' },
+  'portal.noCasesBody':     { en: 'Your consultant will create your case. Nothing to do yet!', fr: 'Votre consultant créera votre dossier. Rien à faire pour l\'instant !', pt: 'Seu consultor criará seu caso. Nada a fazer por enquanto!', ar: 'سينشئ مستشارك قضيتك. لا يوجد شيء تفعله الآن!', es: 'Su consultor creará su caso. ¡Nada que hacer aún!', zh: '您的顾问将创建您的案例。暂时不需要任何操作！' },
+  'portal.pendingDocs':     { en: 'Pending Documents', fr: 'Documents en attente', pt: 'Documentos pendentes', ar: 'المستندات المعلقة', es: 'Documentos pendientes', zh: '待处理文件' },
+  'portal.moreItems':       { en: 'more items', fr: 'autres éléments', pt: 'mais itens', ar: 'عناصر أخرى', es: 'más elementos', zh: '更多项目' },
+  'portal.appProgress':     { en: 'Application Progress', fr: 'Progression de la demande', pt: 'Progresso da candidatura', ar: 'تقدم الطلب', es: 'Progreso de la solicitud', zh: '申请进度' },
+  'portal.overallProgress': { en: 'Overall Progress', fr: 'Progression globale', pt: 'Progresso geral', ar: 'التقدم الإجمالي', es: 'Progreso general', zh: '总体进度' },
+  'portal.activeCases':     { en: 'Active Cases', fr: 'Dossiers actifs', pt: 'Casos ativos', ar: 'القضايا النشطة', es: 'Casos activos', zh: '进行中案例' },
+  'portal.pendingItems':    { en: 'Pending Items', fr: 'Éléments en attente', pt: 'Itens pendentes', ar: 'العناصر المعلقة', es: 'Elementos pendientes', zh: '待处理项目' },
+  'portal.unreadMessages':  { en: 'Unread Messages', fr: 'Messages non lus', pt: 'Mensagens não lidas', ar: 'الرسائل غير المقروءة', es: 'Mensajes no leídos', zh: '未读消息' },
+  'portal.specialist':      { en: 'Your Specialist', fr: 'Votre spécialiste', pt: 'Seu especialista', ar: 'متخصصك', es: 'Su especialista', zh: '您的专家' },
+  'portal.caseStatus':      { en: 'Case Status', fr: 'Statut du dossier', pt: 'Status do caso', ar: 'حالة القضية', es: 'Estado del caso', zh: '案例状态' },
+  'portal.timeline':        { en: 'Timeline', fr: 'Calendrier', pt: 'Cronograma', ar: 'الجدول الزمني', es: 'Cronograma', zh: '时间线' },
+
   // ── General UI ────────────────────────────────────────────────────────────
   'ui.save':                { en: 'Save', fr: 'Enregistrer', pt: 'Salvar', ar: 'حفظ', es: 'Guardar', zh: '保存' },
   'ui.cancel':              { en: 'Cancel', fr: 'Annuler', pt: 'Cancelar', ar: 'إلغاء', es: 'Cancelar', zh: '取消' },

@@ -539,6 +539,19 @@ export const immigrationApi = {
     return apiClient.get('/api/intake/my-stats');
   },
 
+  /**
+   * Returns { used, limit, plan, resetDate } for the current professional.
+   * limit === -1 means unlimited (agency plan).
+   */
+  async getLeadUsage(): Promise<ApiResponse<{
+    used: number;
+    limit: number; // -1 = unlimited
+    plan: string;
+    resetDate: string;
+  }>> {
+    return apiClient.get('/api/intake/lead-usage');
+  },
+
   // Admin functions
   async getPendingVerifications(): Promise<ApiResponse<any>> {
     return apiClient.get('/api/intake/admin/verifications');

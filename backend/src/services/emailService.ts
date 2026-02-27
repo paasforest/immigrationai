@@ -15,6 +15,52 @@ function getResend(): Resend {
 }
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+// ─── Multilingual Email Strings ───────────────────────────────────────────────
+// Used for the two key client-facing transactional emails.
+// Professional dashboard emails remain in English.
+type EmailLang = 'en' | 'fr' | 'pt' | 'ar' | 'es' | 'zh';
+
+const emailStrings: Record<string, Record<EmailLang, string>> = {
+  // sendApplicantConfirmationEmail
+  'confirm.header':   { en: 'Request Received', fr: 'Demande reçue', pt: 'Pedido recebido', ar: 'تم استلام الطلب', es: 'Solicitud recibida', zh: '申请已收到' },
+  'confirm.greeting': { en: 'Thank you, {name}!', fr: 'Merci, {name} !', pt: 'Obrigado, {name}!', ar: 'شكراً، {name}!', es: '¡Gracias, {name}!', zh: '谢谢，{name}！' },
+  'confirm.body1':    { en: "We've received your request for <strong>{service}</strong>. A specialist will contact you within 24–48 hours.", fr: 'Nous avons reçu votre demande pour <strong>{service}</strong>. Un spécialiste vous contactera dans les 24 à 48 heures.', pt: 'Recebemos seu pedido de <strong>{service}</strong>. Um especialista entrará em contato em 24 a 48 horas.', ar: 'لقد استلمنا طلبك بخصوص <strong>{service}</strong>. سيتواصل معك متخصص خلال 24 إلى 48 ساعة.', es: 'Hemos recibido su solicitud de <strong>{service}</strong>. Un especialista se comunicará con usted en 24 a 48 horas.', zh: '我们已收到您关于<strong>{service}</strong>的申请。专家将在24至48小时内与您联系。' },
+  'confirm.refLabel': { en: 'Your Reference Number', fr: 'Votre numéro de référence', pt: 'Seu número de referência', ar: 'رقم مرجعك', es: 'Su número de referencia', zh: '您的参考号码' },
+  'confirm.save':     { en: 'Save this number to track your request', fr: 'Enregistrez ce numéro pour suivre votre demande', pt: 'Salve este número para acompanhar seu pedido', ar: 'احفظ هذا الرقم لمتابعة طلبك', es: 'Guarde este número para hacer seguimiento a su solicitud', zh: '保存此号码以跟踪您的申请' },
+  'confirm.nextTitle':{ en: 'What happens next:', fr: 'Que se passe-t-il ensuite :', pt: 'O que acontece a seguir:', ar: 'ماذا يحدث بعد ذلك:', es: '¿Qué pasa después?', zh: '接下来会发生什么：' },
+  'confirm.step1':    { en: 'We match you with a verified specialist who specialises in your exact situation', fr: 'Nous vous mettons en relation avec un spécialiste vérifié qui se spécialise dans votre situation', pt: 'Nós o conectamos com um especialista verificado que se especializa em sua situação específica', ar: 'نربطك بمتخصص موثق يتخصص في وضعك بالضبط', es: 'Lo conectamos con un especialista verificado que se especializa en su situación exacta', zh: '我们将您与专门处理您具体情况的认证专家匹配' },
+  'confirm.step2':    { en: 'Your specialist reviews your request and contacts you within 24–48 hours', fr: 'Votre spécialiste examine votre demande et vous contacte dans les 24 à 48 heures', pt: 'Seu especialista analisa seu pedido e entra em contato em 24 a 48 horas', ar: 'يراجع متخصصك طلبك ويتواصل معك خلال 24 إلى 48 ساعة', es: 'Su especialista revisa su solicitud y se comunica con usted en 24 a 48 horas', zh: '您的专家审查您的申请并在24至48小时内与您联系' },
+  'confirm.step3':    { en: 'You discuss your case directly with your specialist', fr: 'Vous discutez de votre dossier directement avec votre spécialiste', pt: 'Você discute seu caso diretamente com seu especialista', ar: 'تناقش قضيتك مباشرة مع متخصصك', es: 'Discute su caso directamente con su especialista', zh: '您直接与您的专家讨论您的案例' },
+  'confirm.step4':    { en: 'You work together to complete your immigration application', fr: 'Vous travaillez ensemble pour compléter votre dossier d\'immigration', pt: 'Vocês trabalham juntos para concluir seu pedido de imigração', ar: 'تعملون معاً لإتمام طلب الهجرة', es: 'Trabajan juntos para completar su solicitud de inmigración', zh: '共同完成您的移民申请' },
+  'confirm.cta':      { en: 'Check My Status', fr: 'Vérifier mon statut', pt: 'Verificar meu status', ar: 'تحقق من حالتي', es: 'Verificar mi estado', zh: '查看我的状态' },
+  'confirm.subject':  { en: 'Request Received — {ref}', fr: 'Demande reçue — {ref}', pt: 'Pedido recebido — {ref}', ar: 'تم استلام الطلب — {ref}', es: 'Solicitud recibida — {ref}', zh: '申请已收到 — {ref}' },
+
+  // sendProfessionalContactEmail
+  'assigned.header':  { en: 'Specialist Assigned!', fr: 'Spécialiste assigné !', pt: 'Especialista atribuído!', ar: 'تم تعيين المتخصص!', es: '¡Especialista asignado!', zh: '已分配专家！' },
+  'assigned.greeting':{ en: 'Great news, {name}!', fr: 'Bonne nouvelle, {name} !', pt: 'Ótimas notícias, {name}!', ar: 'أخبار رائعة، {name}!', es: '¡Buenas noticias, {name}!', zh: '好消息，{name}！' },
+  'assigned.body1':   { en: 'Your immigration specialist has been assigned and is ready to help with your <strong>{service}</strong> case.', fr: 'Votre spécialiste en immigration a été assigné et est prêt à vous aider pour votre dossier <strong>{service}</strong>.', pt: 'Seu especialista em imigração foi atribuído e está pronto para ajudar com seu caso de <strong>{service}</strong>.', ar: 'تم تعيين متخصص الهجرة الخاص بك وهو مستعد لمساعدتك في قضية <strong>{service}</strong>.', es: 'Su especialista en inmigración ha sido asignado y está listo para ayudarle con su caso de <strong>{service}</strong>.', zh: '您的移民专家已分配，准备帮助您处理<strong>{service}</strong>案例。' },
+  'assigned.caseRef': { en: 'Case Reference', fr: 'Référence du dossier', pt: 'Referência do caso', ar: 'مرجع القضية', es: 'Referencia del caso', zh: '案例参考' },
+  'assigned.contact': { en: 'Your specialist will contact you within <strong>24 hours</strong> to discuss your case and next steps.', fr: 'Votre spécialiste vous contactera dans les <strong>24 heures</strong> pour discuter de votre dossier.', pt: 'Seu especialista entrará em contato em <strong>24 horas</strong> para discutir seu caso.', ar: 'سيتواصل معك متخصصك خلال <strong>24 ساعة</strong> لمناقشة قضيتك.', es: 'Su especialista se comunicará dentro de <strong>24 horas</strong> para discutir su caso.', zh: '您的专家将在<strong>24小时</strong>内联系您讨论您的案例。' },
+  'assigned.subject': { en: 'Your Immigration Specialist Has Been Assigned', fr: 'Votre spécialiste en immigration a été assigné', pt: 'Seu especialista em imigração foi atribuído', ar: 'تم تعيين متخصص الهجرة الخاص بك', es: 'Su especialista en inmigración ha sido asignado', zh: '您的移民专家已分配' },
+};
+
+function et(key: string, lang: EmailLang, vars?: Record<string, string>): string {
+  const entry = emailStrings[key];
+  let text = entry?.[lang] ?? entry?.['en'] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+    }
+  }
+  return text;
+}
+
+function toEmailLang(lang?: string | null): EmailLang {
+  const supported: EmailLang[] = ['en', 'fr', 'pt', 'ar', 'es', 'zh'];
+  const code = (lang || 'en').toLowerCase().split('-')[0] as EmailLang;
+  return supported.includes(code) ? code : 'en';
+}
+
 /**
  * Send invitation email
  */
@@ -575,17 +621,22 @@ export async function sendApplicantConfirmationEmail({
   referenceNumber,
   serviceName,
   statusUrl,
+  preferredLanguage,
 }: {
   toEmail: string;
   applicantName: string;
   referenceNumber: string;
   serviceName: string;
   statusUrl: string;
+  preferredLanguage?: string | null;
 }): Promise<void> {
   try {
+    const lang = toEmailLang(preferredLanguage);
+    const dir  = lang === 'ar' ? 'rtl' : 'ltr';
+
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -597,46 +648,42 @@ export async function sendApplicantConfirmationEmail({
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; max-width: 600px;">
           <tr>
             <td style="background-color: #0F2557; padding: 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Request Received</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${et('confirm.header', lang)}</h1>
             </td>
           </tr>
           <tr>
             <td style="padding: 40px 30px;">
-              <h2 style="color: #333333; margin-top: 0;">Thank you, ${applicantName}!</h2>
+              <h2 style="color: #333333; margin-top: 0;">${et('confirm.greeting', lang, { name: applicantName })}</h2>
               <p style="color: #666666; font-size: 16px; line-height: 1.6;">
-                We've received your request for <strong>${serviceName}</strong>. A specialist will contact you within 24-48 hours.
+                ${et('confirm.body1', lang, { service: serviceName })}
               </p>
               
-              <div style="background-color: #0F2557; background-opacity: 0.05; padding: 20px; border-radius: 6px; margin: 30px 0; text-align: center;">
-                <p style="margin: 0 0 10px 0; color: #999999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Your Reference Number</p>
+              <div style="background-color: #f0f4ff; padding: 20px; border-radius: 6px; margin: 30px 0; text-align: center;">
+                <p style="margin: 0 0 10px 0; color: #999999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">${et('confirm.refLabel', lang)}</p>
                 <p style="margin: 0; color: #0F2557; font-size: 28px; font-weight: bold; font-family: monospace;">${referenceNumber}</p>
               </div>
               
               <p style="color: #666666; font-size: 14px; line-height: 1.6; text-align: center; margin: 20px 0;">
-                <strong>Save this number to track your request</strong>
+                <strong>${et('confirm.save', lang)}</strong>
               </p>
               
               <div style="margin: 30px 0;">
-                <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 16px;">What happens next:</h3>
+                <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 16px;">${et('confirm.nextTitle', lang)}</h3>
                 <ol style="color: #666666; font-size: 14px; line-height: 1.8; padding-left: 20px; margin: 0;">
-                  <li style="margin-bottom: 10px;">We match you with a verified specialist who specializes in your exact situation</li>
-                  <li style="margin-bottom: 10px;">Your specialist reviews your request and contacts you within 24-48 hours</li>
-                  <li style="margin-bottom: 10px;">You discuss your case directly with your specialist</li>
-                  <li>You work together to complete your immigration application</li>
+                  <li style="margin-bottom: 10px;">${et('confirm.step1', lang)}</li>
+                  <li style="margin-bottom: 10px;">${et('confirm.step2', lang)}</li>
+                  <li style="margin-bottom: 10px;">${et('confirm.step3', lang)}</li>
+                  <li>${et('confirm.step4', lang)}</li>
                 </ol>
               </div>
               
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${statusUrl}" style="display: inline-block; padding: 14px 32px; background-color: #F59E0B; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">Check My Status</a>
+                    <a href="${statusUrl}" style="display: inline-block; padding: 14px 32px; background-color: #F59E0B; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">${et('confirm.cta', lang)}</a>
                   </td>
                 </tr>
               </table>
-              
-              <p style="color: #999999; font-size: 12px; line-height: 1.6; margin-top: 20px; text-align: center;">
-                <strong>Note:</strong> Fees are paid directly to your specialist. We provide free matching only.
-              </p>
             </td>
           </tr>
           <tr>
@@ -655,11 +702,11 @@ export async function sendApplicantConfirmationEmail({
     await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: `Request Received — ${referenceNumber}`,
+      subject: et('confirm.subject', lang, { ref: referenceNumber }),
       html,
     });
 
-    logger.info('Applicant confirmation email sent', { toEmail, referenceNumber });
+    logger.info('Applicant confirmation email sent', { toEmail, referenceNumber, lang });
   } catch (error: any) {
     logger.error('Failed to send applicant confirmation email', { error: error.message, toEmail });
   }
@@ -677,6 +724,7 @@ export async function sendProfessionalContactEmail({
   professionalPhone,
   serviceName,
   caseReference,
+  preferredLanguage,
 }: {
   toEmail: string;
   applicantName: string;
@@ -686,11 +734,15 @@ export async function sendProfessionalContactEmail({
   professionalPhone?: string;
   serviceName: string;
   caseReference: string;
+  preferredLanguage?: string | null;
 }): Promise<void> {
   try {
+    const lang = toEmailLang(preferredLanguage);
+    const dir  = lang === 'ar' ? 'rtl' : 'ltr';
+
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -702,14 +754,14 @@ export async function sendProfessionalContactEmail({
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; max-width: 600px;">
           <tr>
             <td style="background-color: #0F2557; padding: 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Specialist Assigned!</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${et('assigned.header', lang)}</h1>
             </td>
           </tr>
           <tr>
             <td style="padding: 40px 30px;">
-              <h2 style="color: #333333; margin-top: 0;">Great news, ${applicantName}!</h2>
+              <h2 style="color: #333333; margin-top: 0;">${et('assigned.greeting', lang, { name: applicantName })}</h2>
               <p style="color: #666666; font-size: 16px; line-height: 1.6;">
-                Your immigration specialist has been assigned and is ready to help with your <strong>${serviceName}</strong> case.
+                ${et('assigned.body1', lang, { service: serviceName })}
               </p>
               
               <div style="background-color: #f9f9f9; padding: 20px; border-radius: 6px; margin: 30px 0;">
@@ -719,18 +771,12 @@ export async function sendProfessionalContactEmail({
               </div>
               
               <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0;">
-                <strong>Case Reference:</strong> ${caseReference}
+                <strong>${et('assigned.caseRef', lang)}:</strong> ${caseReference}
               </p>
               
               <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 30px 0;">
-                Your specialist will contact you within <strong>24 hours</strong> to discuss your case and next steps.
+                ${et('assigned.contact', lang)}
               </p>
-              
-              <div style="background-color: #FEF3C7; border: 1px solid #F59E0B; padding: 15px; border-radius: 6px; margin: 30px 0;">
-                <p style="margin: 0; color: #92400E; font-size: 14px; line-height: 1.6;">
-                  <strong>💡 Important:</strong> All fees and payments are handled directly with your specialist. We provide free matching only.
-                </p>
-              </div>
             </td>
           </tr>
           <tr>
@@ -749,11 +795,11 @@ export async function sendProfessionalContactEmail({
     await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: `Your Immigration Specialist Has Been Assigned`,
+      subject: et('assigned.subject', lang),
       html,
     });
 
-    logger.info('Professional contact email sent', { toEmail, professionalEmail, caseReference });
+    logger.info('Professional contact email sent', { toEmail, professionalEmail, caseReference, lang });
   } catch (error: any) {
     logger.error('Failed to send professional contact email', { error: error.message, toEmail });
   }
