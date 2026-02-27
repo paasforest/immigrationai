@@ -63,7 +63,7 @@ export async function submitIntake(data: {
   urgencyLevel: string;
   description: string;
   additionalData?: any;
-}): Promise<{ referenceNumber: string }> {
+}): Promise<{ referenceNumber: string; id?: string }> {
   const response = await fetch(`${API_URL}/api/intake/submit`, {
     method: 'POST',
     headers: {

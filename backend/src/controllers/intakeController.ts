@@ -208,6 +208,7 @@ export async function submitIntake(req: Request, res: Response): Promise<void> {
       success: true,
       data: {
         referenceNumber: intake.referenceNumber,
+        id: intake.id,
       },
       message: 'Request received. A specialist will contact you within 24-48 hours.',
     });
