@@ -19,6 +19,12 @@ import {
   Inbox,
   UserCircle,
   BarChart2,
+  BarChart3,
+  Settings,
+  MapPin,
+  Award,
+  Bot,
+  Brain,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -43,6 +49,7 @@ const navigation = [
     title: 'CLIENTS',
     items: [
       { href: '/dashboard/immigration/clients', label: 'Clients', icon: Users },
+      { href: '/dashboard/immigration/messages', label: 'Messages', icon: MessageSquare },
     ],
   },
   {
@@ -50,13 +57,16 @@ const navigation = [
     items: [
       { href: '/dashboard/immigration/tasks', label: 'Tasks', icon: CheckSquare },
       { href: '/dashboard/immigration/documents', label: 'Documents', icon: FileText },
-      { href: '/dashboard/immigration/messages', label: 'Messages', icon: MessageSquare },
+      { href: '/dashboard/immigration/analytics', label: 'Analytics', icon: BarChart3 },
     ],
   },
   {
-    title: 'TOOLS',
+    title: 'AI TOOLS',
     items: [
       { href: '/dashboard/immigration/tools/financial-assistant', label: 'Financial Assistant', icon: Landmark },
+      { href: '/dashboard/immigration/tools/vac-tracker', label: 'VAC Tracker', icon: MapPin },
+      { href: '/dashboard/immigration/tools/credentials', label: 'Credentials', icon: Award },
+      { href: '/documents/ai-assistant', label: 'AI Assistant', icon: Bot },
     ],
   },
   {
@@ -64,11 +74,12 @@ const navigation = [
     items: [
       { href: '/dashboard/immigration/team', label: 'Team', icon: UserCog },
       { href: '/dashboard/immigration/billing', label: 'Billing', icon: CreditCard },
+      { href: '/dashboard/immigration/settings', label: 'Settings', icon: Settings },
     ],
     adminOnly: true,
   },
   {
-    title: 'SETTINGS',
+    title: 'ACCOUNT',
     items: [
       { href: '/dashboard/immigration/profile', label: 'My Profile', icon: UserCircle },
     ],
@@ -116,8 +127,16 @@ export default function ImmigrationLayout({
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-navy-600">
-        <h2 className="text-white font-semibold text-lg">Immigration</h2>
+      <div className="p-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Brain className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white font-bold text-base leading-tight">ImmigrationAI</h2>
+            <p className="text-gray-400 text-[10px]">Agency Dashboard</p>
+          </div>
+        </div>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-6">
         {navigation.map((section) => {

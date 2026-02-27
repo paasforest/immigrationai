@@ -2,339 +2,395 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Briefcase, Users, FileCheck, MessageSquare, Bell, 
-  TrendingUp, Shield, Zap, Globe, ArrowRight, 
-  Menu, X, CheckCircle, Building, Target, 
-  Clock, BarChart3, Lock, Cloud, Smartphone, Sparkles,
-  FolderOpen
+import {
+  Briefcase, Users, FileCheck, MessageSquare, Bell,
+  TrendingUp, Shield, Zap, Globe, ArrowRight,
+  Menu, X, CheckCircle, Building, Target,
+  Clock, BarChart3, Brain, Sparkles,
+  FolderOpen, Bot, ShieldCheck, FileText,
+  MapPin, Award, BookOpen, AlertTriangle,
+  CheckSquare, Inbox, CreditCard,
 } from 'lucide-react';
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const features = [
+  const aiFeatures = [
     {
-      icon: <Briefcase className="w-6 h-6" />,
-      title: "Case Management",
-      description: "Organize and track all client cases in one centralized dashboard. Set deadlines, assign team members, and monitor progress in real-time."
-    },
-    {
-      icon: <Target className="w-6 h-6" />,
-      title: "Lead Routing",
-      description: "Automatically match incoming client inquiries with the right professional based on specialization, availability, and expertise."
+      icon: <Brain className="w-6 h-6" />,
+      title: 'Visa Intelligence DB',
+      description: 'Live-monitored database of South African and African immigration rules. When regulations change, the system alerts you automatically — before it affects your clients.',
+      badge: 'AI-Powered',
     },
     {
       icon: <FileCheck className="w-6 h-6" />,
-      title: "Document Management",
-      description: "AI-powered checklists, secure document uploads, and automated tracking of required documents for each visa type."
+      title: 'Smart Pre-Doc Checklists',
+      description: 'AI generates a case-specific document checklist tailored to visa type, nationality, employment status, and history — not a generic list.',
+      badge: 'AI-Powered',
     },
     {
-      icon: <Users className="w-6 h-6" />,
-      title: "Team Collaboration",
-      description: "Invite team members, assign roles, and collaborate seamlessly on complex cases with built-in messaging and task management."
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Client Communication",
-      description: "Built-in messaging system keeps all client communications organized within each case. No more lost emails or missed updates."
+      icon: <ShieldCheck className="w-6 h-6" />,
+      title: 'Document Cross-Validation',
+      description: 'Catches inconsistencies across submitted documents before submission — mismatched names, expired dates, conflicting data.',
+      badge: 'AI-Powered',
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: "Analytics & Reporting",
-      description: "Track case success rates, team performance, and business metrics with comprehensive analytics and reporting tools."
+      title: 'Application Readiness Score',
+      description: 'Real-time readiness score showing exactly how complete and strong a case is before it goes out. No more guessing.',
+      badge: 'AI-Powered',
     },
     {
-      icon: <Smartphone className="w-6 h-6" />,
-      title: "Client Portal",
-      description: "Give clients secure access to track their case progress, upload documents, and communicate with your team 24/7."
+      icon: <AlertTriangle className="w-6 h-6" />,
+      title: 'Rejection Analysis',
+      description: 'AI analyses rejection letters and prior case history to identify the exact failure points and recommend corrective actions.',
+      badge: 'AI-Powered',
     },
     {
-      icon: <Bell className="w-6 h-6" />,
-      title: "Smart Notifications",
-      description: "Never miss a deadline with automated reminders for document requests, submission dates, and important case updates."
-    }
+      icon: <Target className="w-6 h-6" />,
+      title: 'Silent Eligibility Scoring',
+      description: 'Every incoming lead is scored against visa rules in the background — before you even open the case. Know if a client qualifies before you commit.',
+      badge: 'AI-Powered',
+    },
   ];
 
-  const stats = [
-    { value: "500+", label: "Active Cases", subtext: "managed daily" },
-    { value: "50+", label: "Immigration Agencies", subtext: "trust our platform" },
-    { value: "95%", label: "Client Satisfaction", subtext: "from agencies" },
-    { value: "24/7", label: "Platform Availability", subtext: "always accessible" }
+  const platformFeatures = [
+    {
+      icon: <FolderOpen className="w-6 h-6" />,
+      title: 'Case Management',
+      description: 'Track every case from intake to approval. Deadlines, team assignments, status updates, and full audit trail — all in one place.',
+    },
+    {
+      icon: <Inbox className="w-6 h-6" />,
+      title: 'Automated Lead Routing',
+      description: 'Incoming client inquiries matched to the right professional based on visa type, language, and availability.',
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: 'Team Collaboration',
+      description: 'Assign cases, set tasks, comment, message — all scoped to the case. Your whole team stays aligned without endless emails.',
+    },
+    {
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: 'Client Portal & Messaging',
+      description: 'Clients can track progress, upload documents, and message your team in real-time through their own secure portal.',
+    },
+    {
+      icon: <CheckSquare className="w-6 h-6" />,
+      title: 'Task Management',
+      description: 'Create, assign, and track tasks against each case. Automated deadline reminders fire 24 hours before due dates.',
+    },
+    {
+      icon: <MapPin className="w-6 h-6" />,
+      title: 'VAC Appointment Tracker',
+      description: 'Track visa application centre availability and estimated wait times across Southern and Eastern Africa.',
+    },
   ];
 
-  const benefits = [
+  const audiences = [
     {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Save Time",
-      description: "Reduce case management time by 60% with automated workflows and AI-powered checklists."
+      title: 'For Immigration Agencies',
+      icon: <Building className="w-8 h-8" />,
+      color: 'from-[#0F2557] to-blue-700',
+      points: [
+        'Manage unlimited client cases',
+        'Automated document checklists per visa type',
+        'AI readiness score before submission',
+        'Team collaboration + task assignment',
+        'Lead routing from the applicant marketplace',
+        'Monthly analytics: success rates, turnaround times',
+      ],
+      cta: 'Start Agency Trial',
+      href: '/auth/signup',
     },
     {
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Scale Your Practice",
-      description: "Handle 3x more cases with the same team. Grow your business without hiring more staff."
+      title: 'For Individual Practitioners',
+      icon: <Award className="w-8 h-8" />,
+      color: 'from-amber-500 to-orange-500',
+      points: [
+        'Solo practitioner plan from R499/month',
+        'AI-assisted document review',
+        'Rejection analysis and resubmission guidance',
+        'Client portal for document uploads',
+        'Get verified — appear in our public directory',
+        'Receive matched leads from our marketplace',
+      ],
+      cta: 'Start Solo Trial',
+      href: '/auth/signup',
     },
     {
-      icon: <Shield className="w-8 h-8" />,
-      title: "Stay Compliant",
-      description: "Never miss a deadline or required document. Automated tracking ensures full compliance."
+      title: 'For Individual Applicants',
+      icon: <Globe className="w-8 h-8" />,
+      color: 'from-green-500 to-teal-600',
+      points: [
+        'Find a verified South African immigration professional',
+        'Filter by visa type, language, and location',
+        'Track your application status in real-time',
+        'Upload and share documents securely',
+        'Message your consultant directly',
+        'Know exactly what documents you need',
+      ],
+      cta: 'Find a Specialist',
+      href: '/find-a-specialist',
     },
-    {
-      icon: <Cloud className="w-8 h-8" />,
-      title: "Work Anywhere",
-      description: "Access your cases from any device. Cloud-based platform works on desktop, tablet, or mobile."
-    }
   ];
 
   const howItWorks = [
     {
       step: 1,
-      title: "Sign Up Your Agency",
-      description: "Create your organization account and invite your team members. Set up your profile and specializations.",
-      icon: <Building className="w-8 h-8" />
+      title: 'Create Your Account',
+      description: 'Sign up as an agency, solo practitioner, or individual applicant. 14-day free trial, no card required.',
+      icon: <Building className="w-8 h-8" />,
     },
     {
       step: 2,
-      title: "Accept Leads or Create Cases",
-      description: "Get matched with qualified leads automatically, or create cases manually for your existing clients.",
-      icon: <Target className="w-8 h-8" />
+      title: 'Get Verified',
+      description: 'Upload your practicing certificate. Once verified by our team, your profile appears in the public directory.',
+      icon: <ShieldCheck className="w-8 h-8" />,
     },
     {
       step: 3,
-      title: "Manage Everything in One Place",
-      description: "Track documents, set tasks, communicate with clients, and monitor progress all from your dashboard.",
-      icon: <Briefcase className="w-8 h-8" />
+      title: 'Accept Leads & Create Cases',
+      description: 'Receive matched client inquiries, or create cases manually for your existing clients.',
+      icon: <Target className="w-8 h-8" />,
     },
     {
       step: 4,
-      title: "Scale Your Business",
-      description: "Use analytics to optimize your operations and grow your practice efficiently.",
-      icon: <TrendingUp className="w-8 h-8" />
-    }
+      title: 'AI Does the Heavy Lifting',
+      description: 'Smart checklists, readiness scores, cross-validation, and rejection analysis — all automated per case.',
+      icon: <Bot className="w-8 h-8" />,
+    },
   ];
 
-  const testimonials = [
-    {
-      name: "Sarah Johnson",
-      role: "Founder, Global Immigration Services",
-      text: "We've doubled our case capacity since using this platform. The automated lead routing alone saves us 10 hours per week.",
-      rating: 5
-    },
-    {
-      name: "Michael Chen",
-      role: "Senior Consultant, Visa Experts",
-      text: "The client portal has transformed how we work. Clients can upload documents themselves, which frees up our team to focus on strategy.",
-      rating: 5
-    },
-    {
-      name: "Amina Patel",
-      role: "Director, Africa Immigration Hub",
-      text: "Best investment we've made. The analytics help us identify bottlenecks and improve our success rates significantly.",
-      rating: 5
-    }
+  const visaTypes = [
+    'Critical Skills Visa', 'General Work Permit', 'Business Visa',
+    'Study Visa', 'Spousal/Life Partner', 'Retired Person Visa',
+    'Corporate Permit', 'Asylum / Refugee', 'Zimbabwe Exemption',
+    'Lesotho/eSwatini Exemption', 'SADC Permits', 'Intra-Company Transfer',
   ];
 
   const faqs = [
     {
-      question: "Is this platform only for large agencies?",
-      answer: "No! Our Starter plan is perfect for solo practitioners and small teams. You can start with just one user and scale as you grow."
+      question: 'Is this platform only for South Africa?',
+      answer: 'The platform is built with South African immigration law as the primary focus, but supports any African immigration route. The Visa Intelligence DB currently tracks South African DHA, VFS Global Africa, and SADC-region official sources.',
     },
     {
-      question: "How does the lead routing work?",
-      answer: "When a client submits an inquiry through our marketplace, our AI automatically matches them with the best professional based on specialization, availability, and success rates. You can accept or decline leads."
+      question: 'How does the AI readiness score work?',
+      answer: 'The system checks every required document against the checklist for the specific visa type, verifies cross-consistency (names, dates, employers), and scores the case out of 100. Cases below 80 flag the specific missing items before you submit.',
     },
     {
-      question: "Can clients access their cases?",
-      answer: "Yes! Every case includes a secure client portal where clients can view progress, upload documents, and message your team. This reduces back-and-forth emails significantly."
+      question: 'Can I use this as a solo practitioner, not an agency?',
+      answer: 'Yes. The Starter plan is designed for solo consultants. You get the same AI tools, client portal, and lead marketplace access as larger agencies — just for one user.',
     },
     {
-      question: "What if I already have clients?",
-      answer: "You can manually create cases for existing clients. The platform works whether you get leads from our marketplace or bring your own clients."
+      question: 'How does payment work?',
+      answer: 'We accept EFT/bank transfer for all plans. Once you select your plan, you\'ll receive banking details with your unique account reference. After payment, simply upload your proof of payment and your account is activated within 24 hours.',
     },
     {
-      question: "Is my client data secure?",
-      answer: "Absolutely. We use enterprise-grade encryption, regular security audits, and comply with data protection regulations. Your client data is never shared with third parties."
+      question: 'Do clients need their own account?',
+      answer: 'Yes, but it\'s free for clients. You invite them by email, they create a portal account, and can then upload documents, track status, and message your team — all scoped to their case only.',
     },
     {
-      question: "Can I try before committing?",
-      answer: "Yes! All plans include a 14-day free trial. No credit card required. You can explore all features and see if it fits your workflow."
-    }
+      question: 'What happens if visa regulations change?',
+      answer: 'The Visa Rules Monitor checks all official government and VFS sources weekly. If it detects a content change on a monitored page, it asks the AI to summarise what changed and immediately notifies you so you can adjust pending cases.',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
+    <div className="min-h-screen bg-white">
+
+      {/* ─── NAV ─────────────────────────────────────────────────────────────── */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/90 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+        scrolled ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100' : 'bg-transparent'
       }`}>
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 bg-[#0F2557] rounded-lg flex items-center justify-center">
+                <Brain className="w-5 h-5 text-amber-400" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Immigration Platform
+              <span className="text-xl font-bold text-[#0F2557]">
+                ImmigrationAI
               </span>
             </div>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</a>
-              <a href="#pricing" className="text-gray-700 hover:text-blue-600 transition-colors">Pricing</a>
-              <Link href="/find-a-specialist" className="text-gray-700 hover:text-blue-600 transition-colors">For Applicants</Link>
-              <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</Link>
-              <Link href="/auth/login" className="text-gray-700 hover:text-blue-600 transition-colors">Login</Link>
-              <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all">
+            <div className="hidden md:flex items-center space-x-7">
+              <a href="#features" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Features</a>
+              <a href="#how-it-works" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">How It Works</a>
+              <a href="#pricing" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Pricing</a>
+              <Link href="/find-a-specialist" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Find a Specialist</Link>
+              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Log In</Link>
+              <Link
+                href="/auth/signup"
+                className="bg-[#0F2557] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1a3570] transition-colors"
+              >
                 Start Free Trial
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {/* Mobile toggle */}
+            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
-          {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 bg-white rounded-lg shadow-lg mt-2">
-              <a href="#features" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Features</a>
-              <a href="#pricing" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Pricing</a>
-              <Link href="/find-a-specialist" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">For Applicants</Link>
-              <Link href="/about" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">About</Link>
-              <Link href="/auth/login" className="block px-4 py-2 text-gray-700 hover:bg-blue-50">Login</Link>
-              <Link href="/auth/signup" className="w-full block mt-2 mx-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-center">
-                Start Free Trial
-              </Link>
+            <div className="md:hidden bg-white border rounded-xl shadow-xl mt-2 py-3">
+              {[
+                { href: '#features', label: 'Features' },
+                { href: '#how-it-works', label: 'How It Works' },
+                { href: '#pricing', label: 'Pricing' },
+                { href: '/find-a-specialist', label: 'Find a Specialist' },
+                { href: '/auth/login', label: 'Log In' },
+              ].map((item) => (
+                <a key={item.href} href={item.href} className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                  {item.label}
+                </a>
+              ))}
+              <div className="px-4 pt-2">
+                <Link href="/auth/signup" className="block text-center bg-[#0F2557] text-white py-2 rounded-lg text-sm font-semibold">
+                  Start Free Trial
+                </Link>
+              </div>
             </div>
           )}
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      {/* ─── HERO ────────────────────────────────────────────────────────────── */}
+      <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#0F2557] via-[#1a3570] to-[#0d1e45]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full mb-6">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-sm font-medium">Built for Immigration Professionals</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Manage Immigration Cases
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Like Never Before</span>
-            </h1>
-            
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              The all-in-one platform for immigration agencies and professionals. 
-              Manage cases, route leads, collaborate with your team, and scale your practice—all in one place.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth/signup" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2">
-                <span>Start Free Trial</span>
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link href="#features" className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center space-x-2">
-                <span>See How It Works</span>
-              </Link>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-amber-400/10 border border-amber-400/30 text-amber-300 px-4 py-2 rounded-full mb-6 text-sm font-medium">
+                <Sparkles className="w-4 h-4" />
+                Built for Africa's Immigration Professionals
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                Smarter Immigration
+                <span className="text-amber-400"> Case Management</span>
+                <br />with AI
+              </h1>
+
+              <p className="text-lg text-blue-100 mb-8 leading-relaxed max-w-xl">
+                ImmigrationAI is the end-to-end platform for South African immigration agencies and consultants.
+                AI-powered checklists, live visa rule monitoring, readiness scoring, and a full case management suite — in one place.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <Link
+                  href="/auth/signup"
+                  className="bg-amber-400 text-[#0F2557] px-8 py-4 rounded-xl text-base font-bold hover:bg-amber-300 transition-colors flex items-center justify-center gap-2"
+                >
+                  Start Free Trial <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/find-a-specialist"
+                  className="border border-white/30 text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  Find a Specialist
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-blue-200">
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> 14-day free trial</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> EFT payment — no card needed</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Cancel anytime</span>
+              </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-3 mt-6">
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span>14-day free trial</span>
-                <span>•</span>
-                <span>No credit card required</span>
-                <span>•</span>
-                <span>Cancel anytime</span>
-              </div>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full px-4 py-2 flex items-center space-x-2">
-                <Shield className="w-4 h-4 text-green-600" />
-                <span className="text-green-800 font-semibold text-sm">Trusted by 50+ Immigration Agencies</span>
+            {/* Dashboard preview card */}
+            <div className="hidden lg:block">
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-semibold text-sm">Case Readiness Score</span>
+                  <span className="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">STRONG</span>
+                </div>
+                <div className="flex items-end gap-3">
+                  <span className="text-5xl font-bold text-white">87</span>
+                  <span className="text-blue-200 text-sm pb-2">/ 100</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div className="bg-amber-400 h-2 rounded-full" style={{ width: '87%' }} />
+                </div>
+                <div className="space-y-2 pt-2">
+                  {[
+                    { label: 'Documents uploaded', count: '11 / 13', ok: true },
+                    { label: 'Cross-validation', count: 'Passed', ok: true },
+                    { label: 'Passport expiry', count: '⚠ Expires in 6 months', ok: false },
+                    { label: 'Bank statements', count: '3 months required', ok: false },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between text-sm">
+                      <span className="text-blue-100">{item.label}</span>
+                      <span className={item.ok ? 'text-green-300' : 'text-amber-300'}>{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-2 border-t border-white/10">
+                  <p className="text-xs text-blue-200">Critical Skills Visa — General Work Permit → ZA</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-900 font-semibold mb-1">{stat.label}</div>
-                <div className="text-sm text-gray-600">{stat.subtext}</div>
-              </div>
+      {/* ─── VISA TYPE TICKER ────────────────────────────────────────────────── */}
+      <section className="bg-[#0a1d42] py-4 overflow-hidden">
+        <div className="flex gap-8 animate-none whitespace-nowrap px-4">
+          <div className="flex gap-8 items-center">
+            {visaTypes.map((v, i) => (
+              <React.Fragment key={v}>
+                <span className="text-blue-300 text-sm font-medium">{v}</span>
+                {i < visaTypes.length - 1 && <span className="text-amber-400 text-xs">·</span>}
+              </React.Fragment>
+            ))}
+            {visaTypes.map((v, i) => (
+              <React.Fragment key={`${v}-dup`}>
+                <span className="text-blue-300 text-sm font-medium">{v}</span>
+                {i < visaTypes.length - 1 && <span className="text-amber-400 text-xs">·</span>}
+              </React.Fragment>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* ─── AI FEATURES ─────────────────────────────────────────────────────── */}
+      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full mb-4 text-sm font-semibold">
+              <Bot className="w-4 h-4" /> AI Features
+            </div>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              How It Works
+              The AI Layer Other Platforms Don't Have
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get started in minutes and start managing cases more efficiently
-            </p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            {howItWorks.map((item) => (
-              <div key={item.step} className="bg-white rounded-2xl p-8 shadow-lg text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-                  {item.icon}
-                </div>
-                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need to Manage Cases
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Powerful tools designed specifically for immigration professionals
+              Every case benefits from AI that knows South African immigration law, monitors official sources, and works invisibly in the background.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, idx) => (
-              <div 
-                key={idx}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white mb-4">
-                  {feature.icon}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {aiFeatures.map((feature, idx) => (
+              <div key={idx} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 bg-[#0F2557] rounded-xl flex items-center justify-center text-amber-400">
+                    {feature.icon}
+                  </div>
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full uppercase tracking-wide">
+                    {feature.badge}
+                  </span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
@@ -344,174 +400,326 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      {/* ─── PLATFORM FEATURES ───────────────────────────────────────────────── */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-full mb-4 text-sm font-semibold">
+              <Briefcase className="w-4 h-4" /> Platform Tools
+            </div>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Why Immigration Agencies Choose Us
+              Everything to Run Your Practice
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join leading agencies who have transformed their operations
+              A complete operating system for immigration professionals — not just a file storage tool.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((benefit, idx) => (
-              <div key={idx} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4">
-                  {benefit.icon}
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {platformFeatures.map((feature, idx) => (
+              <div key={idx} className="flex gap-4 p-6 rounded-2xl border border-gray-100 hover:border-[#0F2557]/20 hover:shadow-sm transition-all">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#0F2557] flex-shrink-0">
+                  {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{benefit.title}</h3>
-                <p className="text-gray-600">{benefit.description}</p>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-1">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* ─── THREE AUDIENCES ─────────────────────────────────────────────────── */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Trusted by Leading Immigration Agencies
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See how agencies are transforming their operations
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Who Is It For?</h2>
+            <p className="text-xl text-gray-600">Built for every role in the immigration process</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {audiences.map((audience, idx) => (
+              <div key={idx} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className={`bg-gradient-to-br ${audience.color} p-6 text-white`}>
+                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                    {audience.icon}
+                  </div>
+                  <h3 className="text-xl font-bold">{audience.title}</h3>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3 mb-6">
+                    {audience.points.map((point, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={audience.href}
+                    className="block text-center bg-[#0F2557] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1a3570] transition-colors"
+                  >
+                    {audience.cta} →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── HOW IT WORKS ────────────────────────────────────────────────────── */}
+      <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F2557]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">How It Works</h2>
+            <p className="text-xl text-blue-200 max-w-2xl mx-auto">
+              From signup to verified professional in under 48 hours
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <CheckCircle key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+
+          <div className="grid md:grid-cols-4 gap-6">
+            {howItWorks.map((item, idx) => (
+              <div key={item.step} className="relative">
+                {idx < howItWorks.length - 1 && (
+                  <div className="hidden md:block absolute top-8 left-[60%] w-full h-px bg-white/20" />
+                )}
+                <div className="bg-white/10 border border-white/20 rounded-2xl p-6 text-center relative z-10">
+                  <div className="w-14 h-14 bg-amber-400 text-[#0F2557] rounded-xl flex items-center justify-center mx-auto mb-4">
+                    {item.icon}
+                  </div>
+                  <div className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Step {item.step}</div>
+                  <h3 className="text-base font-bold text-white mb-2">{item.title}</h3>
+                  <p className="text-sm text-blue-200">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PRICING ─────────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple Pricing</h2>
+            <p className="text-xl text-gray-600 mb-2">
+              All plans include a 14-day free trial. Pay by EFT — no card required.
+            </p>
+            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-full text-sm mt-2">
+              <CreditCard className="w-4 h-4" />
+              EFT / Bank Transfer only — instant reference number on signup
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Starter',
+                price: 'R499',
+                period: '/month',
+                desc: 'Solo practitioners and small consultancies',
+                features: [
+                  '1 user',
+                  'Up to 20 active cases',
+                  'AI checklist + readiness score',
+                  'Client portal',
+                  'Lead marketplace access',
+                  'Email support',
+                ],
+                popular: false,
+                color: 'border-gray-200',
+              },
+              {
+                name: 'Professional',
+                price: 'R1,299',
+                period: '/month',
+                desc: 'Growing agencies with a dedicated team',
+                features: [
+                  'Up to 5 users',
+                  'Unlimited active cases',
+                  'All AI tools incl. rejection analysis',
+                  'Document cross-validation',
+                  'VAC tracker',
+                  'Priority support',
+                ],
+                popular: true,
+                color: 'border-[#0F2557]',
+              },
+              {
+                name: 'Agency',
+                price: 'R2,999',
+                period: '/month',
+                desc: 'Large agencies with multiple practitioners',
+                features: [
+                  'Unlimited users',
+                  'Unlimited cases',
+                  'All AI tools',
+                  'Visa rules monitor alerts',
+                  'Custom branding',
+                  'Dedicated account manager',
+                ],
+                popular: false,
+                color: 'border-gray-200',
+              },
+            ].map((plan) => (
+              <div
+                key={plan.name}
+                className={`rounded-2xl border-2 p-8 relative ${plan.color} ${plan.popular ? 'shadow-xl scale-105' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0F2557] text-white text-xs font-bold px-4 py-1.5 rounded-full">
+                    Most Popular
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+                  <p className="text-sm text-gray-500 mb-4">{plan.desc}</p>
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-bold text-[#0F2557]">{plan.price}</span>
+                    <span className="text-gray-500 pb-1">{plan.period}</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-gray-700">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      {f}
+                    </li>
                   ))}
-                </div>
-                <p className="text-gray-700 mb-4 italic">&quot;{testimonial.text}&quot;</p>
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                </div>
+                </ul>
+                <Link
+                  href="/auth/signup"
+                  className={`block text-center py-3 rounded-xl text-sm font-semibold transition-colors ${
+                    plan.popular
+                      ? 'bg-[#0F2557] text-white hover:bg-[#1a3570]'
+                      : 'border-2 border-[#0F2557] text-[#0F2557] hover:bg-blue-50'
+                  }`}
+                >
+                  Start {plan.name} Trial
+                </Link>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Pricing CTA Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Choose the plan that fits your agency size. All plans include a 14-day free trial.
+          <p className="text-center text-sm text-gray-500 mt-8">
+            All prices exclude VAT. Cancel anytime during trial — no charges.
           </p>
-          <Link 
-            href="/pricing" 
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2"
-          >
-            <span>View Pricing Plans</span>
-            <ArrowRight className="w-5 h-5" />
-          </Link>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-600">
-              Everything you need to know about our platform
-            </p>
+      {/* ─── FAQ ─────────────────────────────────────────────────────────────── */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, idx) => (
               <div key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <details className="group">
-                  <summary className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors cursor-pointer">
-                    <span className="font-semibold text-gray-900">{faq.question}</span>
-                    <ArrowRight className="w-5 h-5 text-gray-500 transform group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <p className="text-gray-700">{faq.answer}</p>
+                <button
+                  className="w-full px-6 py-4 flex items-center justify-between text-left"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                >
+                  <span className="font-semibold text-gray-900 text-sm">{faq.question}</span>
+                  <span className="text-[#0F2557] ml-3 flex-shrink-0 text-lg">
+                    {openFaq === idx ? '−' : '+'}
+                  </span>
+                </button>
+                {openFaq === idx && (
+                  <div className="px-6 pb-5">
+                    <p className="text-gray-600 text-sm leading-relaxed">{faq.answer}</p>
                   </div>
-                </details>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Ready to Transform Your Immigration Practice?
+      {/* ─── FINAL CTA ───────────────────────────────────────────────────────── */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F2557]">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="w-16 h-16 bg-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Brain className="w-8 h-8 text-[#0F2557]" />
+          </div>
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Ready to Modernise Your Practice?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join leading agencies who are managing cases more efficiently
+          <p className="text-xl text-blue-200 mb-8">
+            Join South Africa's leading immigration agencies on ImmigrationAI. 14-day free trial, pay by EFT.
           </p>
-          <Link href="/auth/signup" className="bg-white text-blue-600 px-10 py-4 rounded-lg text-lg font-semibold hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2">
-            <span>Start Free Trial</span>
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-          <p className="text-blue-100 text-sm mt-4">
-            No credit card required • 14-day free trial • Cancel anytime
-          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/auth/signup"
+              className="bg-amber-400 text-[#0F2557] px-10 py-4 rounded-xl text-lg font-bold hover:bg-amber-300 transition-colors inline-flex items-center gap-2"
+            >
+              Start Free Trial <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/find-a-specialist"
+              className="border border-white/30 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 transition-colors"
+            >
+              Find a Specialist
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+      {/* ─── FOOTER ──────────────────────────────────────────────────────────── */}
+      <footer className="bg-[#0a1d42] text-gray-400 py-14 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-[#0F2557] rounded-lg flex items-center justify-center border border-amber-400/30">
+                  <Brain className="w-5 h-5 text-amber-400" />
                 </div>
-                <span className="text-lg font-bold text-white">Immigration Platform</span>
+                <span className="text-white font-bold text-lg">ImmigrationAI</span>
               </div>
-              <p className="text-sm text-gray-400">
-                The all-in-one case management platform for immigration professionals.
+              <p className="text-sm leading-relaxed">
+                South Africa's AI-powered immigration case management platform. Built for agencies, practitioners, and applicants.
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-4">Product</h4>
+              <h4 className="text-white font-semibold mb-4 text-sm">Product</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">AI Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Find a Specialist</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-4">Company</h4>
+              <h4 className="text-white font-semibold mb-4 text-sm">Platform</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">For Applicants</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><Link href="/auth/signup" className="hover:text-white transition-colors">Start Free Trial</Link></li>
+                <li><Link href="/auth/login" className="hover:text-white transition-colors">Log In</Link></li>
+                <li><Link href="/auth/signup" className="hover:text-white transition-colors">Agency Sign Up</Link></li>
+                <li><Link href="/onboarding" className="hover:text-white transition-colors">Onboarding</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-4">Legal</h4>
+              <h4 className="text-white font-semibold mb-4 text-sm">Support</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                <li><a href="mailto:support@immigrationai.co.za" className="hover:text-white transition-colors">support@immigrationai.co.za</a></li>
+                <li><span>Cape Town, South Africa</span></li>
+                <li><span className="text-green-400 font-medium">● System operational</span></li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-            © 2024 Immigration Platform. All rights reserved.
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            <p>© {new Date().getFullYear()} ImmigrationAI. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            </div>
           </div>
         </div>
       </footer>
