@@ -23,7 +23,8 @@ import {
   improveDocumentController,
   analyzeFinancialDocs,
   generateSponsorLetter,
-  getPreDocRequirements
+  getPreDocRequirements,
+  universalAIGateway
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 import { auth } from '../middleware/auth';
@@ -102,6 +103,14 @@ router.post('/ai/sponsor-letter', auth, organizationContext, generateSponsorLett
 // Pre-Document Intelligence (Professional+ required, requires organization context)
 // Accepts { caseId } OR { visaType, originCountry, destinationCountry }
 router.post('/ai/pre-doc-requirements', auth, organizationContext, getPreDocRequirements);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// UNIVERSAL AI GATEWAY — POST /api/ai/run
+// Single endpoint for all AI tasks. No new routes needed for new features.
+// Body: { task: string, context: any }
+// Auth: Professional+ plan required
+// ──────────────────────────────────────────────────────────────────────────────
+router.post('/ai/run', authenticateJWT, organizationContext, requirePlan('professional', 'enterprise'), universalAIGateway);
 
 export default router;
 

@@ -1,8 +1,19 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/adminController';
 import { eligibilityController } from '../controllers/eligibilityController';
+import {
+  listVisaRequirementsAdmin,
+  getVisaRequirementAdmin,
+  updateVisaRequirementAdmin,
+  createVisaRequirementAdmin,
+  listUpdateAlertsAdmin,
+  resolveAlertAdmin,
+} from '../controllers/aiController';
+import { runVisaRulesMonitor } from '../services/visaRulesMonitor';
 import { requireAuth } from '../middleware/auth';
 import { requireAdmin } from '../middleware/requireAdmin';
+import { sendSuccess, sendError } from '../utils/helpers';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -39,6 +50,31 @@ router.get('/system/health', adminController.getSystemHealth);
 // User Management
 router.get('/users', adminController.getUsers);
 router.put('/users/:userId', adminController.updateUser);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// VISA INTELLIGENCE — Verified Rules Database
+// Admin-only CRUD for the VisaRequirements table (the RAG ground truth layer).
+// ──────────────────────────────────────────────────────────────────────────────
+router.get('/visa-rules', listVisaRequirementsAdmin);
+router.post('/visa-rules', createVisaRequirementAdmin);
+router.get('/visa-rules/:id', getVisaRequirementAdmin);
+router.put('/visa-rules/:id', updateVisaRequirementAdmin);
+
+// Update Alerts (from monitoring cron)
+router.get('/visa-rules/alerts', listUpdateAlertsAdmin);
+router.post('/visa-rules/alerts/:id/resolve', resolveAlertAdmin);
+
+// Manual trigger for the monitoring cron (admin only — for testing or immediate checks)
+router.post('/visa-rules/run-monitor', async (req, res) => {
+  try {
+    logger.info('Manual visa rules monitor triggered by admin', { adminId: (req as any).user?.userId });
+    // Fire and forget — don't await (takes minutes)
+    runVisaRulesMonitor().catch((err) => logger.error('Monitor error (manual trigger)', { error: err.message }));
+    return sendSuccess(res, { message: 'Monitor started in background. Check alerts in a few minutes.' }, 'Monitor triggered');
+  } catch (err: any) {
+    return sendError(res, 'server_error', 'Failed to trigger monitor', 500);
+  }
+});
 
 export default router;
 

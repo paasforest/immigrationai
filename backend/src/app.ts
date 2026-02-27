@@ -6,6 +6,7 @@ import prisma from './config/prisma';
 import { generalLimiter, aiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
+import { runVisaRulesMonitor } from './services/visaRulesMonitor';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -427,12 +428,19 @@ async function startServer(): Promise<void> {
     setInterval(checkTaskDeadlines, 60 * 60 * 1000);
     // Check trial expirations every 6 hours
     setInterval(checkTrialExpirations, 6 * 60 * 60 * 1000);
+    // Visa rules monitor: run every 7 days (168 hours)
+    // Checks all official source URLs for content changes, creates alerts if anything changed.
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    setInterval(runVisaRulesMonitor, SEVEN_DAYS_MS);
     
     // Run immediately on startup
     checkTaskDeadlines();
     checkTrialExpirations();
+    // Note: visa rules monitor does NOT run on startup (too heavy for cold start).
+    // First check happens 7 days after deployment.
+    // To run manually: POST /api/admin/visa-rules/run-monitor (admin only)
 
-    console.log('✅ Scheduled tasks started');
+    console.log('✅ Scheduled tasks started (including weekly visa rules monitor)');
 
     // Start listening
     server = app.listen(PORT, () => {

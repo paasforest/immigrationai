@@ -1225,4 +1225,354 @@ Return only the letter text, no JSON, no explanations.`;
   }
 };
 
+// ============================================================
+// UNIVERSAL AI GATEWAY
+// POST /api/ai/run
+// Body: { task: string, context: any }
+//
+// Adding a new AI feature no longer requires a new route or
+// controller. Just add the task case here + a function in
+// aiService.ts. The frontend calls POST /api/ai/run with
+// { task, context } and gets a consistent response shape.
+// ============================================================
+export const universalAIGateway = async (req: AuthRequest, res: Response) => {
+  try {
+    const { task, context = {} } = req.body;
+
+    if (!task || typeof task !== 'string') {
+      return sendError(res, 'validation_error', 'task is required', 400);
+    }
+
+    const organizationId = (req as any).organizationId;
+    const userId = req.user?.userId;
+
+    logger.info('Universal AI Gateway request', { task, userId, organizationId });
+
+    let result: any;
+
+    switch (task) {
+      // ── Document Generators ─────────────────────────────────
+      case 'generate_sop':
+        result = await generateSOP(context);
+        break;
+
+      case 'improve_document':
+        result = await improveDocument(context);
+        break;
+
+      case 'generate_email_template':
+        result = await generateEmailTemplate(context.type, context.data);
+        break;
+
+      case 'generate_support_letter':
+        result = await generateSupportLetter(context);
+        break;
+
+      case 'generate_financial_letter':
+        result = await generateFinancialLetter(context);
+        break;
+
+      case 'generate_purpose_of_visit':
+        result = await generatePurposeOfVisit(context);
+        break;
+
+      case 'generate_ties_to_home':
+        result = await generateTiesToHomeCountry(context);
+        break;
+
+      case 'generate_travel_itinerary':
+        result = await generateTravelItinerary(context);
+        break;
+
+      // ── Analysis ─────────────────────────────────────────────
+      case 'analyze_bank_statement':
+        result = await analyzeBankStatement(context);
+        break;
+
+      case 'analyze_document_authenticity':
+        result = await analyzeDocumentAuthenticity(context);
+        break;
+
+      case 'analyze_application_form':
+        result = await analyzeApplicationForm(context);
+        break;
+
+      case 'analyze_visa_rejection':
+        result = await analyzeVisaRejection(context);
+        break;
+
+      case 'build_reapplication_strategy':
+        result = await buildReapplicationStrategy(context);
+        break;
+
+      case 'check_document_consistency':
+        result = await checkDocumentConsistency(context);
+        break;
+
+      case 'check_eligibility':
+        result = await checkEligibility(context);
+        break;
+
+      case 'calculate_financial_capacity':
+        result = await calculateFinancialCapacity(context);
+        break;
+
+      // ── Visa Intelligence (DB-first, AI fallback) ─────────────
+      case 'get_visa_requirements': {
+        const prisma = (await import('../config/prisma')).default;
+        const { originCountry, destinationCountry, visaType } = context;
+
+        if (!originCountry || !destinationCountry || !visaType) {
+          return sendError(res, 'validation_error', 'originCountry, destinationCountry, visaType required for get_visa_requirements', 400);
+        }
+
+        // Build a normalised route key for lookup
+        const buildRouteKey = (origin: string, dest: string, vType: string) => {
+          const ISO: Record<string, string> = {
+            'south africa': 'ZA', 'nigeria': 'NG', 'ghana': 'GH', 'kenya': 'KE',
+            'zimbabwe': 'ZW', 'ethiopia': 'ET', 'cameroon': 'CM', 'tanzania': 'TZ',
+            'uganda': 'UG', 'united kingdom': 'GB', 'canada': 'CA', 'australia': 'AU',
+            'united states': 'US', 'new zealand': 'NZ', 'schengen area': 'SCHENGEN',
+            'united arab emirates': 'AE',
+          };
+          const oCode = ISO[origin.toLowerCase()] || origin.toUpperCase().slice(0, 3);
+          const dCode = ISO[dest.toLowerCase()] || dest.toUpperCase().slice(0, 3);
+          const vtSlug = vType.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/(visa|permit|category|resident|independent)_?/g, '')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '');
+          return `${oCode}-${dCode}-${vtSlug}`;
+        };
+
+        const routeKey = buildRouteKey(originCountry, destinationCountry, visaType);
+
+        // Try exact route key match first
+        let dbRoute = await prisma.visaRequirement.findFirst({
+          where: { isActive: true, routeKey },
+        });
+
+        // Fallback: fuzzy match by country + visa type
+        if (!dbRoute) {
+          dbRoute = await prisma.visaRequirement.findFirst({
+            where: {
+              isActive: true,
+              originCountry: { contains: originCountry, mode: 'insensitive' },
+              destinationCountry: { contains: destinationCountry, mode: 'insensitive' },
+              visaType: { contains: visaType.split(' ')[0], mode: 'insensitive' },
+            },
+          });
+        }
+
+        if (dbRoute) {
+          // DB hit — return verified data, mark source
+          result = {
+            ...dbRoute,
+            _source: 'verified_database',
+            _routeKey: dbRoute.routeKey,
+            _lastVerified: dbRoute.lastVerifiedAt,
+          };
+        } else {
+          // AI fallback — mark as AI-generated, not verified
+          const aiResult = await generatePreDocIntelligence({
+            visaType,
+            originCountry,
+            destinationCountry,
+            applicantName: context.applicantName || 'the applicant',
+            additionalContext: context.additionalContext,
+          });
+          result = {
+            ...aiResult,
+            _source: 'ai_generated',
+            _warning: 'This requirement list was AI-generated. Verify against official sources. To add this route to the verified database, contact your administrator.',
+          };
+        }
+        break;
+      }
+
+      default:
+        return sendError(res, 'not_found', `Unknown task: "${task}". Check the task name and try again.`, 400);
+    }
+
+    return sendSuccess(res, { task, result }, `Task "${task}" completed successfully`);
+  } catch (error: any) {
+    logger.error('Universal AI Gateway error', { error: error.message, task: req.body?.task });
+    return sendError(res, 'ai_error', error.message || 'Task failed', 500);
+  }
+};
+
+// ============================================================
+// VISA REQUIREMENTS ADMIN CRUD
+// These controllers are used by the admin panel to manage
+// the verified visa rules database.
+// ============================================================
+
+export const listVisaRequirementsAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const { page = 1, limit = 50, search } = req.query;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { displayName: { contains: String(search), mode: 'insensitive' } },
+        { originCountry: { contains: String(search), mode: 'insensitive' } },
+        { destinationCountry: { contains: String(search), mode: 'insensitive' } },
+        { visaType: { contains: String(search), mode: 'insensitive' } },
+      ];
+    }
+
+    const [routes, total] = await Promise.all([
+      prisma.visaRequirement.findMany({
+        where,
+        orderBy: [{ isActive: 'desc' }, { updatedAt: 'desc' }],
+        take: Number(limit),
+        skip: (Number(page) - 1) * Number(limit),
+        select: {
+          id: true, routeKey: true, displayName: true, originCountry: true,
+          destinationCountry: true, visaType: true, version: true, isActive: true,
+          lastVerifiedAt: true, lastVerifiedBy: true, updatedAt: true,
+          _count: { select: { alerts: { where: { isResolved: false } } } },
+        },
+      }),
+      prisma.visaRequirement.count({ where }),
+    ]);
+
+    return sendSuccess(res, { routes, total, page: Number(page), limit: Number(limit) }, 'Visa requirements fetched');
+  } catch (error: any) {
+    logger.error('List visa requirements error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to fetch visa requirements', 500);
+  }
+};
+
+export const getVisaRequirementAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const { id } = req.params;
+
+    const route = await prisma.visaRequirement.findUnique({
+      where: { id },
+      include: {
+        history: { orderBy: { createdAt: 'desc' }, take: 10 },
+        alerts: { where: { isResolved: false }, orderBy: { createdAt: 'desc' } },
+      },
+    });
+
+    if (!route) return sendError(res, 'not_found', 'Route not found', 404);
+
+    return sendSuccess(res, route, 'Visa requirement fetched');
+  } catch (error: any) {
+    logger.error('Get visa requirement error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to fetch visa requirement', 500);
+  }
+};
+
+export const updateVisaRequirementAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const { id } = req.params;
+    const adminUser = req.user?.userId || 'unknown';
+    const { changeNotes, ...updateData } = req.body;
+
+    const existing = await prisma.visaRequirement.findUnique({ where: { id } });
+    if (!existing) return sendError(res, 'not_found', 'Route not found', 404);
+
+    // Save history snapshot before updating
+    await prisma.visaRequirementHistory.create({
+      data: {
+        requirementId: id,
+        version: existing.version,
+        requirements: existing.requirements as any,
+        changeNotes: changeNotes || 'Manual admin update',
+        changedBy: adminUser,
+      },
+    });
+
+    const updated = await prisma.visaRequirement.update({
+      where: { id },
+      data: {
+        ...updateData,
+        version: existing.version + 1,
+        changeNotes: changeNotes || null,
+        lastVerifiedAt: new Date(),
+        lastVerifiedBy: adminUser,
+      },
+    });
+
+    logger.info('Visa requirement updated', { id, version: updated.version, updatedBy: adminUser });
+    return sendSuccess(res, updated, 'Visa requirement updated');
+  } catch (error: any) {
+    logger.error('Update visa requirement error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to update visa requirement', 500);
+  }
+};
+
+export const createVisaRequirementAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const adminUser = req.user?.userId || 'unknown';
+
+    const route = await prisma.visaRequirement.create({
+      data: {
+        ...req.body,
+        lastVerifiedBy: adminUser,
+        lastVerifiedAt: new Date(),
+      },
+    });
+
+    logger.info('Visa requirement created', { routeKey: route.routeKey, createdBy: adminUser });
+    return sendSuccess(res, route, 'Visa requirement created', 201);
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return sendError(res, 'conflict', 'A route with this routeKey already exists', 409);
+    }
+    logger.error('Create visa requirement error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to create visa requirement', 500);
+  }
+};
+
+export const listUpdateAlertsAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const { resolved } = req.query;
+
+    const alerts = await prisma.requirementUpdateAlert.findMany({
+      where: resolved === 'true' ? { isResolved: true } : { isResolved: false },
+      include: {
+        requirement: { select: { displayName: true, routeKey: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return sendSuccess(res, alerts, 'Alerts fetched');
+  } catch (error: any) {
+    logger.error('List alerts error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to fetch alerts', 500);
+  }
+};
+
+export const resolveAlertAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = (await import('../config/prisma')).default;
+    const { id } = req.params;
+    const adminUser = req.user?.userId || 'unknown';
+    const { resolutionNote } = req.body;
+
+    const alert = await prisma.requirementUpdateAlert.update({
+      where: { id },
+      data: {
+        isResolved: true,
+        resolvedAt: new Date(),
+        resolvedBy: adminUser,
+        resolutionNote: resolutionNote || null,
+      },
+    });
+
+    return sendSuccess(res, alert, 'Alert resolved');
+  } catch (error: any) {
+    logger.error('Resolve alert error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to resolve alert', 500);
+  }
+};
 
