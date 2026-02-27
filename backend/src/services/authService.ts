@@ -107,9 +107,9 @@ export class AuthService {
         subscriptionStatus: true,
         role: true,
         organizationId: true,
-        createdAt: true
-      } as any
-    });
+        createdAt: true,
+      },
+    }) as { id: string; email: string; fullName: string | null; companyName: string | null; subscriptionPlan: string | null; subscriptionStatus: string | null; role: string | null; organizationId: string | null; createdAt: Date } | null;
     
     if (!user) {
       throw new AppError('Invalid email or password', 401);

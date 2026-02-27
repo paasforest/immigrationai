@@ -144,7 +144,7 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
           type: 'document_uploaded',
           title: `New document uploaded: ${document.name}`,
           body: `Document uploaded for case ${caseData.referenceNumber}`,
-          resourceType: 'case_document',
+          resourceType: 'document',
           resourceId: document.id,
         });
       } catch (error) {

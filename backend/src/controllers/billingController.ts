@@ -34,7 +34,7 @@ export async function getSubscriptionDetails(req: Request, res: Response): Promi
     let daysRemaining: number | null = null;
     if (subscription) {
       const now = new Date();
-      const endDate = subscription.currentPeriodEnd || subscription.trialEndsAt;
+      const endDate = subscription.currentPeriodEnd || (subscription as any).trialEndsAt;
       if (endDate) {
         const diff = endDate.getTime() - now.getTime();
         daysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -53,7 +53,7 @@ export async function getSubscriptionDetails(req: Request, res: Response): Promi
         currency: subscription?.currency || 'ZAR',
         billingCycle: subscription?.billingCycle || 'monthly',
         currentPeriodStart: subscription?.currentPeriodStart || null,
-        currentPeriodEnd: subscription?.currentPeriodEnd || subscription?.trialEndsAt || null,
+        currentPeriodEnd: subscription?.currentPeriodEnd || (subscription as any)?.trialEndsAt || null,
         daysRemaining,
         paymentMethod: subscription?.paymentMethod || null,
         invoices,
@@ -162,7 +162,7 @@ export async function initiatePayment(req: Request, res: Response): Promise<void
       starter: { price: 299 },
       professional: { price: 699 },
       agency: { price: 1499 },
-    }[plan];
+    }[plan as 'starter' | 'professional' | 'agency'];
 
     if (!planData) {
       throw new AppError('Invalid plan', 400);

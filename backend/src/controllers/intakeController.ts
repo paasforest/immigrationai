@@ -1374,11 +1374,6 @@ export async function getRoutingStats(req: Request, res: Response): Promise<void
       prisma.professionalProfile.count({
         where: {
           isPublic: true,
-          specializations: {
-            some: {
-              isAcceptingLeads: true,
-            },
-          },
         },
       }),
     ]);

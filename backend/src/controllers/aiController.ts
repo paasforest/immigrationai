@@ -23,12 +23,6 @@ import {
   improveDocument,
   generatePreDocIntelligence
 } from '../services/aiService';
-import {
-  crossValidateDocuments,
-  calculateReadinessScore,
-  analyzeRejection,
-  scoreSilentEligibility,
-} from '../services/caseIntelligenceService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
 import { AuthRequest } from '../types/request';
@@ -408,7 +402,7 @@ export const createTravelItinerary = async (req: Request, res: Response) => {
 // Calculate Financial Capacity Endpoint
 export const calculateFinancialCapacityController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -476,7 +470,7 @@ export const calculateFinancialCapacityController = async (req: AuthRequest, res
 // Analyze Bank Statement Endpoint
 export const analyzeBankStatementController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -540,7 +534,7 @@ export const analyzeBankStatementController = async (req: AuthRequest, res: Resp
 // Document Authenticity Checklist Endpoint
 export const analyzeDocumentAuthenticityController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -582,7 +576,7 @@ export const analyzeDocumentAuthenticityController = async (req: AuthRequest, re
 // Application Form Pre-Checker Endpoint
 export const analyzeApplicationFormController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -626,7 +620,7 @@ export const analyzeApplicationFormController = async (req: AuthRequest, res: Re
 // Visa Rejection Analyzer Endpoint
 export const analyzeVisaRejectionController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -671,7 +665,7 @@ export const analyzeVisaRejectionController = async (req: AuthRequest, res: Resp
 // Reapplication Strategy Builder Endpoint
 export const buildReapplicationStrategyController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -722,7 +716,7 @@ export const buildReapplicationStrategyController = async (req: AuthRequest, res
 // Check Document Consistency Endpoint
 export const checkDocumentConsistencyController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -763,7 +757,7 @@ export const checkDocumentConsistencyController = async (req: AuthRequest, res: 
 // Generate Student Visa Package Endpoint
 export const generateStudentVisaPackageController = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return sendError(res, 'auth_error', 'Authentication required', 401);
     }
@@ -900,7 +894,7 @@ export const generateAIChecklist = async (req: AuthRequest, res: Response) => {
       await prisma.auditLog.create({
         data: {
           organizationId,
-          userId: user?.id || '',
+          userId: user?.userId || '',
           action: 'ai_checklist_generated',
           resourceType: 'document_checklist',
           resourceId: checklist.id,
@@ -1117,10 +1111,10 @@ export const getPreDocRequirements = async (req: AuthRequest, res: Response) => 
       resolvedDestination = caseData.destinationCountry || destinationCountry || '';
 
       // Get applicant name
-      const applicant = await prisma.user.findUnique({
+      const applicant = caseData.applicantId ? await prisma.user.findUnique({
         where: { id: caseData.applicantId },
         select: { fullName: true },
-      });
+      }) : null;
       applicantName = applicant?.fullName || 'the applicant';
 
       // Get already-uploaded document names for cross-reference
@@ -1128,7 +1122,7 @@ export const getPreDocRequirements = async (req: AuthRequest, res: Response) => 
         where: { caseId },
         select: { name: true, category: true, status: true },
       });
-      existingDocNames = docs.map((d: { name: string; category: string; status: string }) => `${d.name} (${d.status})`);
+      existingDocNames = docs.map((d: { name: string; category: string | null; status: string }) => `${d.name} (${d.status})`);
     }
 
     if (!resolvedVisa || !resolvedOrigin || !resolvedDestination) {
@@ -1267,7 +1261,7 @@ export const universalAIGateway = async (req: AuthRequest, res: Response) => {
         break;
 
       case 'generate_email_template':
-        result = await generateEmailTemplate(context.type, context.data);
+        result = await generateEmailTemplate(context);
         break;
 
       case 'generate_support_letter':
@@ -1582,10 +1576,16 @@ export const resolveAlertAdmin = async (req: AuthRequest, res: Response) => {
   }
 };
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // CASE INTELLIGENCE CONTROLLERS
 // ─────────────────────────────────────────────────────────────────────────────
+
+import {
+  crossValidateDocuments,
+  calculateReadinessScore,
+  analyzeRejection,
+  scoreSilentEligibility,
+} from '../services/caseIntelligenceService';
 
 /**
  * POST /api/cases/:caseId/cross-validate

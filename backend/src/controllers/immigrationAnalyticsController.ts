@@ -152,7 +152,7 @@ export async function getOverviewAnalytics(req: Request, res: Response): Promise
         casesLastMonth,
         monthOverMonthGrowth,
         approvalRate,
-        averageCaseDuration,
+        averageCaseDuration: avgCaseDuration,
         casesByStatus: casesByStatus.map((item) => ({
           status: item.status,
           count: item._count,

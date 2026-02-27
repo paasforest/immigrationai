@@ -284,6 +284,11 @@ export async function inviteUser(req: Request, res: Response): Promise<void> {
       throw new AppError('Email is required', 400);
     }
 
+    const organization = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { id: true, name: true },
+    });
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -313,7 +318,7 @@ export async function inviteUser(req: Request, res: Response): Promise<void> {
           toEmail: email,
           toName: `${firstName || ''} ${lastName || ''}`.trim() || undefined,
           inviterName: user.fullName || user.email,
-          organizationName: organization.name,
+          organizationName: organization?.name || '',
           inviteUrl,
           role: role || 'professional',
         });
@@ -353,7 +358,7 @@ export async function inviteUser(req: Request, res: Response): Promise<void> {
           toEmail: email,
           toName: `${firstName || ''} ${lastName || ''}`.trim() || undefined,
           inviterName: user.fullName || user.email,
-          organizationName: organization.name,
+          organizationName: organization?.name || '',
           inviteUrl,
           role: role || 'professional',
         });

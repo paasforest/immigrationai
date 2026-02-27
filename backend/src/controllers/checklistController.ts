@@ -123,7 +123,6 @@ export async function createChecklist(req: Request, res: Response): Promise<void
             checklistId: checklist.id,
             name: item.name,
             description: item.description,
-            category: item.category,
             isRequired: item.isRequired,
           },
         })
