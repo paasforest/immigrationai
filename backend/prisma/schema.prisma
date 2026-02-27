@@ -42,6 +42,7 @@ model User {
   applicationOutcomes ApplicationOutcome[]
   userTracking        UserTracking?
   pendingPayments     PendingPayment[]
+  paymentProofs       PaymentProof[]
 
   // Interview Coach Relations
   mockInterviews    MockInterview[]
@@ -468,6 +469,28 @@ model PendingPayment {
   @@index([userId])
   @@index([status])
   @@map("pending_payments")
+}
+
+// Payment Proofs (EFT proof-of-payment uploads)
+model PaymentProof {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  accountNumber String    @map("account_number") @db.VarChar(50)
+  filePath      String    @map("file_path") @db.VarChar(500)
+  fileName      String    @map("file_name") @db.VarChar(255)
+  fileSize      Int       @map("file_size")
+  fileType      String    @map("file_type") @db.VarChar(100)
+  status        String    @default("pending") @db.VarChar(20) // pending | verified | rejected
+  adminNotes    String?   @map("admin_notes") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accountNumber])
+  @@index([status])
+  @@map("payment_proofs")
 }
 
 // ============================================

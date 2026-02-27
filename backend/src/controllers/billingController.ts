@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { PLAN_PRICING } from '../config/payments';
 
 /**
  * Get current subscription details
@@ -141,99 +142,103 @@ export async function initiatePayment(req: Request, res: Response): Promise<void
   try {
     const user = (req as any).user;
     const organizationId = req.organizationId!;
-    const { plan, paymentMethod, billingCycle } = req.body;
+    const { plan, billingCycle } = req.body;
+    // paymentMethod is always bank_transfer/EFT for now
+    const paymentMethod = 'bank_transfer';
 
-    if (!plan || !paymentMethod || !billingCycle) {
-      throw new AppError('Plan, payment method, and billing cycle are required', 400);
+    if (!plan || !billingCycle) {
+      throw new AppError('Plan and billing cycle are required', 400);
     }
 
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
-
-    if (!organization) {
-      throw new AppError('Organization not found', 404);
-    }
-
-    // Get plan pricing
-    const plans = await getPlans(req, res);
-    // Note: This won't work as written, need to refactor
-    const planData = {
-      starter: { price: 299 },
-      professional: { price: 699 },
-      agency: { price: 1499 },
-    }[plan as 'starter' | 'professional' | 'agency'];
-
-    if (!planData) {
+    if (!PLAN_PRICING[plan as keyof typeof PLAN_PRICING]) {
       throw new AppError('Invalid plan', 400);
     }
 
-    const amount = billingCycle === 'annual' 
-      ? Math.round(planData.price * 12 * 0.8) // 20% discount
-      : planData.price;
+    const amount = PLAN_PRICING[plan as keyof typeof PLAN_PRICING][billingCycle as 'monthly' | 'annual'];
 
-    // Handle different payment methods
-    if (paymentMethod === 'bank_transfer') {
-      // Return banking details
-      const bankDetails = {
-        bank: 'Standard Bank',
-        accountNumber: '1234567890',
-        accountName: 'Immigration AI',
-        reference: organizationId.substring(0, 8).toUpperCase(),
-      };
+    // ── Get or generate customer account number ──────────────────────────────
+    // Account number is used as the EFT payment reference (e.g. "MA12345")
+    let accountNumber = user.accountNumber as string | null | undefined;
 
-      // Create pending subscription
+    if (!accountNumber) {
+      // Look up from DB
+      const userRecord = await prisma.user.findUnique({
+        where: { id: user.userId },
+        select: { accountNumber: true, fullName: true },
+      });
+      accountNumber = userRecord?.accountNumber ?? null;
+
+      if (!accountNumber) {
+        // Generate a new one: first 2 letters of name + 5 digits
+        const firstName = (userRecord?.fullName || 'US').trim().split(' ')[0];
+        const prefix = firstName.substring(0, 2).toUpperCase();
+        let candidate = `${prefix}${Math.floor(10000 + Math.random() * 90000)}`;
+        // Ensure uniqueness
+        while (await prisma.user.findFirst({ where: { accountNumber: candidate } })) {
+          candidate = `${prefix}${Math.floor(10000 + Math.random() * 90000)}`;
+        }
+        await prisma.user.update({ where: { id: user.userId }, data: { accountNumber: candidate } });
+        accountNumber = candidate;
+      }
+    }
+
+    // ── Upsert pending payment record ────────────────────────────────────────
+    await prisma.pendingPayment.upsert({
+      where: { accountNumber },
+      update: { plan, billingCycle, amount, status: 'pending' },
+      create: {
+        userId: user.userId,
+        accountNumber,
+        plan,
+        billingCycle,
+        amount,
+        status: 'pending',
+      },
+    });
+
+    // ── Create / update pending subscription ─────────────────────────────────
+    const existingSub = await prisma.subscription.findFirst({
+      where: { organizationId, status: { in: ['pending', 'trial'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existingSub) {
+      await prisma.subscription.update({
+        where: { id: existingSub.id },
+        data: { plan, billingCycle, amount, paymentMethod, status: 'pending' },
+      });
+    } else {
       await prisma.subscription.create({
-        data: {
-          organizationId,
-          plan,
-          status: 'pending',
-          amount,
-          currency: 'ZAR',
-          billingCycle,
-          paymentMethod: 'bank_transfer',
-        },
+        data: { organizationId, plan, billingCycle, amount, currency: 'ZAR', paymentMethod, status: 'pending' },
       });
-
-      res.json({
-        success: true,
-        data: {
-          bankDetails,
-        },
-        message: 'Banking details provided',
-      });
-      return;
     }
 
-    // For PayFast, Yoco, Stripe - generate payment URLs
-    // These are placeholders - integrate with actual payment providers
-    let paymentUrl: string | null = null;
-    let clientSecret: string | null = null;
-
-    if (paymentMethod === 'payfast') {
-      // PayFast integration would go here
-      paymentUrl = `https://sandbox.payfast.co.za/eng/process?merchant_id=${process.env.PAYFAST_MERCHANT_ID}&merchant_key=${process.env.PAYFAST_MERCHANT_KEY}&amount=${amount}&item_name=${plan} Plan`;
-    } else if (paymentMethod === 'yoco') {
-      // Yoco integration would go here
-      paymentUrl = `https://payments.yoco.com/checkout?amount=${amount}&plan=${plan}`;
-    } else if (paymentMethod === 'stripe') {
-      // Stripe integration would go here
-      // Would create payment intent and return client secret
-      clientSecret = 'placeholder_stripe_secret';
-    }
+    // ── Bank details to return to frontend ───────────────────────────────────
+    const bankDetails = {
+      bank: process.env.BANK_NAME || 'ABSA Bank',
+      accountName: process.env.ACCOUNT_NAME || 'ImmigrationAI',
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
+      branchCode: process.env.BANK_BRANCH_CODE || '632005',
+      reference: accountNumber,           // ← customer uses their account number as reference
+      amount: (amount / 100).toFixed(2),  // PLAN_PRICING stores cents
+      amountRaw: amount,
+      plan: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan – ${billingCycle === 'monthly' ? 'Monthly' : 'Annual'}`,
+      instructions: [
+        `Use "${accountNumber}" as the payment reference`,
+        'Make an EFT / internet banking transfer to the account above',
+        'Allow 1–2 business days for manual verification',
+        'Upload your proof of payment below to speed up activation',
+        'Questions? Email payments@immigrationai.co.za',
+      ],
+    };
 
     res.json({
       success: true,
-      data: {
-        paymentUrl,
-        clientSecret,
-      },
-      message: 'Payment initiated',
+      data: { bankDetails, accountNumber },
+      message: 'EFT banking details generated',
     });
   } catch (error: any) {
-    if (error instanceof AppError) {
-      throw error;
-    }
+    if (error instanceof AppError) throw error;
     throw new AppError(error.message || 'Failed to initiate payment', 500);
   }
 }
