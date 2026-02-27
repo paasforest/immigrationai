@@ -21,6 +21,8 @@ import {
   getRoutingStats,
   getMyLeadStats,
   patchEligibilityScore,
+  submitVerificationDoc,
+  verificationUpload,
 } from '../controllers/intakeController';
 
 const router = Router();
@@ -45,6 +47,7 @@ router.delete('/specializations/:id', deleteSpecialization); // DELETE /api/inta
 router.post('/profile', upsertPublicProfile); // POST /api/intake/profile
 router.get('/profile', getMyProfile); // GET /api/intake/profile
 router.get('/my-stats', getMyLeadStats); // GET /api/intake/my-stats
+router.post('/profile/upload-verification', verificationUpload, submitVerificationDoc); // POST /api/intake/profile/upload-verification
 
 // Admin routes (require admin role)
 router.get('/admin/verifications', requireAdmin, getPendingVerifications); // GET /api/intake/admin/verifications

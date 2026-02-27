@@ -14,6 +14,7 @@ import {
   Settings,
   BarChart3,
   Shield,
+  ShieldCheck,
   ArrowLeft,
   Activity,
   Target,
@@ -110,10 +111,18 @@ export default function AdminDashboardPage() {
     {
       icon: <DollarSign className="w-8 h-8" />,
       title: "Payment Verification",
-      description: "Review and verify customer payments",
+      description: "Review and verify customer EFT payments",
       href: "/admin/payments",
       color: "from-green-500 to-emerald-600",
       stats: "Pending verification"
+    },
+    {
+      icon: <ShieldCheck className="w-8 h-8" />,
+      title: "Professional Verifications",
+      description: "Approve agencies, lawyers & immigration professionals",
+      href: "/admin/verifications",
+      color: "from-indigo-500 to-blue-600",
+      stats: "Credential review"
     },
     {
       icon: <Target className="w-8 h-8" />,

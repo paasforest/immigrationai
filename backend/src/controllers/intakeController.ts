@@ -1647,3 +1647,105 @@ export async function patchEligibilityScore(req: Request, res: Response) {
     return res.json({ success: true });
   }
 }
+
+// ─── multer instance (shared with paymentProofController pattern) ─────────────
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { randomUUID } from 'crypto';
+
+const verificationStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const dir = 'uploads/verification-docs';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    cb(null, `${randomUUID()}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+export const verificationUpload = multer({
+  storage: verificationStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only PDF and image files are allowed'));
+  },
+}).single('verificationDoc');
+
+/**
+ * POST /api/intake/profile/upload-verification
+ * Authenticated professional uploads their practicing certificate / credential.
+ * Saves file path to professionalProfile.verificationDoc and notifies admin.
+ */
+export async function submitVerificationDoc(req: Request, res: Response): Promise<void> {
+  const user = (req as any).user;
+  if (!user) {
+    res.status(401).json({ success: false, message: 'Authentication required' });
+    return;
+  }
+
+  if (!req.file) {
+    res.status(400).json({ success: false, message: 'No file uploaded' });
+    return;
+  }
+
+  try {
+    // Upsert the professional profile so verificationDoc is stored even if profile is incomplete
+    const profile = await prisma.professionalProfile.upsert({
+      where: { userId: user.userId },
+      update: { verificationDoc: req.file.path },
+      create: {
+        userId: user.userId,
+        displayName: user.email, // minimal placeholder until they fill the profile
+        verificationDoc: req.file.path,
+        languages: [],
+      },
+    });
+
+    // Notify admin via Resend (best-effort)
+    try {
+      if (process.env.RESEND_API_KEY) {
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const userRecord = await prisma.user.findUnique({
+          where: { id: user.userId },
+          select: { fullName: true, email: true },
+        });
+        await resend.emails.send({
+          from: `ImmigrationAI <${process.env.FROM_EMAIL || 'noreply@immigrationai.co.za'}>`,
+          to: [process.env.ADMIN_EMAIL || 'admin@immigrationai.co.za'],
+          subject: `🔍 New Professional Verification Request — ${userRecord?.fullName || user.email}`,
+          html: `
+            <h2>New Verification Submitted</h2>
+            <table style="border-collapse:collapse;width:100%;font-size:14px">
+              <tr><td style="padding:6px;font-weight:600">Name</td><td style="padding:6px">${userRecord?.fullName || '—'}</td></tr>
+              <tr style="background:#f8fafc"><td style="padding:6px;font-weight:600">Email</td><td style="padding:6px">${userRecord?.email}</td></tr>
+              <tr><td style="padding:6px;font-weight:600">File</td><td style="padding:6px">${req.file.originalname}</td></tr>
+            </table>
+            <p style="margin-top:16px">
+              <a href="${process.env.FRONTEND_URL || 'https://app.immigrationai.co.za'}/admin/verifications"
+                 style="background:#0f2557;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">
+                Review in Admin Panel →
+              </a>
+            </p>
+          `,
+        });
+      }
+    } catch (emailErr: any) {
+      logger.warn('submitVerificationDoc: failed to send admin email', { error: emailErr.message });
+    }
+
+    res.json({
+      success: true,
+      data: { profileId: profile.id, verificationDoc: req.file.path },
+      message: 'Verification document submitted. We will review and respond within 2 business days.',
+    });
+  } catch (error: any) {
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    logger.error('submitVerificationDoc failed', { error: error.message });
+    res.status(500).json({ success: false, message: error.message || 'Upload failed' });
+  }
+}

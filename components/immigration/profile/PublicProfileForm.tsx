@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ShieldCheck, Shield, Upload, Loader2 } from 'lucide-react';
+import { ShieldCheck, Shield, Upload, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const languages = [
@@ -32,6 +32,8 @@ export default function PublicProfileForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [verificationFile, setVerificationFile] = useState<File | null>(null);
+  const [verificationUploading, setVerificationUploading] = useState(false);
+  const [verificationSubmitted, setVerificationSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -307,19 +309,48 @@ export default function PublicProfileForm() {
                     }
                   }}
                 />
-                {verificationFile && (
+                {verificationFile && !verificationSubmitted && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      // TODO: Upload verification document
-                      toast.info('Verification upload coming soon');
+                    className="mt-2 w-full border-[#0F2557] text-[#0F2557]"
+                    disabled={verificationUploading}
+                    onClick={async () => {
+                      setVerificationUploading(true);
+                      try {
+                        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                        const formData = new FormData();
+                        formData.append('verificationDoc', verificationFile);
+                        const res = await fetch(`${API_BASE}/api/intake/profile/upload-verification`, {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+                          body: formData,
+                        });
+                        const json = await res.json();
+                        if (json.success) {
+                          setVerificationSubmitted(true);
+                          toast.success('Document submitted! We\'ll review and respond within 2 business days.');
+                        } else {
+                          toast.error(json.message || 'Upload failed');
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || 'Upload failed');
+                      } finally {
+                        setVerificationUploading(false);
+                      }
                     }}
                   >
-                    Submit for Verification
+                    {verificationUploading
+                      ? <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Uploading...</>
+                      : <><Upload className="w-3 h-3 mr-2" /> Submit for Verification</>}
                   </Button>
+                )}
+                {verificationSubmitted && (
+                  <div className="mt-2 flex items-center gap-2 text-green-700 text-sm">
+                    <CheckCircle className="w-4 h-4" />
+                    Submitted — under review
+                  </div>
                 )}
               </div>
             </div>

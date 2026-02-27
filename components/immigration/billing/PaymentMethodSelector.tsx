@@ -136,16 +136,20 @@ export default function PaymentMethodSelector({
     if (file) handleUploadProof(file);
   };
 
-  const handleClose = () => {
-    setStep('confirm');
-    setBankDetails(null);
-    setProofUploaded(false);
-    onClose();
+  // Only allow closing from confirm step or done step; block mid-flow
+  const handleAttemptClose = () => {
+    if (step === 'confirm' || step === 'done') {
+      setStep('confirm');
+      setBankDetails(null);
+      setProofUploaded(false);
+      onClose();
+    }
+    // else: silently block — user must upload proof or complete the flow
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={handleAttemptClose}>
+      <DialogContent className="max-w-md" onPointerDownOutside={(e) => { if (step === 'details' || step === 'upload') e.preventDefault(); }}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[#0F2557]" />
@@ -220,20 +224,24 @@ export default function PaymentMethodSelector({
               </Button>
             </div>
 
-            <div className="border-t pt-3">
-              <p className="text-xs text-gray-500 mb-2 text-center">Already paid? Upload your proof to activate faster.</p>
+            <div className="border-t pt-4 space-y-2">
               <Button
                 onClick={() => setStep('upload')}
-                variant="outline"
-                className="w-full border-[#0F2557] text-[#0F2557]"
+                className="w-full bg-[#0F2557] hover:bg-[#1a3570]"
               >
                 <Upload className="w-4 h-4 mr-2" /> Upload Proof of Payment
               </Button>
+              <p className="text-[11px] text-center text-amber-700 font-medium">
+                ⚠ Your account will only be activated after you upload proof and admin verifies it.
+              </p>
+              <button
+                onClick={handleAttemptClose}
+                className="w-full text-[10px] text-gray-400 hover:text-gray-600 underline underline-offset-2 py-1"
+                type="button"
+              >
+                I'll upload later (account stays inactive)
+              </button>
             </div>
-
-            <p className="text-[10px] text-gray-400 text-center">
-              Account activates within 1–2 business days after payment is verified
-            </p>
           </div>
         )}
 
