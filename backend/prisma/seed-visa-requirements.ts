@@ -751,6 +751,349 @@ const ROUTES = [
     lastVerifiedBy: 'system-seed-feb-2025',
   },
 
+  // ══════════════════════════════════════════════════════════
+  //  21. INDIA → UK — Skilled Worker Visa
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'IN-GB-skilled_worker',
+    originCountry: 'India',
+    destinationCountry: 'United Kingdom',
+    visaType: 'Skilled Worker Visa',
+    displayName: 'India → UK Skilled Worker Visa',
+    summary: 'UK Skilled Worker visa for Indian nationals. One of the highest-volume routes globally. NHS, IT, and engineering most common sectors. BRP (Biometric Residence Permit) issued on arrival. Police clearance from local Indian authority required if lived outside India.',
+    processingTime: { minDays: 15, maxDays: 45, typicalDays: 21, source: 'https://www.gov.uk/skilled-worker-visa/how-long-it-takes' },
+    financialThresholds: { amount: 1270, currency: 'GBP', description: 'Maintenance funds if not exempt', asOf: '2025-01' },
+    knownGotchas: [
+      'CoS must be assigned by employer BEFORE applying. Employer needs UKVI sponsor licence.',
+      'Indian educational certificates — UKVI may request UK ENIC equivalency for degrees from Indian institutions in some sectors.',
+      'VFS India offices are very busy — book biometrics appointment immediately after submitting online application.',
+      'If previously refused, include a detailed explanation with the application.',
+    ],
+    criticalPath: ['Secure CoS from licensed UK employer', 'English language proof (most Indian degrees qualify)', 'Police clearance if relevant', 'Submit online + VFS India biometrics'],
+    officialSources: [
+      { name: 'Gov.uk Skilled Worker', url: 'https://www.gov.uk/skilled-worker-visa', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'VFS India', url: 'https://visa.vfsglobal.com/ind/en/gbr', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'IN-SW-001', category: 'Sponsorship', name: 'Certificate of Sponsorship (CoS)', description: 'Reference number from licensed UK employer.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'IN-SW-002', category: 'Identity', name: 'Valid Indian Passport', description: 'Valid passport with sufficient validity.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'IN-SW-003', category: 'English Language', name: 'English Language Proof', description: 'IELTS minimum B1 per component OR degree taught in English.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical', notes: 'Most Indian graduates qualify via degree exemption. Confirm with university letter.' },
+      { id: 'IN-SW-004', category: 'Financial', name: 'Bank Statements (3 months)', description: 'Showing £1,270+ unless employer is exempt.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+      { id: 'IN-SW-005', category: 'Employment', name: 'Employment Contract / Offer Letter', description: 'Confirming role, salary, and start date.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'high' },
+      { id: 'IN-SW-006', category: 'Personal Statement', name: 'Statement of Purpose', description: 'Optional but strengthens application.', isMandatory: false, isAiGeneratable: true, estimatedDays: 1, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  22. INDIA → CANADA — Express Entry
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'IN-CA-express_entry',
+    originCountry: 'India',
+    destinationCountry: 'Canada',
+    visaType: 'Express Entry (Federal Skilled Worker)',
+    displayName: 'India → Canada Express Entry',
+    summary: 'Canada Express Entry for Indian nationals — the most popular permanent residency route. WES credential assessment is mandatory. IELTS CLB 7+ per band required. Processing 6–12 months after ITA. IELTS and WES are both long lead-time items — start immediately.',
+    processingTime: { minDays: 180, maxDays: 365, typicalDays: 210, source: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html' },
+    financialThresholds: { amount: 13757, currency: 'CAD', description: 'Settlement funds for single applicant (2024). Higher with dependants.', asOf: '2025-01' },
+    knownGotchas: [
+      'WES assessment for Indian degrees: standard takes 7–10 weeks. Premium available but verify which institutions accept it.',
+      'IELTS CLB 7 = 6.0 listening, 6.0 reading, 6.0 writing, 6.0 speaking. NOT an average — each band individually.',
+      'Police clearance from India: ICPC (Indian Clearance) from District Superintendent of Police. Can be slow in some states.',
+      'CRS score is highly competitive — typically 470+ for FSW draws. Consider PNP nomination to boost by 600 points.',
+      'Gaps in employment: each gap must be explained in a letter.',
+    ],
+    criticalPath: ['WES credential assessment (start first — 7–10 weeks)', 'IELTS CLB 7+ all bands', 'Police clearance from India', 'Create Express Entry profile', 'Wait for ITA', 'Submit PR application within 60 days'],
+    officialSources: [
+      { name: 'IRCC Express Entry', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'WES Canada', url: 'https://www.wes.org/ca/', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'IN-EE-001', category: 'Credentials', name: 'WES Credential Assessment', description: 'WES evaluation of Indian degree(s).', isMandatory: true, isAiGeneratable: false, estimatedDays: 56, urgencyLevel: 'critical' },
+      { id: 'IN-EE-002', category: 'English Language', name: 'IELTS General (CLB 7+ each band)', description: 'All 4 bands must individually meet CLB 7.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'IN-EE-003', category: 'Police Clearance', name: 'India Police Clearance', description: 'From District SP office. Apostilled if required.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'IN-EE-004', category: 'Identity', name: 'Valid Indian Passport', description: 'Valid 12+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'IN-EE-005', category: 'Financial', name: 'Proof of Settlement Funds', description: 'CAD 13,757+ for single applicant.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+      { id: 'IN-EE-006', category: 'Employment', name: 'Reference Letters (NOC-matching)', description: 'Employer letters confirming NOC duties, hours, and salary.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+      { id: 'IN-EE-007', category: 'Medical', name: 'Immigration Medical Exam', description: 'From IRCC-approved panel physician.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  23. PHILIPPINES → CANADA — Express Entry
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'PH-CA-express_entry',
+    originCountry: 'Philippines',
+    destinationCountry: 'Canada',
+    visaType: 'Express Entry (Federal Skilled Worker)',
+    displayName: 'Philippines → Canada Express Entry',
+    summary: 'Canada Express Entry for Filipino nationals. High success rate due to strong English skills. WES or IQAS credential assessment required. PSA (Philippine Statistics Authority)-issued documents required — not local civil registrar copies.',
+    processingTime: { minDays: 180, maxDays: 365, typicalDays: 210, source: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html' },
+    financialThresholds: { amount: 13757, currency: 'CAD', description: 'Settlement funds for single applicant (2024).', asOf: '2025-01' },
+    knownGotchas: [
+      'All civil documents (birth cert, marriage cert) must be PSA-issued. Local registrar copies are NOT accepted.',
+      'NBI clearance required. Apply online at nbi.gov.ph. Allow 2–3 weeks. Apostilled or with authentication.',
+      'Nursing/medical professionals: may need Canadian credentials assessment from separate body (NNAS).',
+      'IELTS: Filipino applicants generally score well but must ensure CLB 7 in each individual band.',
+    ],
+    criticalPath: ['WES/IQAS credential assessment', 'IELTS CLB 7+ each band', 'NBI clearance (apostilled)', 'PSA-issued civil documents', 'Express Entry profile + ITA', 'PR application within 60 days'],
+    officialSources: [
+      { name: 'IRCC Express Entry', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'NBI Clearance', url: 'https://clearance.nbi.gov.ph', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'PH-EE-001', category: 'Credentials', name: 'WES / IQAS Credential Assessment', description: 'Evaluation of Filipino degree.', isMandatory: true, isAiGeneratable: false, estimatedDays: 56, urgencyLevel: 'critical' },
+      { id: 'PH-EE-002', category: 'English Language', name: 'IELTS General (CLB 7+ each band)', description: 'Each band must individually meet CLB 7.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'PH-EE-003', category: 'Police Clearance', name: 'NBI Clearance (Apostilled)', description: 'Online application at nbi.gov.ph. Apostilled for use abroad.', isMandatory: true, isAiGeneratable: false, officialSource: 'https://clearance.nbi.gov.ph', estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'PH-EE-004', category: 'Identity', name: 'Valid Philippine Passport', description: 'Valid 12+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'PH-EE-005', category: 'Identity', name: 'PSA-Issued Birth Certificate', description: 'Must be PSA-issued. Not local civil registrar.', isMandatory: true, isAiGeneratable: false, officialSource: 'https://www.psa.gov.ph', estimatedDays: 14, urgencyLevel: 'high' },
+      { id: 'PH-EE-006', category: 'Financial', name: 'Proof of Settlement Funds', description: 'CAD 13,757+ for single applicant.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+      { id: 'PH-EE-007', category: 'Employment', name: 'Employer Reference Letters', description: 'NOC-matching duties, hours, salary.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+      { id: 'PH-EE-008', category: 'Medical', name: 'Immigration Medical Exam', description: 'From IRCC-approved panel physician.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  24. BRAZIL → PORTUGAL — Residence Permit (Language Treaty)
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'BR-PT-residence',
+    originCountry: 'Brazil',
+    destinationCountry: 'Portugal',
+    visaType: 'Residence Permit (Equality Treaty)',
+    displayName: 'Brazil → Portugal Residence Permit',
+    summary: 'Brazilian nationals enjoy a special status in Portugal under the Treaty of Friendship, Cooperation and Consultation. After 2 years of legal residence, Brazilians can apply for equal rights (Estatuto de Igualdade). No language requirement (same language). SEF/AIMA handles registrations. Key route for Brazilians entering the EU.',
+    processingTime: { minDays: 30, maxDays: 180, typicalDays: 90, source: 'https://imigrante.sef.pt' },
+    financialThresholds: { amount: 760, currency: 'EUR', description: 'Monthly proof of means (minimum wage equivalent) typically expected', asOf: '2025-01' },
+    knownGotchas: [
+      'AIMA (formerly SEF) appointments are notoriously difficult to book — use the online system immediately on arrival.',
+      'Proof of address in Portugal (Atestado de Residência) required — obtain from Junta de Freguesia.',
+      'Job contract OR proof of self-employment OR proof of sufficient funds required.',
+      'Criminal record from Brazil: Antecedentes Criminais from Polícia Federal must be apostilled under the Hague Convention.',
+    ],
+    criticalPath: ['Arrive in Portugal on valid passport (visa-free 90 days)', 'Register at local Junta de Freguesia (address proof)', 'Book AIMA appointment immediately', 'Prepare employment/financial evidence', 'Attend AIMA appointment + submit documents'],
+    officialSources: [
+      { name: 'AIMA Portugal', url: 'https://imigrante.sef.pt', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'Equality Treaty Info', url: 'https://www.jf.pt', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'BR-PT-R-001', category: 'Identity', name: 'Valid Brazilian Passport', description: 'Valid passport. Brazilians enter Portugal visa-free for 90 days.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'BR-PT-R-002', category: 'Police Clearance', name: 'Brazilian Criminal Record (Apostilled)', description: 'From Polícia Federal. Apostilled under Hague Convention.', isMandatory: true, isAiGeneratable: false, officialSource: 'https://www.pf.gov.br', estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'BR-PT-R-003', category: 'Identity', name: 'Proof of Address in Portugal', description: 'Atestado de Residência from local Junta de Freguesia.', isMandatory: true, isAiGeneratable: false, estimatedDays: 7, urgencyLevel: 'critical', notes: 'Free from Junta de Freguesia with any proof of living at the address (utility bill, rental contract).' },
+      { id: 'BR-PT-R-004', category: 'Financial', name: 'Employment Contract OR Proof of Means', description: 'Work contract, payslips, or bank statements showing sufficient funds.', isMandatory: true, isAiGeneratable: false, estimatedDays: 7, urgencyLevel: 'high' },
+      { id: 'BR-PT-R-005', category: 'Personal Statement', name: 'Application Letter / Statement', description: 'Brief cover letter explaining purpose of residence.', isMandatory: false, isAiGeneratable: true, estimatedDays: 1, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  25. PAKISTAN → UK — Skilled Worker Visa
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'PK-GB-skilled_worker',
+    originCountry: 'Pakistan',
+    destinationCountry: 'United Kingdom',
+    visaType: 'Skilled Worker Visa',
+    displayName: 'Pakistan → UK Skilled Worker Visa',
+    summary: 'UK Skilled Worker visa for Pakistani nationals. High volume route, especially healthcare (NHS). Police clearance from NADRA (National Database and Registration Authority) required. VFS Islamabad/Karachi for biometrics.',
+    processingTime: { minDays: 15, maxDays: 45, typicalDays: 25, source: 'https://www.gov.uk/skilled-worker-visa' },
+    financialThresholds: { amount: 1270, currency: 'GBP', description: 'Maintenance if not exempt', asOf: '2025-01' },
+    knownGotchas: [
+      'NADRA police clearance: apply online at nadra.gov.pk/pcc. Allow 3–5 weeks.',
+      'Pakistani degree holders: UK ENIC may be required for equivalency in some roles.',
+      'Healthcare workers need NMC (nursing) or GMC (medical) registration letter before visa.',
+      'VFS Islamabad appointments fill quickly — book immediately after online application.',
+    ],
+    criticalPath: ['CoS from UK employer', 'NADRA police clearance', 'English language proof', 'Financial evidence', 'VFS Pakistan biometrics'],
+    officialSources: [
+      { name: 'Gov.uk Skilled Worker', url: 'https://www.gov.uk/skilled-worker-visa', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'NADRA PCC', url: 'https://nadra.gov.pk/pcc', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'PK-SW-001', category: 'Sponsorship', name: 'Certificate of Sponsorship (CoS)', description: 'From licensed UK employer.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'PK-SW-002', category: 'Police Clearance', name: 'NADRA Police Clearance Certificate', description: 'Online application via nadra.gov.pk/pcc.', isMandatory: true, isAiGeneratable: false, officialSource: 'https://nadra.gov.pk/pcc', estimatedDays: 28, urgencyLevel: 'critical' },
+      { id: 'PK-SW-003', category: 'Identity', name: 'Valid Pakistani Passport', description: 'Valid passport.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'PK-SW-004', category: 'English Language', name: 'English Language Proof', description: 'IELTS B1+ or degree taught in English.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'PK-SW-005', category: 'Financial', name: 'Bank Statements (3 months)', description: 'Showing GBP 1,270+ unless exempt.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  26. SOUTH AFRICA → GERMANY — Job Seeker / Skilled Worker Visa
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'ZA-DE-skilled_worker',
+    originCountry: 'South Africa',
+    destinationCountry: 'Germany',
+    visaType: 'Skilled Worker Visa (Fachkräfteeinwanderungsgesetz)',
+    displayName: 'South Africa → Germany Skilled Worker Visa',
+    summary: 'Germany Skilled Worker visa for South Africans under the Skilled Immigration Act (2020/2023). Credential recognition through anabin database or ZAB assessment is mandatory. German language skills (B1) increasingly required for most roles. Germany actively recruits skilled workers from South Africa especially in engineering and healthcare.',
+    processingTime: { minDays: 60, maxDays: 120, typicalDays: 90, source: 'https://www.make-it-in-germany.com/en/visa-residence/types/skilled-workers-with-vocational-training' },
+    financialThresholds: { amount: 12000, currency: 'EUR', description: 'Proof of sufficient funds or employment contract covering living costs', asOf: '2025-01' },
+    knownGotchas: [
+      'Credential recognition (Anerkennung) is mandatory and must be done BEFORE applying for the visa.',
+      'German language B1 required for most healthcare roles. A2 minimum for some technical roles.',
+      'Degree evaluation: check anabin.kmk.org first — SA university degrees vary in recognition status.',
+      'ZAB (Zentralstelle für ausländisches Bildungswesen) does credential evaluations for SAfrican degrees.',
+      'Appointment at German Embassy Pretoria can have long waiting times — book early.',
+    ],
+    criticalPath: ['Credential recognition (anabin/ZAB) — 2–3 months', 'German language test (B1 Goethe)', 'Job offer from German employer', 'Book German Embassy Pretoria appointment', 'Submit visa application with all documents'],
+    officialSources: [
+      { name: 'Make it in Germany', url: 'https://www.make-it-in-germany.com', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'German Embassy Pretoria', url: 'https://pretoria.diplo.de', lastChecked: '2025-02-01', contentHash: '' },
+      { name: 'Anabin Database', url: 'https://anabin.kmk.org', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'ZA-DE-SW-001', category: 'Credentials', name: 'Credential Recognition (Anerkennung)', description: 'Official recognition of SA qualification by German authority. Check anabin.kmk.org.', isMandatory: true, isAiGeneratable: false, officialSource: 'https://anabin.kmk.org', estimatedDays: 60, urgencyLevel: 'critical' },
+      { id: 'ZA-DE-SW-002', category: 'Employment', name: 'Job Offer from German Employer', description: 'Written binding job offer from German-registered employer.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'ZA-DE-SW-003', category: 'Identity', name: 'Valid SA Passport', description: 'Valid 6+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'ZA-DE-SW-004', category: 'English Language', name: 'German Language Certificate (B1 Goethe or equivalent)', description: 'Goethe-Institut B1 or equivalent for most roles.', isMandatory: true, isAiGeneratable: false, estimatedDays: 60, urgencyLevel: 'critical', notes: 'Goethe Institut SA has exam centres in Johannesburg and Cape Town.' },
+      { id: 'ZA-DE-SW-005', category: 'Police Clearance', name: 'SAPS Police Clearance', description: 'SA clearance. Apostille required.', isMandatory: true, isAiGeneratable: false, estimatedDays: 25, urgencyLevel: 'high' },
+      { id: 'ZA-DE-SW-006', category: 'Qualifications', name: 'Academic Degree Certificates + Translations', description: 'Certified copies + certified German translations if originals are in English.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+      { id: 'ZA-DE-SW-007', category: 'Personal Statement', name: 'Motivation Letter', description: 'Why Germany, this employer, your career plans.', isMandatory: false, isAiGeneratable: true, estimatedDays: 1, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  27. SOUTH AFRICA → AUSTRALIA — Working Holiday Visa (417)
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'ZA-AU-working_holiday',
+    originCountry: 'South Africa',
+    destinationCountry: 'Australia',
+    visaType: 'Working Holiday Visa (subclass 417)',
+    displayName: 'South Africa → Australia Working Holiday',
+    summary: 'Australian Working Holiday Visa for South Africans aged 18–35. Work and travel in Australia for up to 12 months. Can extend to 2nd and 3rd year by doing regional work. No job offer required. Online application. Fast processing (few weeks). Health insurance strongly recommended.',
+    processingTime: { minDays: 14, maxDays: 60, typicalDays: 21, source: 'https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/work-holiday-417' },
+    financialThresholds: { amount: 5000, currency: 'AUD', description: 'Proof of AUD 5,000 in funds on arrival (not formally assessed but border control may ask)', asOf: '2025-01' },
+    knownGotchas: [
+      'Age limit: must be under 31 at time of application (subclass 417). Over 31 check subclass 462 (Work and Holiday).',
+      'Medical check required if applicant has worked in certain fields (healthcare, childcare).',
+      'Working for the same employer more than 6 months requires separate permission.',
+      'To get 2nd year: must have done 88 days of specified regional work in 1st year.',
+    ],
+    criticalPath: ['Online application via ImmiAccount', 'Health check if required', 'Pay visa fee (AUD 635)', 'Receive visa (linked to passport)', 'Enter Australia within 12 months'],
+    officialSources: [{ name: 'DHA Working Holiday 417', url: 'https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/work-holiday-417', lastChecked: '2025-02-01', contentHash: '' }],
+    requirements: [
+      { id: 'ZA-AU-WH-001', category: 'Identity', name: 'Valid SA Passport', description: 'Valid 12+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'ZA-AU-WH-002', category: 'Financial', name: 'Proof of Funds (AUD 5,000)', description: 'Bank statement showing adequate travel funds.', isMandatory: false, isAiGeneratable: false, estimatedDays: 1, urgencyLevel: 'high', notes: 'Not formally assessed in application but asked at border.' },
+      { id: 'ZA-AU-WH-003', category: 'Medical', name: 'Health Examination (if required)', description: 'If worked in healthcare, childcare, or from specific countries.', isMandatory: false, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+      { id: 'ZA-AU-WH-004', category: 'Police Clearance', name: 'SAPS Police Clearance (if required)', description: 'Sometimes requested for applicants with complex immigration history.', isMandatory: false, isAiGeneratable: false, estimatedDays: 25, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  28. CHINA → CANADA — Express Entry
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'CN-CA-express_entry',
+    originCountry: 'China',
+    destinationCountry: 'Canada',
+    visaType: 'Express Entry (Federal Skilled Worker)',
+    displayName: 'China → Canada Express Entry',
+    summary: 'Canada Express Entry for Chinese nationals. One of the most common routes to Canada. Credential evaluation mandatory. Language test typically IELTS or CELPIP. RCMP clearance required + Chinese police clearance. Processing 6–12 months after ITA.',
+    processingTime: { minDays: 180, maxDays: 365, typicalDays: 210, source: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html' },
+    financialThresholds: { amount: 13757, currency: 'CAD', description: 'Settlement funds for single applicant (2024)', asOf: '2025-01' },
+    knownGotchas: [
+      'Chinese police clearance: from local Public Security Bureau (PSB). Must be authenticated by Chinese MFA + Canadian Embassy in Beijing.',
+      'Degree evaluation: WES is strongly recommended. Chinese 4-year degrees generally receive good equivalency.',
+      'IELTS CLB 7 requires 6.0 in each band individually — not an average.',
+      'If applying from China, IELTS Academic vs General matters — use General Training for Express Entry.',
+    ],
+    criticalPath: ['WES credential assessment', 'IELTS CLB 7+ each band', 'Chinese PSB police clearance (authenticated)', 'Express Entry profile + ITA', 'PR application within 60 days'],
+    officialSources: [{ name: 'IRCC Express Entry', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html', lastChecked: '2025-02-01', contentHash: '' }],
+    requirements: [
+      { id: 'CN-EE-001', category: 'Credentials', name: 'WES Credential Assessment', description: 'Evaluation of Chinese university degree.', isMandatory: true, isAiGeneratable: false, estimatedDays: 56, urgencyLevel: 'critical' },
+      { id: 'CN-EE-002', category: 'English Language', name: 'IELTS General (CLB 7+ each band)', description: 'General Training IELTS, 6.0+ in each band.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'CN-EE-003', category: 'Police Clearance', name: 'Chinese PSB Police Clearance (Authenticated)', description: 'From local PSB, authenticated by Chinese MFA and Canadian Embassy.', isMandatory: true, isAiGeneratable: false, estimatedDays: 45, urgencyLevel: 'critical' },
+      { id: 'CN-EE-004', category: 'Identity', name: 'Valid Chinese Passport', description: 'Valid 12+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'CN-EE-005', category: 'Financial', name: 'Proof of Settlement Funds', description: 'CAD 13,757+ for single applicant.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+      { id: 'CN-EE-006', category: 'Medical', name: 'Immigration Medical Exam', description: 'From IRCC-approved panel physician.', isMandatory: true, isAiGeneratable: false, estimatedDays: 14, urgencyLevel: 'high' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  29. MEXICO → USA — B1/B2 Visitor Visa
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'MX-US-b1_b2_visitor',
+    originCountry: 'Mexico',
+    destinationCountry: 'United States',
+    visaType: 'B1/B2 Visitor Visa',
+    displayName: 'Mexico → USA B1/B2 Visitor Visa',
+    summary: 'US B1 (business) / B2 (tourism) visitor visa for Mexican nationals. Interview at US Embassy Mexico City or consulates. Non-immigrant intent must be demonstrated. Strong economic ties to Mexico (employment, property, family) are critical. Many Mexicans qualify for 10-year multiple entry visas.',
+    processingTime: { minDays: 30, maxDays: 120, typicalDays: 45, source: 'https://mx.usembassy.gov/visas/' },
+    financialThresholds: { amount: 10000, currency: 'USD', description: 'Sufficient funds to cover stay. No hard minimum but show financial stability', asOf: '2025-01' },
+    knownGotchas: [
+      'Non-immigrant intent is the key — show property ownership, permanent employment, dependent family members in Mexico.',
+      'DS-160 must be completed carefully — any inconsistency causes refusal.',
+      'Appointment wait times at Mexico City Embassy can be months — apply well in advance.',
+      'Interview conducted in Spanish/English — be prepared to answer questions about finances, employment, travel purpose.',
+    ],
+    criticalPath: ['DS-160 online application', 'Pay MRV visa fee', 'Book Embassy appointment (can be months)', 'Attend interview with all supporting documents'],
+    officialSources: [{ name: 'US Embassy Mexico', url: 'https://mx.usembassy.gov/visas/', lastChecked: '2025-02-01', contentHash: '' }],
+    requirements: [
+      { id: 'MX-B2-001', category: 'Application', name: 'DS-160 Confirmation Page', description: 'Completed online nonimmigrant visa application.', isMandatory: true, isAiGeneratable: false, estimatedDays: 1, urgencyLevel: 'critical' },
+      { id: 'MX-B2-002', category: 'Identity', name: 'Valid Mexican Passport', description: '6+ months validity beyond intended stay.', isMandatory: true, isAiGeneratable: false, estimatedDays: 30, urgencyLevel: 'critical' },
+      { id: 'MX-B2-003', category: 'Financial', name: 'Bank Statements (3–6 months)', description: 'Showing financial stability and ability to fund trip.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'critical' },
+      { id: 'MX-B2-004', category: 'Employment', name: 'Employment Letter or Business Registration', description: 'Employer letter with salary, or business registration showing Mexican economic ties.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'high' },
+      { id: 'MX-B2-005', category: 'Ties to Home', name: 'Ties to Mexico Evidence', description: 'Property deed, family photos, employment contract — non-immigrant intent.', isMandatory: false, isAiGeneratable: true, estimatedDays: 7, urgencyLevel: 'critical', notes: 'The interview question is always: why will you return? Prepare thoroughly.' },
+      { id: 'MX-B2-006', category: 'Photos', name: 'Passport Photo', description: '2x2 inch colour photo meeting US requirements.', isMandatory: true, isAiGeneratable: false, estimatedDays: 1, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  30. COLOMBIA → SPAIN — Residency by Non-Lucrative Visa
+  // ══════════════════════════════════════════════════════════
+  {
+    routeKey: 'CO-ES-non_lucrative',
+    originCountry: 'Colombia',
+    destinationCountry: 'Spain',
+    visaType: 'Non-Lucrative Residence Visa',
+    displayName: 'Colombia → Spain Non-Lucrative Visa',
+    summary: 'Spain Non-Lucrative Visa for Colombians who have sufficient passive income to live in Spain without working. Colombians also have a language and cultural advantage. Popular gateway to EU residency. Requires substantial financial proof (approx EUR 30,000+ per year) and comprehensive health insurance.',
+    processingTime: { minDays: 30, maxDays: 90, typicalDays: 60, source: 'https://www.exteriores.gob.es' },
+    financialThresholds: { amount: 30000, currency: 'EUR', description: 'Approx EUR 2,400/month (400% IPREM). Higher with dependants.', asOf: '2025-01' },
+    knownGotchas: [
+      'Financial requirement is approximately 400% of IPREM (approx EUR 2,400/month in 2024). Dependants add ~100% each.',
+      'Criminal record from Colombia: Antecedentes Judiciales from Policía Nacional. Must be apostilled and translated to Spanish by sworn translator.',
+      'Health insurance must be comprehensive, without co-pays, covering all Spain — not travel insurance.',
+      'Documents must be original, apostilled, and many require sworn translation (traducción jurada) to Spanish.',
+    ],
+    criticalPath: ['Accumulate EUR 30,000+ bank evidence', 'Colombian criminal record (apostilled + sworn translation)', 'Comprehensive Spanish health insurance', 'Medical certificate from doctor', 'Apply at Spanish Consulate in Bogotá/Medellín'],
+    officialSources: [
+      { name: 'Spanish Ministry of Foreign Affairs', url: 'https://www.exteriores.gob.es', lastChecked: '2025-02-01', contentHash: '' },
+    ],
+    requirements: [
+      { id: 'CO-ES-NL-001', category: 'Identity', name: 'Valid Colombian Passport', description: 'Valid passport 12+ months.', isMandatory: true, isAiGeneratable: false, estimatedDays: 0, urgencyLevel: 'critical' },
+      { id: 'CO-ES-NL-002', category: 'Financial', name: 'Bank Statements (EUR 30,000+)', description: 'Showing EUR 2,400+/month or lump sum of EUR 30,000+ in accessible funds.', isMandatory: true, isAiGeneratable: false, estimatedDays: 7, urgencyLevel: 'critical' },
+      { id: 'CO-ES-NL-003', category: 'Police Clearance', name: 'Colombian Criminal Record (Apostilled + Sworn Translation)', description: 'From Policía Nacional Colombia. Hague apostille + sworn Spanish translation.', isMandatory: true, isAiGeneratable: false, estimatedDays: 21, urgencyLevel: 'critical' },
+      { id: 'CO-ES-NL-004', category: 'Medical', name: 'Medical Certificate (No Contagious Disease)', description: 'From licensed physician in Colombia. Must be apostilled.', isMandatory: true, isAiGeneratable: false, estimatedDays: 7, urgencyLevel: 'high' },
+      { id: 'CO-ES-NL-005', category: 'Insurance', name: 'Comprehensive Health Insurance (Spain)', description: 'Full coverage in Spain, no co-pays, no exclusions. Spanish insurer preferred.', isMandatory: true, isAiGeneratable: false, estimatedDays: 3, urgencyLevel: 'critical' },
+      { id: 'CO-ES-NL-006', category: 'Personal Statement', name: 'Motivation / Cover Letter', description: 'Explains purpose of residence and financial self-sufficiency.', isMandatory: false, isAiGeneratable: true, estimatedDays: 1, urgencyLevel: 'normal' },
+    ] as RequirementItem[],
+    version: 1,
+    lastVerifiedBy: 'system-seed-feb-2025',
+  },
+
 ] as const;
 
 // ────────────────────────────────────────────────────────────────────────────

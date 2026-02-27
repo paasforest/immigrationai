@@ -19,8 +19,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Clock, AlertTriangle, AlertOctagon, Lock } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, AlertOctagon, Lock, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { LanguageProvider, LanguagePills, useLanguage } from '@/lib/i18n/LanguageContext';
+import { type LanguageCode } from '@/lib/i18n/translations';
 
 const intakeSchema = z.object({
   applicantName: z.string().min(2, 'Name required'),
@@ -53,21 +55,24 @@ const countryCodes = [
 ];
 
 const originCountries = [
-  'Nigeria',
-  'Ghana',
-  'Kenya',
-  'South Africa',
-  'Ethiopia',
-  'Zimbabwe',
-  'Uganda',
-  'Tanzania',
-  'Cameroon',
-  'Senegal',
-  'Rwanda',
-  'Zambia',
-  'Angola',
-  'Mozambique',
-];
+  // Africa
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Ethiopia', 'Zimbabwe',
+  'Uganda', 'Tanzania', 'Cameroon', 'Senegal', 'Rwanda', 'Zambia',
+  'Angola', 'Mozambique', 'Egypt', 'Morocco', 'Tunisia',
+  // Asia
+  'India', 'China', 'Philippines', 'Pakistan', 'Bangladesh', 'Sri Lanka',
+  'Nepal', 'Indonesia', 'Vietnam', 'Thailand', 'Malaysia',
+  // Latin America
+  'Brazil', 'Colombia', 'Mexico', 'Peru', 'Argentina', 'Chile',
+  'Ecuador', 'Venezuela',
+  // Middle East
+  'Saudi Arabia', 'UAE', 'Jordan', 'Lebanon',
+  // Europe
+  'Ukraine', 'Russia', 'Turkey', 'Poland',
+  // Other
+  'United States', 'United Kingdom', 'Australia', 'Canada',
+  'Other',
+].sort();
 
 const destinationCountries = [
   { value: 'United Kingdom', label: 'UK 🇬🇧' },
@@ -78,14 +83,31 @@ const destinationCountries = [
   { value: 'Australia', label: 'Australia 🇦🇺' },
   { value: 'Netherlands', label: 'Netherlands 🇳🇱' },
   { value: 'Ireland', label: 'Ireland 🇮🇪' },
+  { value: 'France', label: 'France 🇫🇷' },
+  { value: 'Portugal', label: 'Portugal 🇵🇹' },
+  { value: 'Spain', label: 'Spain 🇪🇸' },
+  { value: 'New Zealand', label: 'New Zealand 🇳🇿' },
+  { value: 'Sweden', label: 'Sweden 🇸🇪' },
+  { value: 'Norway', label: 'Norway 🇳🇴' },
+  { value: 'Denmark', label: 'Denmark 🇩🇰' },
+  { value: 'Switzerland', label: 'Switzerland 🇨🇭' },
+  { value: 'Belgium', label: 'Belgium 🇧🇪' },
+  { value: 'Poland', label: 'Poland 🇵🇱' },
+  { value: 'Italy', label: 'Italy 🇮🇹' },
+  { value: 'South Africa', label: 'South Africa 🇿🇦' },
+  { value: 'Singapore', label: 'Singapore 🇸🇬' },
+  { value: 'Japan', label: 'Japan 🇯🇵' },
+  { value: 'South Korea', label: 'South Korea 🇰🇷' },
+  { value: 'Other', label: 'Other 🌍' },
 ];
 
-export default function IntakeForm({ service, preferredSpecialist }: IntakeFormProps) {
+function IntakeFormInner({ service, preferredSpecialist }: IntakeFormProps) {
   const router = useRouter();
+  const { lang, t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
-  const [countryCode, setCountryCode] = useState('+234');
+  const [countryCode, setCountryCode] = useState('+27');
   const [specialistName, setSpecialistName] = useState<string>('');
 
   useEffect(() => {
@@ -191,6 +213,7 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
           description: data.description,
           additionalData: {
             ...(preferredSpecialist ? { preferredSpecialist } : {}),
+            preferredLanguage: lang, // store client language preference
             // Score is silently attached — used by routing engine and pricing
             _eligibilityScore: undefined, // will be set after both complete
           },
@@ -283,8 +306,17 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
       {/* Step 1: Your Details */}
       {currentStep === 1 && (
         <div className="space-y-4">
+          {/* Language selector — always visible on step 1 */}
+          <div className="pb-2 border-b border-gray-100">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-500">{t('intake.language')}</span>
+            </div>
+            <LanguagePills />
+          </div>
+
           <div>
-            <Label htmlFor="applicantName">Full Name *</Label>
+            <Label htmlFor="applicantName">{t('intake.name')} *</Label>
             <Input
               id="applicantName"
               {...register('applicantName')}
@@ -296,7 +328,7 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
           </div>
 
           <div>
-            <Label htmlFor="applicantEmail">Email Address *</Label>
+            <Label htmlFor="applicantEmail">{t('intake.email')} *</Label>
             <Input
               id="applicantEmail"
               type="email"
@@ -309,7 +341,7 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
           </div>
 
           <div>
-            <Label htmlFor="applicantPhone">Phone (Optional)</Label>
+            <Label htmlFor="applicantPhone">{t('intake.phone')}</Label>
             <div className="flex gap-2">
               <Select value={countryCode} onValueChange={setCountryCode}>
                 <SelectTrigger className="w-32">
@@ -334,7 +366,7 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
           </div>
 
           <div>
-            <Label htmlFor="applicantCountry">Your Current Country *</Label>
+            <Label htmlFor="applicantCountry">{t('intake.currentCountry')} *</Label>
             <Select
               value={watch('applicantCountry') || ''}
               onValueChange={(value) => setValue('applicantCountry', value)}
@@ -588,14 +620,23 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
             {isSubmitting ? (
               <>
                 <span className="animate-spin mr-2">⏳</span>
-                Matching you with a specialist...
+                {t('intake.submitting')}
               </>
             ) : (
-              'Find My Specialist →'
+              t('intake.submit') + ' →'
             )}
           </Button>
         </div>
       )}
     </form>
+  );
+}
+
+// Wrap with LanguageProvider so the form is self-contained with language detection
+export default function IntakeForm(props: IntakeFormProps) {
+  return (
+    <LanguageProvider>
+      <IntakeFormInner {...props} />
+    </LanguageProvider>
   );
 }

@@ -26,9 +26,10 @@ model User {
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // NEW: Additional fields
-  phone     String? @db.VarChar(50)
-  avatarUrl String? @map("avatar_url") @db.VarChar(500)
-  isActive  Boolean @default(true) @map("is_active")
+  phone             String? @db.VarChar(50)
+  avatarUrl         String? @map("avatar_url") @db.VarChar(500)
+  isActive          Boolean @default(true) @map("is_active")
+  preferredLanguage String  @default("en") @map("preferred_language") @db.VarChar(10)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
