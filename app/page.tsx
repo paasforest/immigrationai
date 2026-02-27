@@ -5,16 +5,16 @@ import Link from 'next/link';
 import Script from 'next/script';
 import {
   Briefcase, Users, FileCheck, MessageSquare, Bell,
-  TrendingUp, Shield, Zap, Globe, ArrowRight,
+  TrendingUp, Globe, ArrowRight,
   Menu, X, CheckCircle, Building, Target,
-  Clock, BarChart3, Brain, Sparkles,
-  FolderOpen, Bot, ShieldCheck, FileText,
-  MapPin, Award, BookOpen, AlertTriangle,
-  CheckSquare, Inbox, ChevronDown, ChevronUp,
-  Phone, Star, Search,
+  BarChart3, Brain, Sparkles,
+  FolderOpen, Bot, ShieldCheck,
+  MapPin, Award,
+  CheckSquare, ChevronDown, ChevronUp,
+  Phone, Star, Search, AlertTriangle, Zap,
 } from 'lucide-react';
 
-// ─── JSON-LD Structured Data ────────────────────────────────────────────────
+// ─── JSON-LD Structured Data ──────────────────────────────────────────────
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
@@ -22,16 +22,11 @@ const organizationSchema = {
   url: 'https://www.immigrationai.co.za',
   logo: 'https://www.immigrationai.co.za/logo.png',
   description:
-    'South Africa\'s AI-powered immigration case management platform. Connecting applicants with verified immigration consultants and helping professionals manage cases with AI tools.',
-  areaServed: {
-    '@type': 'Country',
-    name: 'South Africa',
-  },
+    'AI-powered immigration case management platform for agencies, consultants, and lawyers worldwide. Handle immigration cases to any country with AI tools, client portals, and live regulation monitoring.',
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer support',
-    areaServed: 'ZA',
-    availableLanguage: ['English', 'Afrikaans'],
+    availableLanguage: ['English'],
   },
 };
 
@@ -53,66 +48,66 @@ const faqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'My South African visa was rejected — what can I do?',
+      name: 'My visa was rejected — what can I do?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'A visa rejection in South Africa is not the end. In most cases you can reapply or lodge an appeal. The first step is to understand the exact reason for rejection — this is stated in the rejection letter. Common reasons include insufficient funds, incomplete documentation, or ineligibility for the visa type applied for. A verified immigration professional can review your case and advise on the best path forward, whether that\'s an appeal, a fresh application, or applying for a different visa category.',
+        text: 'A visa rejection is not the end. Most rejections result from fixable documentation issues or eligibility gaps. The first step is to understand the exact rejection reason stated in the letter. A verified immigration professional can review your case, identify the problem, and advise whether to appeal or reapply with corrected documentation. ImmigrationAI connects you with verified professionals who specialise in visa appeals and reapplications.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How do I appeal a visa rejection in South Africa?',
+      name: 'What immigration destinations does ImmigrationAI support?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'To appeal a South African visa or permit rejection, you must submit a formal review application to the Department of Home Affairs (DHA) within 10 days of receiving the rejection notice. The appeal must address each reason for rejection with supporting documentation. Appeals are complex and the success rate is significantly higher when handled by a registered immigration practitioner. ImmigrationAI connects you with verified professionals who specialise in visa appeals.',
+        text: 'ImmigrationAI supports immigration cases to any country in the world. Our AI tools, document checklists, and case management system work for all major immigration destinations including UK, Canada, USA, Australia, Germany, Netherlands, UAE, New Zealand, South Africa, and all SADC countries. The platform is used by immigration agencies and consultants who handle multi-country portfolios.',
       },
     },
     {
       '@type': 'Question',
-      name: 'What are the requirements for a Critical Skills Visa in South Africa?',
+      name: 'What types of immigration professionals use ImmigrationAI?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The Critical Skills Visa requires a South African qualification or foreign equivalent assessed by SAQA, proof that your occupation appears on the Critical Skills List published by the DHA, a valid job offer or proof of self-employment, a certificate of evaluation from the relevant professional body (e.g., ECSA for engineers, HPCSA for health professionals), a valid passport, medical certificate, radiological report, police clearance, and biometric data. Requirements change periodically — a verified immigration consultant can confirm the current list for your specific occupation.',
+        text: 'ImmigrationAI is used by immigration agencies, solo immigration consultants, immigration lawyers, and registered immigration practitioners. Both large multi-country agencies and solo practitioners use the platform to manage cases, collaborate with clients, reduce paperwork errors, and stay ahead of regulation changes.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How long does a South African work permit take?',
+      name: 'How does the AI help prevent visa rejections?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Processing times vary by permit type and volume at Home Affairs. A General Work Permit or Critical Skills Visa typically takes between 8 and 12 weeks from submission, but can take longer during high-demand periods. Corporate Permits for large employers may take up to 6 months. Intra-Company Transfer Permits are generally faster at 6–8 weeks. A qualified immigration consultant can help ensure your application is error-free, which significantly reduces delays caused by requests for additional information (ROI letters).',
+        text: 'The platform\'s AI scans every case before submission: it generates a case-specific document checklist based on visa type, nationality, and application route; checks all submitted documents for inconsistencies (mismatched names, expired dates, conflicting data); scores the case for readiness; analyses prior rejection letters to identify exact failure points; and monitors official immigration sources for regulation changes that could affect pending cases.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Can I reapply for a South African visa immediately after rejection?',
+      name: 'Can I manage cases for multiple countries on one platform?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes — unlike some countries, South Africa does not impose a mandatory waiting period before reapplication after a rejection. However, reapplying with the same incomplete documentation will result in another rejection. You must address every reason cited in the rejection letter before reapplying. Working with a professional to identify and fix the gaps is strongly recommended before submitting a new application.',
+        text: 'Yes. ImmigrationAI is built for multi-country immigration practices. You can manage cases for UK, Canada, USA, Australia, South Africa, Germany, UAE, and any other destination from a single workspace. Each case tracks its own destination country, visa type, and specific requirements independently.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How do I find a verified immigration consultant or lawyer in South Africa?',
+      name: 'Does ImmigrationAI have a client portal?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'All immigration practitioners in South Africa must be registered with the Immigration Practitioners Association of South Africa (IPASA) or hold a valid attorney\'s certificate. ImmigrationAI\'s directory lists only practitioners who have submitted their credentials for verification. You can search by visa type, city (Johannesburg, Cape Town, Pretoria, Durban), and language. Visit immigrationai.co.za/find-a-specialist to find a verified professional near you.',
+        text: 'Yes. Every case includes a secure client portal where your client can track their application status, upload documents, and message your team directly — without emails or WhatsApp. Client accounts are free and scoped only to their cases.',
       },
     },
     {
       '@type': 'Question',
-      name: 'What is the difference between a spousal visa and a life partner visa in South Africa?',
+      name: 'What happens when immigration regulations change?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'A Spousal Visa is for foreign nationals legally married to a South African citizen or permanent resident. A Life Partner Visa is for those in a permanent same-sex or heterosexual relationship without legal marriage. Both allow the holder to live and work in South Africa, but the documentation required differs. The Life Partner Visa requires proof of a permanent partnership (cohabitation, financial co-dependency, etc.) rather than a marriage certificate. Both visas are initially valid for 2 years and are renewable.',
+        text: 'Our system continuously monitors official government and visa authority sources across all supported countries. When a change is detected on a monitored source, it identifies which active cases may be affected and alerts the responsible practitioner immediately — so you can adjust before the change causes a problem for your client.',
       },
     },
     {
       '@type': 'Question',
-      name: 'What documents do I need for a South African study visa?',
+      name: 'How do I find a verified immigration consultant?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'For a South African Study Visa you need: an unconditional letter of acceptance from a registered South African educational institution, proof of payment of fees or a financial guarantee, a medical certificate and radiological report, police clearance from your country of origin, a valid passport (valid for at least 30 days beyond your intended departure), proof of medical cover, and completed BI-1739 application form. If you are under 18, parental consent (BI-829) and a birth certificate are also required.',
+        text: 'ImmigrationAI maintains a directory of verified immigration professionals. All listed practitioners have submitted their credentials for review. You can search by visa type specialty, destination country, city, and language. Visit immigrationai.co.za/find-a-specialist to find a verified professional.',
       },
     },
   ],
@@ -129,49 +124,49 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ─── Benefits (outcome-focused, no internal mechanism names) ──────────────
+  // ─── Why practitioners choose us (outcome-focused) ────────────────────
   const benefits = [
     {
       icon: <AlertTriangle className="w-6 h-6" />,
-      title: 'Stop Losing Cases to Paperwork Errors',
+      title: 'Stop Losing Cases to Preventable Errors',
       description:
-        'The majority of South African visa rejections are caused by avoidable document mistakes. Our AI scans every case for errors, expired dates, and missing items before your client pays the price.',
+        'The majority of visa rejections worldwide are caused by avoidable document mistakes. Our AI scans every case for errors, inconsistencies, and missing items before your client pays the price of a rejection.',
       stat: '73%',
-      statLabel: 'of SA visa rejections involve fixable errors',
+      statLabel: 'of visa rejections involve fixable errors',
     },
     {
       icon: <FileCheck className="w-6 h-6" />,
-      title: 'Know Exactly What\'s Needed — Per Case',
+      title: 'Case-Specific Checklists for Every Destination',
       description:
-        'No more generic checklists. Every case gets a tailored document list based on the specific visa type, nationality, employment history, and application route — automatically.',
-      stat: '40%',
-      statLabel: 'faster case preparation reported by practitioners',
+        'No more generic lists. Every case gets a tailored document checklist based on the specific visa category, destination country, nationality, employment history, and application route — generated automatically.',
+      stat: '100+',
+      statLabel: 'visa types and destinations supported',
     },
     {
       icon: <Bell className="w-6 h-6" />,
-      title: 'Never Be Caught Off-Guard by Regulation Changes',
+      title: 'Never Miss a Regulation Change',
       description:
-        'South African immigration rules change without warning. Our system monitors all official government and VFS sources and alerts you the moment something changes that affects your active cases.',
+        'Immigration rules change without warning across every country. Our system monitors official government and visa authority sources and alerts you the moment something changes that could affect your active cases.',
       stat: '24h',
-      statLabel: 'average time to alert on official source changes',
+      statLabel: 'average time to alert on source changes',
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: 'Know a Case\'s Chances Before You File',
+      title: 'Know a Case\'s Strength Before You File',
       description:
-        'Get a readiness score for every case before submission. Identify weak spots, missing documentation, and risk factors — so you submit with confidence, not hope.',
+        'Get a readiness score for every case before submission. See exactly what\'s missing, what\'s weak, and what\'s strong — so you submit with confidence, not guesswork.',
       stat: '87%',
       statLabel: 'average readiness score for approved applications',
     },
   ];
 
-  // ─── Platform tools (outcome-focused) ────────────────────────────────────
+  // ─── Platform tools ───────────────────────────────────────────────────
   const platformFeatures = [
     {
       icon: <FolderOpen className="w-6 h-6" />,
       title: 'Full Case Lifecycle Management',
       description:
-        'Track every case from the first inquiry to final approval. Deadlines, documents, status, team assignments — all in one place, with a complete audit trail.',
+        'Track every case from first inquiry to final decision. Documents, deadlines, team assignments, and status — all in one place with a complete audit trail.',
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -183,29 +178,29 @@ export default function HomePage() {
       icon: <MessageSquare className="w-6 h-6" />,
       title: 'Client Portal & Secure Messaging',
       description:
-        'Clients track progress, upload documents, and message your team in real-time through their own secure portal — no WhatsApp or email needed.',
+        'Clients track progress, upload documents, and message your team in real-time through their own secure portal. No WhatsApp threads or lost emails.',
     },
     {
       icon: <CheckSquare className="w-6 h-6" />,
-      title: 'Task Management & Deadlines',
+      title: 'Task Management & Deadline Tracking',
       description:
-        'Create and assign tasks against each case. Automated reminders ensure nothing slips through the cracks as submission deadlines approach.',
+        'Create and assign tasks against each case. Automated reminders ensure nothing slips through as submission deadlines approach.',
     },
     {
       icon: <MapPin className="w-6 h-6" />,
       title: 'VAC Appointment Tracking',
       description:
-        'Track visa application centre availability and estimated wait times across Southern and Eastern Africa — right inside your case workflow.',
+        'Track visa application centre availability and estimated wait times across Africa, Asia, and Europe — directly inside your case workflow.',
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
       title: 'Practice Analytics',
       description:
-        'See your success rates, average case duration, and workload distribution. Understand which visa types you\'re winning and where to focus.',
+        'See your success rates, case durations, and workload by destination country. Understand where your practice excels and where to focus.',
     },
   ];
 
-  // ─── Audience cards (no internal details, no pricing) ─────────────────────
+  // ─── Audience cards (outcome-focused, no internal details) ───────────
   const audiences = [
     {
       title: 'Immigration Agencies',
@@ -213,11 +208,11 @@ export default function HomePage() {
       color: 'from-[#0F2557] to-blue-700',
       points: [
         'Manage all your cases in one workspace',
+        'Multi-country and multi-visa-type support',
         'AI catches errors before they cause rejections',
-        'Your whole team collaborates on cases',
+        'Your whole team collaborates on every case',
         'Clients get their own secure tracking portal',
-        'Regulation change alerts keep you ahead',
-        'Full practice analytics and reporting',
+        'Regulation alerts across all your destinations',
       ],
       cta: 'Start Free Trial',
       href: '/auth/signup',
@@ -227,10 +222,10 @@ export default function HomePage() {
       icon: <Award className="w-8 h-8" />,
       color: 'from-amber-500 to-orange-500',
       points: [
-        'Run your practice without the overhead',
-        'AI tools that make you look like a team of five',
-        'Client portal for document uploads and updates',
-        'Rejection analysis to win resubmissions',
+        'Run your practice without the overhead of enterprise tools',
+        'AI tools that make you work like a team of five',
+        'Client portal for document uploads and case updates',
+        'Rejection analysis to win difficult resubmissions',
         'Join our verified professionals directory',
         'Receive matched client enquiries',
       ],
@@ -238,14 +233,14 @@ export default function HomePage() {
       href: '/auth/signup',
     },
     {
-      title: 'Visa Applicants',
+      title: 'For Applicants',
       icon: <Globe className="w-8 h-8" />,
       color: 'from-green-500 to-teal-600',
       points: [
         'Visa rejected? Get expert help today',
-        'Find a verified SA immigration specialist',
-        'Filter by visa type, city, and language',
-        'Track your application in real-time',
+        'Find a verified immigration professional',
+        'Filter by destination country, visa type, and language',
+        'Track your application status in real-time',
         'Secure document sharing with your consultant',
         'Direct messaging — no lost emails',
       ],
@@ -254,81 +249,69 @@ export default function HomePage() {
     },
   ];
 
-  // ─── Visa types (SEO keyword rich) ───────────────────────────────────────
-  const visaTypes = [
-    'Critical Skills Visa', 'General Work Permit', 'Business Visa',
-    'Study Visa', 'Spousal / Life Partner Visa', 'Retired Person Visa',
-    'Corporate Permit', 'Asylum / Refugee Status', 'Zimbabwe Exemption Permit',
-    'Lesotho & eSwatini Exemption', 'SADC Permits', 'Intra-Company Transfer',
-    'Visitor\'s Visa Extension', 'Permanent Residence', 'Appeals & Reviews',
+  // ─── Supported destinations (ticker) ─────────────────────────────────
+  const destinations = [
+    '🇬🇧 United Kingdom', '🇨🇦 Canada', '🇺🇸 United States', '🇦🇺 Australia',
+    '🇩🇪 Germany', '🇳🇱 Netherlands', '🇿🇦 South Africa', '🇦🇪 UAE',
+    '🇳🇿 New Zealand', '🇮🇪 Ireland', '🇵🇹 Portugal', '🇿🇼 Zimbabwe',
+    '🇿🇲 Zambia', '🇿🇼 Zimbabwe', '🇲🇿 Mozambique', '🇧🇼 Botswana',
+    '🇸🇬 Singapore', '🇯🇵 Japan', '🇳🇱 Schengen Area', '🇫🇷 France',
   ];
 
-  // ─── FAQ (targets high-volume search queries) ────────────────────────────
+  // ─── FAQ (high-search-volume queries) ────────────────────────────────
   const faqs = [
     {
-      question: 'My South African visa was rejected — what can I do?',
+      question: 'My visa was rejected — what can I do?',
       answer:
-        'A rejection is not the end. Most rejections are the result of fixable documentation issues or eligibility gaps — not permanent bars. The first step is to understand the exact rejection reason stated in the letter. A verified immigration professional can review your case, identify the specific problem, and advise whether to appeal or reapply with corrected documentation.',
+        'A rejection is not the end. Most rejections are the result of fixable documentation issues or eligibility gaps. The first step is to understand the exact rejection reason stated in the letter. A verified immigration professional can review your case, identify the specific problem, and advise whether to appeal or reapply. ImmigrationAI connects you with verified professionals who specialise in visa appeals.',
     },
     {
-      question: 'How do I appeal a South African visa or permit rejection?',
+      question: 'What immigration destinations does the platform support?',
       answer:
-        'You have 10 days from the date of rejection to lodge a formal review with the Department of Home Affairs. The review must directly address each stated reason for rejection with supporting evidence. Appeals handled by a registered practitioner have a significantly higher success rate. Our directory can connect you with specialists who focus on visa appeals.',
+        'ImmigrationAI supports cases to any country in the world. Our AI tools, document checklists, and case logic work for all major destinations — UK, Canada, USA, Australia, Germany, Netherlands, South Africa, UAE, New Zealand, and more. Professionals handling multi-country portfolios can manage all their cases in one workspace.',
     },
     {
-      question: 'What documents are required for a Critical Skills Visa in South Africa?',
+      question: 'What types of immigration professionals use ImmigrationAI?',
       answer:
-        'Requirements include: proof your occupation is on the current Critical Skills List, a SAQA evaluation of your qualifications, a certificate from the relevant professional body (e.g. ECSA, HPCSA, SACAP), valid job offer or proof of self-employment, medical and radiological certificates, police clearance, and a valid passport. The list changes — always confirm current requirements with a qualified practitioner before applying.',
+        'The platform is used by immigration agencies, solo immigration consultants, immigration lawyers, and registered immigration practitioners. Whether you\'re handling 5 cases or 500, the tools scale with your practice.',
     },
     {
-      question: 'How long does a South African work permit take to process?',
+      question: 'How does the AI help prevent visa rejections?',
       answer:
-        'A General Work Permit or Critical Skills Visa typically takes 8–12 weeks. Intra-Company Transfers are usually faster at 6–8 weeks. Corporate Permits for qualifying companies can take up to 6 months. Incomplete applications trigger a Request for Information letter which significantly extends the timeline — which is why error-checking before submission matters so much.',
+        'The AI generates a case-specific document checklist, checks all uploaded documents for inconsistencies (mismatched names, expired dates, conflicting data), scores the case for readiness before submission, and analyses prior rejection letters to identify exact failure points. It also monitors official sources across all supported countries for regulation changes that could affect your active cases.',
     },
     {
-      question: 'Can I reapply immediately after a South African visa rejection?',
+      question: 'Can I manage cases for multiple countries on one platform?',
       answer:
-        'Yes. South Africa does not impose a waiting period between rejection and reapplication. However, reapplying with the same documentation will result in another rejection. Every reason stated in your rejection letter must be addressed with new supporting evidence before you resubmit.',
+        'Yes. ImmigrationAI is built for multi-country practices. You can manage UK, Canada, South Africa, UAE, and any other destination cases from a single workspace. Each case tracks its own destination, visa type, and specific requirements independently.',
     },
     {
-      question: 'How do I find a verified immigration consultant or lawyer in South Africa?',
+      question: 'Does my client need an account?',
       answer:
-        'All practising immigration consultants must be registered with IPASA (Immigration Practitioners Association of South Africa) or hold a valid legal practising certificate. Our directory lists only professionals who have submitted credentials for verification. You can filter by visa type specialty, city (Johannesburg, Cape Town, Pretoria, Durban), and language.',
+        'Yes, but client accounts are free. You invite them by email. They create a portal account and can then upload documents, track their application status, and message your team — all scoped only to their case. No access to other cases or sensitive practice data.',
     },
     {
-      question: 'Is this platform only for South African immigration?',
+      question: 'What happens when immigration regulations change?',
       answer:
-        'The platform is built primarily for South African and SADC-region immigration. All AI tools, visa rules, and case logic are calibrated for South African DHA and VFS Global Africa requirements. We cover every South African visa category and all major SADC permit types.',
+        'Our system continuously monitors official government and visa authority sources across all supported countries. When a change is detected, it identifies which active cases may be affected and alerts the responsible practitioner — so you can adjust before the change causes a rejection for your client.',
     },
     {
-      question: 'What if immigration regulations change after I submit?',
+      question: 'How do I get started?',
       answer:
-        'Our system continuously monitors all official government and VFS sources. When a change is detected, it immediately identifies which active cases may be affected and alerts the responsible practitioner — so you can adjust before the change causes a problem for your client.',
+        'Sign up for a 14-day free trial — no credit card required. You\'ll be guided through creating your practice workspace, inviting your team, and setting up your first case. We also offer live demo sessions for larger agencies. Payment is by EFT/bank transfer only.',
     },
   ];
 
   return (
     <>
       {/* JSON-LD Structured Data */}
-      <Script
-        id="organization-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <Script
-        id="website-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <Script
-        id="faq-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <Script id="org-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+      <Script id="web-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+      <Script id="faq-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <div className="min-h-screen bg-white">
 
-        {/* ─── NAV ──────────────────────────────────────────────────────────── */}
+        {/* ─── NAV ────────────────────────────────────────────────────────── */}
         <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           scrolled ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100' : 'bg-transparent'
         }`}>
@@ -343,7 +326,7 @@ export default function HomePage() {
 
               <div className="hidden md:flex items-center space-x-7">
                 <a href="#how-we-help" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">How We Help</a>
-                <a href="#visa-types" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Visa Types</a>
+                <a href="#who-its-for" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Who It's For</a>
                 <a href="#faq" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">FAQ</a>
                 <Link href="/find-a-specialist" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Find a Specialist</Link>
                 <Link href="/auth/login" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Log In</Link>
@@ -364,7 +347,7 @@ export default function HomePage() {
               <div className="md:hidden bg-white border rounded-xl shadow-xl mt-2 py-3">
                 {[
                   { href: '#how-we-help', label: 'How We Help' },
-                  { href: '#visa-types', label: 'Visa Types' },
+                  { href: '#who-its-for', label: 'Who It\'s For' },
                   { href: '#faq', label: 'FAQ' },
                   { href: '/find-a-specialist', label: 'Find a Specialist' },
                   { href: '/auth/login', label: 'Log In' },
@@ -383,53 +366,53 @@ export default function HomePage() {
           </nav>
         </header>
 
-        {/* ─── HERO ─────────────────────────────────────────────────────────── */}
+        {/* ─── HERO ───────────────────────────────────────────────────────── */}
         <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#0F2557] via-[#1a3570] to-[#0d1e45]">
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 bg-amber-400/10 border border-amber-400/30 text-amber-300 px-4 py-2 rounded-full mb-6 text-sm font-medium">
                   <Sparkles className="w-4 h-4" />
-                  Built for South Africa's Immigration Professionals
+                  For Immigration Agencies &amp; Professionals Worldwide
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                  Visa Rejected?
-                  <span className="text-amber-400"> Application</span>
-                  <br />Stalled?
+                  The AI Platform
+                  <span className="text-amber-400"> Immigration </span>
+                  Professionals Trust
                 </h1>
 
                 <p className="text-lg text-blue-100 mb-4 leading-relaxed max-w-xl">
-                  Connect with a <strong className="text-white">verified South African immigration professional</strong> — or if you're a practitioner, run your entire practice with AI tools that prevent rejections before they happen.
+                  Manage immigration cases to <strong className="text-white">any country</strong> from one workspace. AI tools that prevent rejections, a full case management suite, client portals, and live regulation monitoring — built for agencies and consultants who handle real-world immigration every day.
                 </p>
 
                 <p className="text-sm text-blue-300 mb-8 max-w-xl">
-                  Critical Skills Visa · Work Permits · Spousal Visas · Study Visas · Corporate Permits · Appeals & Rejections — all covered.
+                  UK · Canada · USA · Australia · Germany · South Africa · UAE · New Zealand · Schengen and beyond.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <Link
-                    href="/find-a-specialist"
+                    href="/auth/signup"
                     className="bg-amber-400 text-[#0F2557] px-8 py-4 rounded-xl text-base font-bold hover:bg-amber-300 transition-colors flex items-center justify-center gap-2"
                   >
-                    Find a Specialist <ArrowRight className="w-5 h-5" />
+                    Start Free Trial <ArrowRight className="w-5 h-5" />
                   </Link>
-                  <Link
-                    href="/auth/signup"
+                  <a
+                    href="mailto:hello@immigrationai.co.za"
                     className="border border-white/30 text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                   >
-                    I'm a Professional
-                  </Link>
+                    <Phone className="w-5 h-5" /> Book a Demo
+                  </a>
                 </div>
 
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-blue-200">
-                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Verified professionals only</span>
-                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> All SA visa categories</span>
-                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Johannesburg · Cape Town · Durban · Pretoria</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> All immigration destinations</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> 14-day free trial</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> No card needed</span>
                 </div>
               </div>
 
-              {/* Case readiness preview card */}
+              {/* Case readiness preview */}
               <div className="hidden lg:block">
                 <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
@@ -457,7 +440,7 @@ export default function HomePage() {
                     ))}
                   </div>
                   <div className="pt-2 border-t border-white/10">
-                    <p className="text-xs text-blue-200">Critical Skills Visa — ZA Application</p>
+                    <p className="text-xs text-blue-200">Skilled Worker Visa — 🇬🇧 United Kingdom</p>
                   </div>
                 </div>
               </div>
@@ -465,13 +448,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── VISA TYPE TICKER ─────────────────────────────────────────────── */}
-        <section id="visa-types" className="bg-[#0a1d42] py-4 overflow-hidden">
+        {/* ─── DESTINATION TICKER ─────────────────────────────────────────── */}
+        <section className="bg-[#0a1d42] py-4 overflow-hidden">
           <div className="relative flex gap-8 whitespace-nowrap">
-            <div className="flex gap-8 items-center animate-[marquee_30s_linear_infinite]">
-              {[...visaTypes, ...visaTypes].map((v, i) => (
-                <React.Fragment key={`${v}-${i}`}>
-                  <span className="text-blue-300 text-sm font-medium">{v}</span>
+            <div className="flex gap-8 items-center animate-[marquee_35s_linear_infinite]">
+              {[...destinations, ...destinations].map((d, i) => (
+                <React.Fragment key={`${d}-${i}`}>
+                  <span className="text-blue-300 text-sm font-medium">{d}</span>
                   <span className="text-amber-400 text-xs">·</span>
                 </React.Fragment>
               ))}
@@ -479,12 +462,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── TRUST BAR ────────────────────────────────────────────────────── */}
+        {/* ─── TRUST BAR ──────────────────────────────────────────────────── */}
         <section className="py-10 px-4 bg-white border-b border-gray-100">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { stat: '15+', label: 'SA Visa Types Supported' },
-              { stat: '100%', label: 'Verified Professionals' },
+              { stat: '100+', label: 'Visa Types & Routes Supported' },
+              { stat: 'Any', label: 'Destination Country' },
               { stat: 'AI', label: 'Powered Error Detection' },
               { stat: '24h', label: 'Regulation Change Alerts' },
             ].map((item) => (
@@ -496,7 +479,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── FIND A SPECIALIST CTA (applicant capture) ────────────────────── */}
+        {/* ─── APPLICANT CAPTURE SECTION ──────────────────────────────────── */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-amber-50 border-b border-amber-100">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full mb-6 text-sm font-semibold">
@@ -504,10 +487,10 @@ export default function HomePage() {
               For Visa Applicants
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Visa Rejected? Don't Navigate This Alone.
+              Visa Rejected? Application Delayed?
             </h2>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              South African immigration law is complex and changes frequently. A verified professional who knows your visa category can mean the difference between another rejection and a successful application.
+              Immigration law is complex and changes constantly. A verified professional who knows your destination country and visa category can mean the difference between another rejection and a successful application.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -516,20 +499,11 @@ export default function HomePage() {
               >
                 Find a Verified Specialist <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link
-                href="/find-a-specialist"
-                className="border-2 border-[#0F2557] text-[#0F2557] px-8 py-4 rounded-xl font-semibold hover:bg-[#0F2557]/5 transition-colors flex items-center justify-center gap-2 text-base"
-              >
-                <MapPin className="w-5 h-5" /> Search by City
-              </Link>
             </div>
-            <p className="text-sm text-gray-500 mt-4">
-              Available in Johannesburg · Cape Town · Pretoria · Durban · and across South Africa
-            </p>
           </div>
         </section>
 
-        {/* ─── HOW WE HELP (benefits / outcomes) ───────────────────────────── */}
+        {/* ─── BENEFITS (HOW WE HELP) ──────────────────────────────────────── */}
         <section id="how-we-help" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -537,10 +511,10 @@ export default function HomePage() {
                 <Bot className="w-4 h-4" /> For Immigration Professionals
               </div>
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Built to Prevent Rejections,<br />Not Just Manage Cases
+                Built to Prevent Rejections,<br />Not Just Track Cases
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Every case on ImmigrationAI benefits from AI that knows South African immigration law, works automatically in the background, and alerts you before problems become rejections.
+                Every case benefits from AI that knows immigration rules across all major countries, works automatically in the background, and alerts you before problems become rejections.
               </p>
             </div>
 
@@ -566,7 +540,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── PLATFORM TOOLS ───────────────────────────────────────────────── */}
+        {/* ─── PLATFORM TOOLS ─────────────────────────────────────────────── */}
         <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -577,7 +551,7 @@ export default function HomePage() {
                 Everything to Run a Professional Practice
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Not just a case tracker — a complete operating system for immigration practitioners. From first inquiry to approval letter.
+                Not just a case tracker — a complete operating system for immigration professionals. From first inquiry to approval letter, across every destination country.
               </p>
             </div>
 
@@ -597,12 +571,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── THREE AUDIENCES ──────────────────────────────────────────────── */}
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        {/* ─── THREE AUDIENCES ─────────────────────────────────────────────── */}
+        <section id="who-its-for" className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">Who Uses ImmigrationAI?</h2>
-              <p className="text-xl text-gray-600">Whether you're handling cases or going through one — we've got you.</p>
+              <p className="text-xl text-gray-600">Whether you manage cases or you're going through one — we've got you.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -636,18 +610,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── PROFESSIONAL CTA (dark) ───────────────────────────────────────── */}
+        {/* ─── PROFESSIONAL CTA ────────────────────────────────────────────── */}
         <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F2557]">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-4 py-2 rounded-full mb-6 text-sm font-semibold">
-              <Star className="w-4 h-4" />
-              For Immigration Professionals
+              <Star className="w-4 h-4" /> For Immigration Professionals
             </div>
             <h2 className="text-4xl font-bold text-white mb-4">
               Ready to Run a Smarter Practice?
             </h2>
             <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-              Join South Africa's growing network of immigration professionals using AI to handle more cases, prevent rejections, and deliver better client outcomes.
+              Join immigration professionals using AI to handle more cases, prevent rejections, and deliver better outcomes — across every destination country.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -664,20 +637,20 @@ export default function HomePage() {
               </a>
             </div>
             <p className="text-sm text-blue-300 mt-6">
-              14-day free trial · No credit card · EFT payment only · Cancel anytime
+              14-day free trial · No credit card · EFT payment · Cancel anytime
             </p>
           </div>
         </section>
 
-        {/* ─── FAQ ──────────────────────────────────────────────────────────── */}
+        {/* ─── FAQ ─────────────────────────────────────────────────────────── */}
         <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Common Questions About South African Visas
+                Common Questions
               </h2>
               <p className="text-xl text-gray-600">
-                Answers to what immigration applicants and professionals ask most.
+                What immigration professionals and applicants ask most.
               </p>
             </div>
 
@@ -708,18 +681,18 @@ export default function HomePage() {
             </div>
 
             <div className="text-center mt-12">
-              <p className="text-gray-600 mb-4">Have a specific question about your situation?</p>
+              <p className="text-gray-600 mb-4">Looking for help with a specific visa or country?</p>
               <Link
                 href="/find-a-specialist"
                 className="inline-flex items-center gap-2 bg-[#0F2557] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#1a3570] transition-colors"
               >
-                Talk to a Verified Specialist <ArrowRight className="w-4 h-4" />
+                Find a Verified Specialist <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
         </section>
 
-        {/* ─── FOOTER ───────────────────────────────────────────────────────── */}
+        {/* ─── FOOTER ──────────────────────────────────────────────────────── */}
         <footer className="bg-gray-900 text-gray-400 py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-4 gap-8 mb-12">
@@ -731,7 +704,7 @@ export default function HomePage() {
                   <span className="text-xl font-bold text-white">ImmigrationAI</span>
                 </div>
                 <p className="text-sm leading-relaxed max-w-xs">
-                  South Africa's AI-powered immigration platform. Connecting applicants with verified professionals and helping practitioners deliver better outcomes.
+                  The AI-powered immigration case management platform for agencies and professionals worldwide. Handle cases to any country from one workspace.
                 </p>
               </div>
               <div>
@@ -739,9 +712,8 @@ export default function HomePage() {
                 <ul className="space-y-2 text-sm">
                   <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Find a Specialist</Link></li>
                   <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Visa Rejection Help</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Critical Skills Visa</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Work Permit Help</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Spousal Visa Help</Link></li>
+                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Immigration Consultant</Link></li>
+                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Immigration Lawyer</Link></li>
                 </ul>
               </div>
               <div>
@@ -755,22 +727,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* SEO footer keywords */}
+            {/* SEO keyword links */}
             <div className="border-t border-gray-800 pt-8">
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-6 text-xs text-gray-600">
                 {[
-                  'Critical Skills Visa South Africa',
-                  'Work Permit South Africa',
-                  'Spousal Visa South Africa',
-                  'Visa Rejection South Africa',
-                  'Immigration Consultant Johannesburg',
-                  'Immigration Consultant Cape Town',
-                  'Immigration Consultant Pretoria',
-                  'Business Visa South Africa',
-                  'Study Visa South Africa',
-                  'SADC Permits',
-                  'Corporate Permit South Africa',
-                  'Permanent Residence South Africa',
+                  'Immigration Case Management Software', 'Visa Rejection Help',
+                  'Immigration Consultant', 'Immigration Lawyer',
+                  'UK Visa Application', 'Canada Immigration',
+                  'Australia Visa', 'South Africa Immigration',
+                  'Germany Immigration', 'UAE Visa',
+                  'Work Permit Application', 'Skilled Worker Visa',
+                  'Spousal Visa Application', 'Study Visa',
+                  'Immigration Agency Software', 'Visa Application Management',
                 ].map((kw) => (
                   <span key={kw}>{kw}</span>
                 ))}

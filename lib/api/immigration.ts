@@ -758,6 +758,60 @@ export const immigrationApi = {
     return apiClient.post('/api/ai/improve-document', data);
   },
 
+  // ============================================
+  // PROFESSIONAL VERIFICATION
+  // ============================================
+
+  async uploadVerificationDoc(formData: FormData): Promise<ApiResponse<{ verificationDocUrl: string }>> {
+    const token = apiClient.getToken();
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const response = await fetch(`${API_URL}/api/intake/profile/upload-verification`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      const text = await response.text();
+      let parsed: any;
+      try { parsed = text ? JSON.parse(text) : {}; } catch { parsed = { message: text }; }
+      if (!response.ok) return { success: false, error: parsed.error || parsed.message || 'Upload failed' };
+      return { success: true, data: parsed.data || parsed, message: parsed.message };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Upload failed' };
+    }
+  },
+
+  // ============================================
+  // PAYMENT PROOF
+  // ============================================
+
+  async uploadPaymentProof(formData: FormData): Promise<ApiResponse<any>> {
+    const token = apiClient.getToken();
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const response = await fetch(`${API_URL}/api/payment-proof/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      const text = await response.text();
+      let parsed: any;
+      try { parsed = text ? JSON.parse(text) : {}; } catch { parsed = { message: text }; }
+      if (!response.ok) return { success: false, error: parsed.error || parsed.message || 'Upload failed' };
+      return { success: true, data: parsed.data || parsed, message: parsed.message };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Upload failed' };
+    }
+  },
+
+  async getPaymentProofStatus(): Promise<ApiResponse<{ status: string; proofs: any[] }>> {
+    return apiClient.get('/api/payment-proof/status');
+  },
+
   // Pre-Document Intelligence: AI-powered, case-specific required document list
   async getPreDocRequirements(data: {
     caseId?: string;

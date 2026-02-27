@@ -38,7 +38,7 @@ export async function createTask(req: Request, res: Response): Promise<void> {
       data: {
         caseId,
         organizationId,
-        createdById: user.id,
+        createdById: user.userId,
         title,
         description,
         priority,
@@ -64,8 +64,8 @@ export async function createTask(req: Request, res: Response): Promise<void> {
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
-        action: 'task_created',
+        userId: user.userId,
+          action: 'task_created',
         resourceType: 'task',
         resourceId: task.id,
         metadata: {
@@ -77,7 +77,7 @@ export async function createTask(req: Request, res: Response): Promise<void> {
     });
 
     // Create notification if task is assigned to someone
-    if (assignedToId && assignedToId !== user.id) {
+    if (assignedToId && assignedToId !== user.userId) {
       try {
         const { createNotification } = await import('./notificationController');
         await createNotification({
@@ -233,7 +233,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
       await prisma.auditLog.create({
         data: {
           organizationId,
-          userId: user.id,
+          userId: user.userId,
           action: 'task_status_changed',
           resourceType: 'task',
           resourceId: id,
@@ -296,8 +296,8 @@ export async function deleteTask(req: Request, res: Response): Promise<void> {
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
-        action: 'task_deleted',
+        userId: user.userId,
+          action: 'task_deleted',
         resourceType: 'task',
         resourceId: id,
         metadata: { title: task.title },
@@ -347,7 +347,7 @@ export async function getUpcomingDeadlines(req: Request, res: Response): Promise
 
     // Professional sees only their assigned tasks
     if (organizationRole === 'professional') {
-      where.assignedToId = user.id;
+      where.assignedToId = user.userId;
     }
 
     // Get tasks

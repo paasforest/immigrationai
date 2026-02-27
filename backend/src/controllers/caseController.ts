@@ -71,7 +71,7 @@ export async function createCaseHandler(req: Request, res: Response): Promise<vo
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'case_created',
         resourceType: 'case',
         resourceId: newCase.id,
@@ -129,7 +129,7 @@ export async function getCases(req: Request, res: Response): Promise<void> {
 
     // Applicant can only see their own cases
     if (organizationRole === 'applicant') {
-      filters.applicantId = user.id;
+      filters.applicantId = user.userId;
     }
 
     // Get cases using scoped helper
@@ -185,7 +185,7 @@ export async function getCaseByIdHandler(req: Request, res: Response): Promise<v
     }
 
     // Applicant can only access their own case
-    if (organizationRole === 'applicant' && caseData.applicantId !== user.id) {
+    if (organizationRole === 'applicant' && caseData.applicantId !== user.userId) {
       throw new AppError('Access denied: You can only view your own cases', 403);
     }
 
@@ -279,7 +279,7 @@ export async function updateCaseHandler(req: Request, res: Response): Promise<vo
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'case_updated',
         resourceType: 'case',
         resourceId: id,
@@ -374,7 +374,7 @@ export async function deleteCaseHandler(req: Request, res: Response): Promise<vo
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'case_closed',
         resourceType: 'case',
         resourceId: id,
@@ -416,7 +416,7 @@ export async function getCaseStats(req: Request, res: Response): Promise<void> {
 
     // Professional sees only their assigned cases
     if (organizationRole === 'professional') {
-      where.assignedProfessionalId = user.id;
+      where.assignedProfessionalId = user.userId;
     }
 
     // Get all cases for stats
@@ -487,7 +487,7 @@ export async function getApplicantDashboard(req: Request, res: Response): Promis
     const activeCases = await prisma.case.findMany({
       where: {
         organizationId,
-        applicantId: user.id,
+        applicantId: user.userId,
         status: { not: 'closed' },
       },
       include: {
@@ -510,7 +510,7 @@ export async function getApplicantDashboard(req: Request, res: Response): Promis
       where: {
         organizationId,
         case: {
-          applicantId: user.id,
+          applicantId: user.userId,
         },
       },
       include: {
@@ -527,7 +527,7 @@ export async function getApplicantDashboard(req: Request, res: Response): Promis
       where: {
         organizationId,
         case: {
-          applicantId: user.id,
+          applicantId: user.userId,
         },
       },
       include: {
@@ -561,10 +561,10 @@ export async function getApplicantDashboard(req: Request, res: Response): Promis
       where: {
         organizationId,
         case: {
-          applicantId: user.id,
+          applicantId: user.userId,
         },
         readAt: null,
-        senderId: { not: user.id },
+        senderId: { not: user.userId },
         isInternal: false, // Applicants don't see internal messages
       },
     });
@@ -577,7 +577,7 @@ export async function getApplicantDashboard(req: Request, res: Response): Promis
       where: {
         organizationId,
         case: {
-          applicantId: user.id,
+          applicantId: user.userId,
         },
         dueDate: {
           lte: fourteenDaysFromNow,

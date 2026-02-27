@@ -14,7 +14,7 @@ export async function getNotifications(req: Request, res: Response): Promise<voi
     const skip = (Number(page) - 1) * Number(limit);
 
     const where: any = {
-      userId: user.id,
+      userId: user.userId,
       organizationId,
     };
 
@@ -70,7 +70,7 @@ export async function markNotificationRead(req: Request, res: Response): Promise
       // Mark all user's notifications as read
       const result = await prisma.notification.updateMany({
         where: {
-          userId: user.id,
+          userId: user.userId,
           organizationId,
           isRead: false,
         },
@@ -90,7 +90,7 @@ export async function markNotificationRead(req: Request, res: Response): Promise
       const notification = await prisma.notification.findFirst({
         where: {
           id,
-          userId: user.id,
+          userId: user.userId,
           organizationId,
         },
       });

@@ -89,7 +89,7 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
       data: {
         caseId,
         organizationId,
-        uploadedById: user.id,
+        uploadedById: user.userId,
         name: name || req.file.originalname,
         category: category || 'supporting',
         fileUrl: req.file.path,
@@ -122,7 +122,7 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'document_uploaded',
         resourceType: 'case_document',
         resourceId: document.id,
@@ -199,7 +199,7 @@ export async function getDocumentsByCase(req: Request, res: Response): Promise<v
     }
 
     // Applicant can only see documents for their own case
-    if (organizationRole === 'applicant' && caseData.applicantId !== user.id) {
+    if (organizationRole === 'applicant' && caseData.applicantId !== user.userId) {
       throw new AppError('Access denied: You can only view documents for your own case', 403);
     }
 
@@ -296,7 +296,7 @@ export async function updateDocument(req: Request, res: Response): Promise<void>
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'document_updated',
         resourceType: 'case_document',
         resourceId: id,
@@ -359,7 +359,7 @@ export async function deleteDocument(req: Request, res: Response): Promise<void>
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'document_deleted',
         resourceType: 'case_document',
         resourceId: id,
@@ -409,7 +409,7 @@ export async function getDocumentDownload(req: Request, res: Response): Promise<
     }
 
     // Applicant can only download documents for their own case
-    if (organizationRole === 'applicant' && document.case.applicantId !== user.id) {
+    if (organizationRole === 'applicant' && document.case.applicantId !== user.userId) {
       throw new AppError('Access denied: You can only download documents for your own case', 403);
     }
 

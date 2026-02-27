@@ -133,7 +133,7 @@ export async function createChecklist(req: Request, res: Response): Promise<void
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'checklist_created',
         resourceType: 'document_checklist',
         resourceId: checklist.id,
@@ -340,7 +340,7 @@ export async function updateChecklistItem(req: Request, res: Response): Promise<
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'checklist_item_updated',
         resourceType: 'checklist_item',
         resourceId: id,
@@ -410,7 +410,7 @@ export async function deleteChecklist(req: Request, res: Response): Promise<void
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'checklist_deleted',
         resourceType: 'document_checklist',
         resourceId: id,

@@ -67,7 +67,7 @@ export async function createOrganization(req: Request, res: Response): Promise<v
 
     // Update user's organizationId and set role to org_admin
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: user.userId },
       data: {
         organizationId: organization.id,
         role: 'org_admin',
@@ -78,7 +78,7 @@ export async function createOrganization(req: Request, res: Response): Promise<v
     await prisma.auditLog.create({
       data: {
         organizationId: organization.id,
-        userId: user.id,
+        userId: user.userId,
         action: 'organization_created',
         resourceType: 'organization',
         resourceId: organization.id,
@@ -209,7 +209,7 @@ export async function updateMyOrganization(req: Request, res: Response): Promise
     await prisma.auditLog.create({
       data: {
         organizationId: organization.id,
-        userId: user.id,
+        userId: user.userId,
         action: 'organization_updated',
         resourceType: 'organization',
         resourceId: organization.id,
@@ -377,7 +377,7 @@ export async function inviteUser(req: Request, res: Response): Promise<void> {
     await prisma.auditLog.create({
       data: {
         organizationId: user.organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'user_invited',
         resourceType: 'user',
         metadata: { email, role },
@@ -414,7 +414,7 @@ export async function updateOrganizationUser(
     }
 
     // Cannot demote yourself
-    if (userId === user.id && role && role !== 'org_admin') {
+    if (userId === user.userId && role && role !== 'org_admin') {
       throw new AppError('You cannot change your own role', 400);
     }
 
@@ -450,7 +450,7 @@ export async function updateOrganizationUser(
     await prisma.auditLog.create({
       data: {
         organizationId: user.organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'user_updated',
         resourceType: 'user',
         resourceId: userId,

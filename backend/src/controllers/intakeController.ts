@@ -364,7 +364,7 @@ export async function getIntakeStatus(req: Request, res: Response): Promise<void
 export async function getMyLeads(req: Request, res: Response): Promise<void> {
   try {
     const user = (req as any).user;
-    const professionalId = user.id;
+    const professionalId = user.userId;
     const { status, page = 1, limit = 20 } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -458,7 +458,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
     }
 
     // Verify ownership
-    if (assignment.professionalId !== user.id) {
+    if (assignment.professionalId !== user.userId) {
       throw new AppError('Access denied', 403);
     }
 
@@ -476,7 +476,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
       // Convert to case
       const newCase = await convertIntakeToCase(
         assignment.intakeId,
-        user.id
+        user.userId
       );
 
       // Update assignment
@@ -492,7 +492,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
       setImmediate(async () => {
         try {
           const professional = await prisma.user.findUnique({
-            where: { id: user.id },
+            where: { id: user.userId },
             select: {
               fullName: true,
               email: true,
@@ -501,7 +501,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
           });
 
           const profile = await prisma.professionalProfile.findUnique({
-            where: { userId: user.id },
+            where: { userId: user.userId },
             select: {
               title: true,
             },
@@ -584,7 +584,7 @@ export async function getMySpecializations(req: Request, res: Response): Promise
 
     const specializations = await prisma.professionalSpecialization.findMany({
       where: {
-        userId: user.id,
+        userId: user.userId,
       },
       include: {
         service: {
@@ -649,7 +649,7 @@ export async function upsertSpecialization(req: Request, res: Response): Promise
     const specialization = await prisma.professionalSpecialization.upsert({
       where: {
         userId_serviceId: {
-          userId: user.id,
+          userId: user.userId,
           serviceId,
         },
       },
@@ -662,7 +662,7 @@ export async function upsertSpecialization(req: Request, res: Response): Promise
         bio: bio || null,
       },
       create: {
-        userId: user.id,
+        userId: user.userId,
         organizationId: user.organizationId || null,
         serviceId,
         originCorridors,
@@ -717,14 +717,14 @@ export async function deleteSpecialization(req: Request, res: Response): Promise
     }
 
     // Verify ownership
-    if (specialization.userId !== user.id) {
+    if (specialization.userId !== user.userId) {
       throw new AppError('Access denied', 403);
     }
 
     // Check for pending assignments
     const pendingAssignments = await prisma.intakeAssignment.count({
       where: {
-        professionalId: user.id,
+        professionalId: user.userId,
         status: 'pending',
         intake: {
           serviceId: specialization.serviceId,
@@ -781,7 +781,7 @@ export async function upsertPublicProfile(req: Request, res: Response): Promise<
 
     const profile = await prisma.professionalProfile.upsert({
       where: {
-        userId: user.id,
+        userId: user.userId,
       },
       update: {
         organizationId: user.organizationId || null,
@@ -797,7 +797,7 @@ export async function upsertPublicProfile(req: Request, res: Response): Promise<
         websiteUrl: websiteUrl?.trim() || null,
       },
       create: {
-        userId: user.id,
+        userId: user.userId,
         organizationId: user.organizationId || null,
         displayName: displayName.trim(),
         title: title?.trim() || null,
@@ -834,7 +834,7 @@ export async function getMyProfile(req: Request, res: Response): Promise<void> {
 
     const profile = await prisma.professionalProfile.findUnique({
       where: {
-        userId: user.id,
+        userId: user.userId,
       },
     });
 
@@ -1187,7 +1187,7 @@ export async function verifyProfessional(req: Request, res: Response): Promise<v
       // Log to audit
       await prisma.auditLog.create({
         data: {
-          userId: user.id,
+          userId: user.userId,
           action: 'professional_verified',
           resourceType: 'professional_profile',
           resourceId: profileId,
@@ -1220,7 +1220,7 @@ export async function verifyProfessional(req: Request, res: Response): Promise<v
       // Log to audit
       await prisma.auditLog.create({
         data: {
-          userId: user.id,
+          userId: user.userId,
           action: 'professional_verification_rejected',
           resourceType: 'professional_profile',
           resourceId: profileId,
@@ -1445,7 +1445,7 @@ export async function getRoutingStats(req: Request, res: Response): Promise<void
 export async function getMyLeadStats(req: Request, res: Response): Promise<void> {
   try {
     const user = (req as any).user;
-    const professionalId = user.id;
+    const professionalId = user.userId;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

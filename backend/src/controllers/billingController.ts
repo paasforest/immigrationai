@@ -345,7 +345,7 @@ export async function cancelSubscription(req: Request, res: Response): Promise<v
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'subscription_cancelled',
         resourceType: 'subscription',
         resourceId: subscription.id,

@@ -36,7 +36,7 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
       data: {
         caseId,
         organizationId,
-        senderId: user.id,
+        senderId: user.userId,
         content,
         isInternal: finalIsInternal,
       },
@@ -51,7 +51,7 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
     await prisma.auditLog.create({
       data: {
         organizationId,
-        userId: user.id,
+        userId: user.userId,
         action: 'message_sent',
         resourceType: 'message',
         resourceId: message.id,
@@ -196,7 +196,7 @@ export async function markMessagesRead(req: Request, res: Response): Promise<voi
       const userCases = await prisma.case.findMany({
         where: {
           organizationId,
-          applicantId: user.id,
+          applicantId: user.userId,
         },
         select: { id: true },
       });
@@ -252,7 +252,7 @@ export async function getUnreadCount(req: Request, res: Response): Promise<void>
       const userCases = await prisma.case.findMany({
         where: {
           organizationId,
-          applicantId: user.id,
+          applicantId: user.userId,
         },
         select: { id: true },
       });
