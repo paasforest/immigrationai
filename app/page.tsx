@@ -412,35 +412,36 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Case readiness preview */}
-              <div className="hidden lg:block">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-semibold text-sm">Case Readiness Check</span>
-                    <span className="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">STRONG</span>
+              {/* Social proof / outcome panel */}
+              <div className="hidden lg:block space-y-4">
+                {/* Main outcome card */}
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                  <p className="text-blue-200 text-sm mb-4 leading-relaxed italic">
+                    "We used to lose clients to rejections we could have prevented. Since using this platform our resubmission success rate has gone up significantly. The AI catches things we miss under deadline pressure."
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300 font-bold text-sm">
+                      MK
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-semibold">M. Khumalo</div>
+                      <div className="text-blue-300 text-xs">Immigration Agency — Johannesburg</div>
+                    </div>
                   </div>
-                  <div className="flex items-end gap-3">
-                    <span className="text-5xl font-bold text-white">87</span>
-                    <span className="text-blue-200 text-sm pb-2">/ 100</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div className="bg-amber-400 h-2 rounded-full" style={{ width: '87%' }} />
-                  </div>
-                  <div className="space-y-2 pt-2">
-                    {[
-                      { label: 'Documents submitted', count: '11 / 13', ok: true },
-                      { label: 'Document consistency', count: 'All matched', ok: true },
-                      { label: 'Passport validity', count: '⚠ Expires in 6 months', ok: false },
-                      { label: 'Bank statements', count: '3 months required', ok: false },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center justify-between text-sm">
-                        <span className="text-blue-100">{item.label}</span>
-                        <span className={item.ok ? 'text-green-300' : 'text-amber-300'}>{item.count}</span>
-                      </div>
+                </div>
+
+                {/* Destination countries */}
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5">
+                  <p className="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-3">Cases managed to</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['🇬🇧 UK', '🇨🇦 Canada', '🇦🇺 Australia', '🇩🇪 Germany', '🇿🇦 South Africa', '🇦🇪 UAE', '🇺🇸 USA', '🇳🇿 NZ'].map((d) => (
+                      <span key={d} className="bg-white/10 text-white text-xs px-3 py-1 rounded-full border border-white/20">
+                        {d}
+                      </span>
                     ))}
-                  </div>
-                  <div className="pt-2 border-t border-white/10">
-                    <p className="text-xs text-blue-200">Skilled Worker Visa — 🇬🇧 United Kingdom</p>
+                    <span className="bg-amber-400/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-400/30">
+                      + many more
+                    </span>
                   </div>
                 </div>
               </div>
