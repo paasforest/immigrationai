@@ -166,7 +166,7 @@ export default function TasksPage() {
         caseId: newTask.caseId,
         title: newTask.title.trim(),
         description: newTask.description || undefined,
-        assignedToId: newTask.assignedToId || undefined,
+        assignedToId: (newTask.assignedToId && newTask.assignedToId !== '__none__') ? newTask.assignedToId : undefined,
         priority: newTask.priority,
         dueDate: newTask.dueDate || undefined,
       });
@@ -340,7 +340,7 @@ export default function TasksPage() {
                         <SelectValue placeholder="Unassigned" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Unassigned</SelectItem>
+                        <SelectItem value="__none__">Unassigned</SelectItem>
                         {orgUsers
                           .filter((u) => u.organizationRole !== 'applicant')
                           .map((u) => (

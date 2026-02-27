@@ -325,14 +325,14 @@ export default function HomePage() {
               </div>
 
               <div className="hidden md:flex items-center space-x-7">
-                <a href="#how-we-help" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">How We Help</a>
-                <a href="#who-its-for" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Who It's For</a>
-                <a href="#faq" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">FAQ</a>
-                <Link href="/find-a-specialist" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Find a Specialist</Link>
-                <Link href="/auth/login" className="text-sm text-gray-600 hover:text-[#0F2557] font-medium transition-colors">Log In</Link>
+                <a href="#how-we-help" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>How We Help</a>
+                <a href="#who-its-for" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Who It's For</a>
+                <a href="#faq" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>FAQ</a>
+                <Link href="/find-a-specialist" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Find a Specialist</Link>
+                <Link href="/auth/login" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Log In</Link>
                 <Link
                   href="/auth/signup"
-                  className="bg-[#0F2557] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#1a3570] transition-colors"
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${scrolled ? 'bg-[#0F2557] text-white hover:bg-[#1a3570]' : 'bg-amber-400 text-[#0F2557] hover:bg-amber-300'}`}
                 >
                   Start Free Trial
                 </Link>

@@ -812,6 +812,55 @@ export const immigrationApi = {
     return apiClient.get('/api/payment-proof/status');
   },
 
+  // ============================================
+  // PUBLIC DIRECTORY (no auth required)
+  // ============================================
+
+  async getPublicDirectory(filters?: {
+    service?: string;
+    originCountry?: string;
+    destinationCountry?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<{ profiles: any[]; total: number; page: number; totalPages: number }>> {
+    const params = new URLSearchParams();
+    if (filters?.service) params.append('service', filters.service);
+    if (filters?.originCountry) params.append('originCountry', filters.originCountry);
+    if (filters?.destinationCountry) params.append('destinationCountry', filters.destinationCountry);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    try {
+      const response = await fetch(`${API_URL}/api/intake/directory?${params.toString()}`);
+      const data = await response.json();
+      return { success: true, data: data.data };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to fetch directory' };
+    }
+  },
+
+  async getPublicProfile(userId: string): Promise<ApiResponse<any>> {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    try {
+      const response = await fetch(`${API_URL}/api/intake/directory/${userId}`);
+      const data = await response.json();
+      return { success: true, data: data.data };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to fetch profile' };
+    }
+  },
+
+  async getPublicServices(): Promise<ApiResponse<any[]>> {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    try {
+      const response = await fetch(`${API_URL}/api/intake/services`);
+      const data = await response.json();
+      return { success: true, data: data.data || data.services || [] };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to fetch services' };
+    }
+  },
+
   // Pre-Document Intelligence: AI-powered, case-specific required document list
   async getPreDocRequirements(data: {
     caseId?: string;
