@@ -572,4 +572,189 @@ export const immigrationApi = {
   async getRoutingStats(): Promise<ApiResponse<any>> {
     return apiClient.get('/api/intake/admin/routing-stats');
   },
+
+  // ============================================
+  // DOCUMENT STUDIO — AI document generation
+  // Each method calls the appropriate backend endpoint
+  // and normalises the response to { content: string }
+  // ============================================
+
+  async generateSOP(data: {
+    fullName: string;
+    currentCountry: string;
+    targetCountry: string;
+    institution: string;
+    program?: string;
+    purpose?: string;
+    background?: string;
+    motivation?: string;
+    careerGoals?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ sop: string; tokensUsed?: number }>(
+      '/api/ai/generate-sop',
+      data
+    );
+    return res.success
+      ? { success: true, data: { content: res.data!.sop, tokensUsed: res.data!.tokensUsed } }
+      : res;
+  },
+
+  async generateCoverLetter(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    purpose: string;
+    employerOrInstitution?: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ letter: string; tokensUsed?: number }>(
+      '/api/ai/generate-support-letter',
+      {
+        letterType: 'cover_letter',
+        visitorName: data.applicantName,
+        targetCountry: data.targetCountry,
+        visaType: data.visaType,
+        purpose: data.purpose,
+        employerOrInstitution: data.employerOrInstitution,
+        additionalContext: data.additionalContext,
+      }
+    );
+    return res.success
+      ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
+      : res;
+  },
+
+  async generateMotivationLetter(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    institution?: string;
+    program?: string;
+    motivation?: string;
+    background?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ letter: string; tokensUsed?: number }>(
+      '/api/ai/generate-support-letter',
+      {
+        letterType: 'motivation_letter',
+        visitorName: data.applicantName,
+        targetCountry: data.targetCountry,
+        visaType: data.visaType,
+        institution: data.institution,
+        program: data.program,
+        motivation: data.motivation,
+        background: data.background,
+      }
+    );
+    return res.success
+      ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
+      : res;
+  },
+
+  async generateSponsorLetterForCase(data: {
+    sponsorName: string;
+    sponsorRelationship: string;
+    sponsorOccupation: string;
+    sponsorCountry: string;
+    applicantName: string;
+    visaType: string;
+    destinationCountry: string;
+    travelPurpose: string;
+    travelDuration: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ letter: string }>('/api/ai/sponsor-letter', data);
+    return res.success
+      ? { success: true, data: { content: res.data!.letter } }
+      : res;
+  },
+
+  async generateFinancialLetter(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    availableFunds: string;
+    sourceOfFunds: string;
+    currency?: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ letter: string; tokensUsed?: number }>(
+      '/api/ai/generate-financial-letter',
+      data
+    );
+    return res.success
+      ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
+      : res;
+  },
+
+  async generatePurposeOfVisit(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    visitPurpose: string;
+    duration: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ explanation: string; tokensUsed?: number }>(
+      '/api/ai/generate-purpose-of-visit',
+      data
+    );
+    return res.success
+      ? {
+          success: true,
+          data: { content: res.data!.explanation, tokensUsed: res.data!.tokensUsed },
+        }
+      : res;
+  },
+
+  async generateTiesToHomeCountry(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    homeCountry: string;
+    employment?: string;
+    family?: string;
+    property?: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ assessment: string; tokensUsed?: number }>(
+      '/api/ai/generate-ties-to-home-country',
+      data
+    );
+    return res.success
+      ? {
+          success: true,
+          data: { content: res.data!.assessment, tokensUsed: res.data!.tokensUsed },
+        }
+      : res;
+  },
+
+  async generateTravelItinerary(data: {
+    applicantName: string;
+    targetCountry: string;
+    visaType: string;
+    travelDates: string;
+    cities: string;
+    purpose: string;
+    accommodation?: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{ content: string; tokensUsed?: number }>> {
+    const res = await apiClient.post<{ itinerary: string; tokensUsed?: number }>(
+      '/api/ai/generate-travel-itinerary',
+      data
+    );
+    return res.success
+      ? { success: true, data: { content: res.data!.itinerary, tokensUsed: res.data!.tokensUsed } }
+      : res;
+  },
+
+  async improveGeneratedDocument(data: {
+    documentType: string;
+    currentContent: string;
+    visaType: string;
+    destinationCountry: string;
+    originCountry: string;
+    instructions?: string;
+  }): Promise<ApiResponse<{ suggestions: string[]; improvedVersion: string }>> {
+    return apiClient.post('/api/ai/improve-document', data);
+  },
 };

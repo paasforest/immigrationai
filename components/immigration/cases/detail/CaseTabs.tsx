@@ -5,10 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { ImmigrationCase } from '@/types/immigration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OverviewTab from './tabs/OverviewTab';
-import DocumentsTab from './tabs/DocumentsTab';
+import EnhancedDocumentsTab from './tabs/EnhancedDocumentsTab';
 import TasksTab from './tabs/TasksTab';
 import MessagesTab from './tabs/MessagesTab';
 import ChecklistTab from './tabs/ChecklistTab';
+import DocumentStudioTab from './tabs/DocumentStudioTab';
 
 interface CaseTabsProps {
   caseData: ImmigrationCase;
@@ -33,7 +34,7 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="documents">
           Documents {documentsCount > 0 && `(${documentsCount})`}
@@ -45,6 +46,9 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
           Messages {messagesCount > 0 && `(${messagesCount})`}
         </TabsTrigger>
         <TabsTrigger value="checklist">Checklist</TabsTrigger>
+        <TabsTrigger value="studio" className="flex items-center gap-1">
+          ✨ Studio
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
@@ -52,7 +56,7 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
       </TabsContent>
 
       <TabsContent value="documents" className="mt-6">
-        <DocumentsTab caseId={caseId} onRefresh={onRefresh} />
+        <EnhancedDocumentsTab caseId={caseId} onRefresh={onRefresh} />
       </TabsContent>
 
       <TabsContent value="tasks" className="mt-6">
@@ -65,6 +69,10 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
 
       <TabsContent value="checklist" className="mt-6">
         <ChecklistTab caseId={caseId} onRefresh={onRefresh} />
+      </TabsContent>
+
+      <TabsContent value="studio" className="mt-6">
+        <DocumentStudioTab caseData={caseData} caseId={caseId} onRefresh={onRefresh} />
       </TabsContent>
     </Tabs>
   );
