@@ -193,7 +193,7 @@ export async function getCaseDocuments(req: Request, res: Response): Promise<voi
         [caseId]
       );
       documents.push(...uploadedDocs.rows.map(doc => ({ ...doc, category: 'client', source: 'client' })));
-    });
+    }
 
     // Sort by created date
     documents.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
