@@ -10,6 +10,7 @@ import TasksTab from './tabs/TasksTab';
 import MessagesTab from './tabs/MessagesTab';
 import ChecklistTab from './tabs/ChecklistTab';
 import DocumentStudioTab from './tabs/DocumentStudioTab';
+import ValidationTab from './tabs/ValidationTab';
 
 interface CaseTabsProps {
   caseData: ImmigrationCase;
@@ -34,21 +35,20 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-7">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="documents">
-          Documents {documentsCount > 0 && `(${documentsCount})`}
+          Docs {documentsCount > 0 && `(${documentsCount})`}
         </TabsTrigger>
         <TabsTrigger value="tasks">
           Tasks {tasksCount > 0 && `(${tasksCount})`}
         </TabsTrigger>
         <TabsTrigger value="messages">
-          Messages {messagesCount > 0 && `(${messagesCount})`}
+          Msgs {messagesCount > 0 && `(${messagesCount})`}
         </TabsTrigger>
         <TabsTrigger value="checklist">Checklist</TabsTrigger>
-        <TabsTrigger value="studio" className="flex items-center gap-1">
-          ✨ Studio
-        </TabsTrigger>
+        <TabsTrigger value="validate">🛡 Validate</TabsTrigger>
+        <TabsTrigger value="studio">✨ Studio</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
@@ -69,6 +69,10 @@ export default function CaseTabs({ caseData, caseId, onRefresh }: CaseTabsProps)
 
       <TabsContent value="checklist" className="mt-6">
         <ChecklistTab caseId={caseId} onRefresh={onRefresh} />
+      </TabsContent>
+
+      <TabsContent value="validate" className="mt-6">
+        <ValidationTab caseData={caseData} />
       </TabsContent>
 
       <TabsContent value="studio" className="mt-6">

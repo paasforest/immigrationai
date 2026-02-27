@@ -24,7 +24,9 @@ import {
   analyzeFinancialDocs,
   generateSponsorLetter,
   getPreDocRequirements,
-  universalAIGateway
+  universalAIGateway,
+  analyzeRejectionV2Controller,
+  silentEligibilityController,
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 import { auth } from '../middleware/auth';
@@ -111,6 +113,10 @@ router.post('/ai/pre-doc-requirements', auth, organizationContext, getPreDocRequ
 // Auth: Professional+ plan required
 // ──────────────────────────────────────────────────────────────────────────────
 router.post('/ai/run', authenticateJWT, organizationContext, requirePlan('professional', 'enterprise'), universalAIGateway);
+
+// Phase 1 — Route-aware intelligence
+router.post('/ai/analyze-rejection-v2', authenticateJWT, analyzeRejectionV2Controller);
+router.post('/eligibility/silent-score', silentEligibilityController); // No auth — called from public intake form
 
 export default router;
 

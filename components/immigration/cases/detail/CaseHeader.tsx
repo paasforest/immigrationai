@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ImmigrationCase } from '@/types/immigration';
 import { immigrationApi } from '@/lib/api/immigration';
 import { ArrowLeft, Edit } from 'lucide-react';
+import ReadinessWidget from './ReadinessWidget';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -197,6 +198,9 @@ export default function CaseHeader({ caseData, onUpdate }: CaseHeaderProps) {
                   </p>
                 </div>
               )}
+
+              {/* Submission Readiness Score */}
+              <ReadinessWidget caseId={caseData.id} />
 
               <Sheet>
                 <SheetTrigger asChild>

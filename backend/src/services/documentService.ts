@@ -33,8 +33,8 @@ export class DocumentService {
 
     // Save to database
     const saveResult = await query(
-      `INSERT INTO documents (user_id, type, title, input_data, generated_output, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO documents (user_id, type, title, input_data, generated_output, status, case_id, source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         userId,
@@ -43,6 +43,8 @@ export class DocumentService {
         JSON.stringify(inputData),
         result.content,
         'completed',
+        (inputData as any).caseId || null,
+        'system',
       ]
     );
 
@@ -78,8 +80,8 @@ export class DocumentService {
 
     // Save to database
     const saveResult = await query(
-      `INSERT INTO documents (user_id, type, title, input_data, generated_output, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO documents (user_id, type, title, input_data, generated_output, status, case_id, source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         userId,
@@ -88,6 +90,8 @@ export class DocumentService {
         JSON.stringify(inputData),
         result.content,
         'completed',
+        (inputData as any).caseId || null,
+        'system',
       ]
     );
 

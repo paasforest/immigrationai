@@ -10,6 +10,12 @@ import {
   getAllDocumentsByOrg,
   uploadMiddleware,
 } from '../controllers/documentController';
+import {
+  generateCaseDocument,
+  getCaseDocumentChecklist,
+  getCaseDocuments,
+  generateCaseEligibilityReport,
+} from '../controllers/caseDocumentsController';
 
 const router = Router();
 
@@ -24,5 +30,11 @@ router.get('/case/:caseId', getDocumentsByCase); // GET /api/case-documents/case
 router.put('/:id', updateDocument); // PUT /api/case-documents/:id
 router.delete('/:id', deleteDocument); // DELETE /api/case-documents/:id
 router.get('/:id/download', getDocumentDownload); // GET /api/case-documents/:id/download
+
+// Case document generation routes
+router.post('/case/:caseId/generate', generateCaseDocument); // POST /api/case-documents/case/:caseId/generate
+router.get('/case/:caseId/checklist', getCaseDocumentChecklist); // GET /api/case-documents/case/:caseId/checklist
+router.get('/case/:caseId/all-documents', getCaseDocuments); // GET /api/case-documents/case/:caseId/all-documents
+router.get('/case/:caseId/eligibility-report', generateCaseEligibilityReport); // GET /api/case-documents/case/:caseId/eligibility-report
 
 export default router;

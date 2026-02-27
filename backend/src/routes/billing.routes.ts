@@ -1,22 +1,27 @@
 import { Router } from 'express';
-import { billingController } from '../controllers/billingController';
-import { authenticateJWT } from '../middleware/auth';
-import express from 'express';
+import { auth } from '../middleware/auth';
+import { organizationContext } from '../middleware/organizationContext';
+import {
+  getSubscriptionDetails,
+  getPlans,
+  initiatePayment,
+  handlePaymentWebhook,
+  cancelSubscription,
+} from '../controllers/billingController';
 
 const router = Router();
 
-// Webhook route (raw body required for Stripe signature verification)
-router.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  billingController.handleWebhook
-);
+// Get subscription details (requires auth + org context)
+router.get('/subscription', auth, organizationContext, getSubscriptionDetails);
 
-// Protected routes (require authentication)
-router.post('/checkout', authenticateJWT, billingController.createCheckoutSession);
-router.get('/portal', authenticateJWT, billingController.createPortalSession);
-router.get('/usage', authenticateJWT, billingController.getUserUsage);
+// Get available plans (public, but auth recommended)
+router.get('/plans', auth, getPlans);
 
-export default router;
+// Initiate payment (requires auth + org context)
+router.post('/initiate', auth, organizationContext, initiatePayment);
 
+// Payment webhook (no auth - called by payment provider)
+router.post('/webhook', handlePaymentWebhook);
 
+// Cancel subscription (requires auth + org context)
+router.delete('/cancel', auth, organizationContext, cancelSubscription);export default router;

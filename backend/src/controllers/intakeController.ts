@@ -11,6 +11,7 @@ import {
   sendApplicantConfirmationEmail,
   sendProfessionalContactEmail,
 } from '../services/emailService';
+import { eligibilityService, type EligibilityInput } from '../services/eligibilityService';
 
 // Module-level cache for services
 const servicesCache: { data: any[] | null; cachedAt: number } = {
@@ -114,6 +115,64 @@ export async function submitIntake(req: Request, res: Response): Promise<void> {
       include: {
         service: true,
       },
+    });
+
+    // Run silent eligibility assessment (non-blocking)
+    setImmediate(async () => {
+      try {
+        // Map destination country to visa type codes
+        const countryToVisaType: Record<string, string> = {
+          'United Kingdom': 'uk_skilled_worker',
+          'Canada': 'canada_express_entry',
+          'United States': 'usa_h1b',
+          'Germany': 'germany_blue_card',
+          'UAE': 'uae_employment',
+          'Australia': 'australia_skilled',
+          'Netherlands': 'netherlands_work_permit',
+          'Ireland': 'ireland_critical_skills',
+        };
+
+        const eligibilityInput: EligibilityInput = {
+          email: applicantEmail,
+          country: applicantCountry.toLowerCase().replace(/\s+/g, '_'),
+          visaType: countryToVisaType[destinationCountry] || 'uk_skilled_worker',
+          notes: description,
+          ipAddress: req.ip || undefined,
+        };
+
+        const eligibilityResult = await eligibilityService.assessEligibility(eligibilityInput);
+        
+        // Store eligibility result with the intake
+        await prisma.caseIntake.update({
+          where: { id: intake.id },
+          data: {
+            additionalData: {
+              ...additionalData,
+              eligibilityAssessment: {
+                verdict: eligibilityResult.verdict,
+                confidence: eligibilityResult.confidence,
+                summary: eligibilityResult.summary,
+                riskFactors: eligibilityResult.riskFactors,
+                recommendedDocuments: eligibilityResult.recommendedDocuments,
+                recommendedSteps: eligibilityResult.recommendedSteps,
+                assessedAt: new Date().toISOString(),
+              },
+            },
+          },
+        });
+
+        logger.info('Eligibility assessment completed', {
+          intakeId: intake.id,
+          verdict: eligibilityResult.verdict,
+          confidence: eligibilityResult.confidence,
+        });
+      } catch (error: any) {
+        logger.error('Eligibility assessment failed', {
+          error: error.message || error,
+          intakeId: intake.id,
+        });
+        // Don't fail the intake if assessment fails
+      }
     });
 
     // Use setImmediate for routing and email (non-blocking)
@@ -1551,5 +1610,44 @@ export async function getMyLeadStats(req: Request, res: Response): Promise<void>
   } catch (error: any) {
     logger.error('Failed to get lead stats', { error: error.message });
     throw new AppError(error.message || 'Failed to get stats', 500);
+  }
+}
+
+
+/**
+ * PATCH /api/intake/:id/eligibility-score
+ * Silently attaches a background eligibility score to an intake lead.
+ * Called from the frontend after form submission — no auth required.
+ * The score is used for lead routing and pricing internally.
+ */
+export async function patchEligibilityScore(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { eligibilityScore } = req.body;
+
+    if (typeof eligibilityScore !== 'number' || eligibilityScore < 0 || eligibilityScore > 100) {
+      return res.status(400).json({ success: false, message: 'Invalid score' });
+    }
+
+    // Store score in additionalData JSON field — no schema migration needed
+    const intake = await prisma.caseIntake.findUnique({ where: { id } });
+    if (intake) {
+      const existing = (intake.additionalData as Record<string, any>) || {};
+      await prisma.caseIntake.update({
+        where: { id },
+        data: {
+          additionalData: {
+            ...existing,
+            _eligibilityScore: eligibilityScore,
+            _eligibilityScoredAt: new Date().toISOString(),
+          },
+        },
+      });
+    }
+
+    return res.json({ success: true });
+  } catch {
+    // Best-effort — never surface errors to the applicant
+    return res.json({ success: true });
   }
 }

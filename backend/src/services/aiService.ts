@@ -2350,7 +2350,16 @@ export const generatePreDocIntelligence = async (params: {
   applicantName: string;
   additionalContext?: string;
 }): Promise<PreDocIntelligence> => {
+  // ── RAG: Pull verified rules from database FIRST ──
+  const { getVisaIntelligence, buildVisaContext } = await import('./visaIntelligenceService');
+  const intel = await getVisaIntelligence(params.originCountry, params.destinationCountry, params.visaType);
+  const dbContext = buildVisaContext(intel);
+
   const prompt = `You are a senior immigration lawyer and document intelligence expert with 20 years of experience in African visa applications. Produce a PRECISE, NON-GENERIC pre-document intelligence report.
+
+${dbContext}
+
+
 
 CASE:
 Applicant: ${params.applicantName}

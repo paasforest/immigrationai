@@ -129,6 +129,41 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
     }
   };
 
+  // ── Silent Eligibility Scoring ──
+  // Fires in background on submission. Score attached to intake lead data.
+  // NOT shown to the applicant. Used for lead routing and pricing on the backend.
+  const runSilentEligibility = async (
+    originCountry: string,
+    destinationCountry: string
+  ): Promise<number | null> => {
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      // Infer a common visa type from the service name for scoring
+      const visaTypeGuess = service.name?.toLowerCase().includes('student')
+        ? 'Student Visa'
+        : service.name?.toLowerCase().includes('work') || service.name?.toLowerCase().includes('skilled')
+        ? 'Skilled Worker Visa'
+        : service.name?.toLowerCase().includes('family')
+        ? 'Family Visa'
+        : 'Standard Visitor Visa';
+
+      const res = await fetch(`${API_BASE}/api/eligibility/silent-score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originCountry,
+          destinationCountry,
+          visaType: visaTypeGuess,
+        }),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.success ? (json.data?.score ?? null) : null;
+    } catch {
+      return null; // Silent — never block the form submission
+    }
+  };
+
   const onSubmit = async (data: IntakeFormValues) => {
     try {
       setIsSubmitting(true);
@@ -138,19 +173,44 @@ export default function IntakeForm({ service, preferredSpecialist }: IntakeFormP
         ? `${countryCode}${data.applicantPhone.replace(/\D/g, '')}`
         : undefined;
 
-      const result = await submitIntake({
-        serviceId: service.id,
-        applicantName: data.applicantName,
-        applicantEmail: data.applicantEmail,
-        applicantPhone: phone,
-        applicantCountry: data.applicantCountry,
-        destinationCountry: data.destinationCountry,
-        urgencyLevel: data.urgencyLevel,
-        description: data.description,
-        additionalData: preferredSpecialist
-          ? { preferredSpecialist: preferredSpecialist }
-          : undefined,
-      });
+      // Fire silent eligibility check in parallel — does NOT block submission
+      const eligibilityScorePromise = runSilentEligibility(
+        data.applicantCountry,
+        data.destinationCountry
+      );
+
+      const [result, eligibilityScore] = await Promise.all([
+        submitIntake({
+          serviceId: service.id,
+          applicantName: data.applicantName,
+          applicantEmail: data.applicantEmail,
+          applicantPhone: phone,
+          applicantCountry: data.applicantCountry,
+          destinationCountry: data.destinationCountry,
+          urgencyLevel: data.urgencyLevel,
+          description: data.description,
+          additionalData: {
+            ...(preferredSpecialist ? { preferredSpecialist } : {}),
+            // Score is silently attached — used by routing engine and pricing
+            _eligibilityScore: undefined, // will be set after both complete
+          },
+        }),
+        eligibilityScorePromise,
+      ]);
+
+      // If we got an eligibility score and the lead was created, update it silently
+      if (eligibilityScore !== null && result.id) {
+        try {
+          const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+          await fetch(`${API_BASE}/api/intake/${result.id}/eligibility-score`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eligibilityScore }),
+          });
+        } catch {
+          // Silently ignore — score update is best-effort
+        }
+      }
 
       router.push(`/get-help/confirmation?ref=${result.referenceNumber}`);
     } catch (err: any) {

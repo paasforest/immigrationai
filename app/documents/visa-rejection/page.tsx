@@ -6,32 +6,76 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, AlertTriangle, FileText, Loader, ClipboardList, Copy } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  ArrowLeft,
+  AlertTriangle,
+  FileText,
+  Loader,
+  Copy,
+  CheckCircle,
+  XCircle,
+  Shield,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+} from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+const ORIGIN_COUNTRIES = [
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Zimbabwe', 'Ethiopia',
+  'Uganda', 'Tanzania', 'Cameroon', 'Zambia', 'Senegal', 'Rwanda',
+];
+
+const TARGET_COUNTRIES = [
+  'United Kingdom', 'Canada', 'United States', 'Australia', 'Germany',
+  'UAE', 'Netherlands', 'New Zealand', 'Ireland', 'Schengen (Schengen Area)',
+];
+
+const VISA_TYPES = [
+  'Skilled Worker Visa', 'Student Visa', 'Standard Visitor Visa',
+  'Express Entry', 'Study Permit', 'F-1 Student Visa',
+  'Skilled Migration', 'Employment Visa', 'Tourist Visa', 'Family Visa',
+  'Business Visa', 'Permanent Residency',
+];
+
+const SEVERITY_CONFIG = {
+  low: { color: 'text-green-700 bg-green-50 border-green-200', label: 'Low Risk', icon: '🟢' },
+  medium: { color: 'text-amber-700 bg-amber-50 border-amber-200', label: 'Medium Risk', icon: '🟡' },
+  high: { color: 'text-orange-700 bg-orange-50 border-orange-200', label: 'High Risk', icon: '🟠' },
+  critical: { color: 'text-red-700 bg-red-50 border-red-200', label: 'Critical', icon: '🔴' },
+};
 
 export default function VisaRejectionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<string | null>('summary');
+
   const [formData, setFormData] = useState({
     applicantName: '',
+    originCountry: '',
     targetCountry: '',
-    visaType: 'study',
+    visaType: 'Student Visa',
     rejectionDate: '',
     rejectionReason: '',
     rejectionLetter: '',
     previousAttempts: '0',
     documentsSubmitted: '',
-    concerns: ''
+    concerns: '',
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleAnalyze = async () => {
-    if (!formData.applicantName || !formData.targetCountry || !formData.visaType) {
-      alert('Please fill in applicant name, target country, and visa type.');
+    if (!formData.targetCountry || !formData.visaType) {
+      alert('Please fill in target country and visa type.');
       return;
     }
     if (!formData.rejectionLetter && !formData.rejectionReason) {
@@ -42,14 +86,15 @@ export default function VisaRejectionPage() {
     setIsLoading(true);
     setReport(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai/visa-rejection`, {
+      const response = await fetch(`${API_BASE_URL}/api/ai/analyze-rejection-v2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          applicantName: formData.applicantName,
+          applicantName: formData.applicantName || 'Applicant',
+          originCountry: formData.originCountry || '',
           targetCountry: formData.targetCountry,
           visaType: formData.visaType,
           rejectionDate: formData.rejectionDate || undefined,
@@ -57,283 +102,454 @@ export default function VisaRejectionPage() {
           rejectionLetter: formData.rejectionLetter || undefined,
           previousAttempts: parseInt(formData.previousAttempts || '0', 10) || 0,
           documentsSubmitted: formData.documentsSubmitted
-            ? formData.documentsSubmitted.split(',').map(item => item.trim()).filter(Boolean)
+            ? formData.documentsSubmitted.split(',').map((s) => s.trim()).filter(Boolean)
             : undefined,
-          concerns: formData.concerns || undefined
-        })
+          concerns: formData.concerns || undefined,
+        }),
       });
 
       const data = await response.json();
       if (data.success) {
-        setReport(data.data.report);
+        setReport(data.data.analysis);
       } else {
         alert(data.message || 'Failed to analyze rejection');
       }
-    } catch (error) {
-      console.error('Visa rejection analyzer error:', error);
-      alert('Failed to analyze rejection. Please check backend connection.');
+    } catch {
+      alert('Failed to analyze. Please check connection.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const copySummary = () => {
-    if (!report?.rootCauseSummary) return;
-    navigator.clipboard.writeText(report.rootCauseSummary);
-    alert('Summary copied!');
+  const copyText = (text: string, section: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSection(section);
+    setTimeout(() => setCopiedSection(null), 2000);
   };
 
-  const getSeverityColor = (severity?: string) => {
-    switch (severity) {
-      case 'low':
-        return 'text-green-700 bg-green-50 border-green-200';
-      case 'medium':
-        return 'text-amber-700 bg-amber-50 border-amber-200';
-      case 'high':
-        return 'text-orange-700 bg-orange-50 border-orange-200';
-      case 'critical':
-        return 'text-red-700 bg-red-50 border-red-200';
-      default:
-        return 'text-gray-700 bg-gray-50 border-gray-200';
-    }
-  };
+  const toggle = (s: string) => setExpandedSection(expandedSection === s ? null : s);
+
+  const severity = report?.severity as keyof typeof SEVERITY_CONFIG;
+  const severityConf = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.medium;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/dashboard" className="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Dashboard</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-orange-50">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Dashboard</span>
           </Link>
+          <span className="text-gray-300">|</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            <span className="font-semibold text-gray-800">Visa Rejection Analyzer</span>
+            <Badge className="bg-orange-100 text-orange-700 text-xs">Powered by Route Intelligence</Badge>
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
-            <AlertTriangle className="w-8 h-8 text-orange-600" />
-            <span>Visa Rejection Analyzer</span>
+        {/* Hero */}
+        <div className="mb-8 text-center max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            Turn Your Refusal Into a <span className="text-orange-600">Winning Reapplication</span>
           </h1>
           <p className="text-gray-600">
-            Paste your refusal letter and we’ll pinpoint the officer’s concerns, missing evidence, and exact fixes for your reapplication.
+            Paste your refusal letter. Our AI cross-references it against verified country-pair rules to pinpoint the officer's real concerns and build a precise reapplication roadmap.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Refusal Details</CardTitle>
+          {/* ── Left: Input Form ── */}
+          <div className="space-y-4">
+            <Card className="border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Refusal Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <Input
                   name="applicantName"
                   value={formData.applicantName}
                   onChange={handleInputChange}
-                  placeholder="Applicant Full Name *"
+                  placeholder="Applicant Full Name"
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    name="targetCountry"
-                    value={formData.targetCountry}
-                    onChange={handleInputChange}
-                    placeholder="Target Country *"
-                  />
-                  <select
-                    name="visaType"
-                    value={formData.visaType}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="study">Study Visa</option>
-                    <option value="work">Work Visa</option>
-                    <option value="visitor">Visitor Visa</option>
-                    <option value="business">Business Visa</option>
-                    <option value="family">Family Visa</option>
-                    <option value="permanent">Permanent Residency</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Origin Country</label>
+                    <select
+                      name="originCountry"
+                      value={formData.originCountry}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="">Select country…</option>
+                      {ORIGIN_COUNTRIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Target Country *</label>
+                    <select
+                      name="targetCountry"
+                      value={formData.targetCountry}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="">Select…</option>
+                      {TARGET_COUNTRIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Visa Type *</label>
+                    <select
+                      name="visaType"
+                      value={formData.visaType}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      {VISA_TYPES.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Refusal Date</label>
+                    <Input
+                      type="date"
+                      name="rejectionDate"
+                      value={formData.rejectionDate}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Previous Attempts</label>
+                    <Input
+                      type="number"
+                      name="previousAttempts"
+                      value={formData.previousAttempts}
+                      onChange={handleInputChange}
+                      min="0"
+                      max="10"
+                    />
+                  </div>
+                  <div />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Refusal Letter</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1 font-medium">
+                    Stated Reason (from letter)
+                  </label>
                   <Input
-                    name="rejectionDate"
-                    value={formData.rejectionDate}
+                    name="rejectionReason"
+                    value={formData.rejectionReason}
                     onChange={handleInputChange}
-                    placeholder="Rejection Date (YYYY-MM-DD)"
-                  />
-                  <Input
-                    name="previousAttempts"
-                    value={formData.previousAttempts}
-                    onChange={handleInputChange}
-                    placeholder="Previous Attempts (#)"
-                    type="number"
-                    min="0"
+                    placeholder="e.g. Not satisfied you will leave at end of visit"
                   />
                 </div>
-                <Textarea
-                  name="rejectionReason"
-                  value={formData.rejectionReason}
-                  onChange={handleInputChange}
-                  placeholder="Stated reason in the refusal letter (optional if you paste the letter)"
-                  rows={2}
-                />
-                <Textarea
-                  name="rejectionLetter"
-                  value={formData.rejectionLetter}
-                  onChange={handleInputChange}
-                  placeholder="Paste the full refusal letter text here"
-                  rows={8}
-                />
-                <Textarea
-                  name="documentsSubmitted"
-                  value={formData.documentsSubmitted}
-                  onChange={handleInputChange}
-                  placeholder="Documents you submitted (comma-separated)"
-                  rows={2}
-                />
-                <Textarea
-                  name="concerns"
-                  value={formData.concerns}
-                  onChange={handleInputChange}
-                  placeholder="Anything else we should know? (e.g., new sponsor, updated funds, improved ties)"
-                  rows={2}
-                />
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1 font-medium">
+                    Full Refusal Letter Text (paste here for best results)
+                  </label>
+                  <Textarea
+                    name="rejectionLetter"
+                    value={formData.rejectionLetter}
+                    onChange={handleInputChange}
+                    placeholder="Paste the full text of your refusal letter here…"
+                    rows={6}
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1 font-medium">
+                    Documents You Submitted (comma-separated)
+                  </label>
+                  <Input
+                    name="documentsSubmitted"
+                    value={formData.documentsSubmitted}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Passport, Bank Statements, Employment Letter"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1 font-medium">
+                    Your Concerns / Additional Context
+                  </label>
+                  <Textarea
+                    name="concerns"
+                    value={formData.concerns}
+                    onChange={handleInputChange}
+                    placeholder="Anything specific you want the AI to consider…"
+                    rows={2}
+                    className="text-sm"
+                  />
+                </div>
               </CardContent>
             </Card>
 
             <Button
               onClick={handleAnalyze}
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-orange-600 to-red-600"
+              className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3"
             >
               {isLoading ? (
                 <>
                   <Loader className="w-5 h-5 mr-2 animate-spin" />
-                  Analyzing Rejection...
+                  Analyzing against Route Intelligence…
                 </>
               ) : (
                 <>
-                  <ClipboardList className="w-5 h-5 mr-2" />
-                  Analyze Rejection Letter
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Analyze Refusal
                 </>
               )}
             </Button>
           </div>
 
-          <Card className="lg:sticky lg:top-8 h-fit">
-            <CardHeader>
-              <CardTitle>Reapplication Strategy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {report ? (
-                <div className="space-y-6">
-                  <div className={`p-4 rounded-xl border ${getSeverityColor(report.severity)}`}>
-                    <div className="flex items-center justify-between mb-2">
+          {/* ── Right: Results ── */}
+          <div className="space-y-4">
+            {!report && !isLoading && (
+              <Card className="border-dashed border-2 border-gray-200">
+                <CardContent className="py-20 text-center">
+                  <AlertTriangle className="w-14 h-14 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-gray-600 font-medium mb-2">Analysis will appear here</h3>
+                  <p className="text-sm text-gray-400 max-w-xs mx-auto">
+                    Our AI will cross-reference your refusal against verified rules for your specific route and give you a precise reapplication roadmap.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {isLoading && (
+              <Card>
+                <CardContent className="py-16 text-center">
+                  <Loader className="w-10 h-10 text-orange-500 animate-spin mx-auto mb-4" />
+                  <div className="text-gray-700 font-medium">Analyzing your refusal…</div>
+                  <div className="text-sm text-gray-500 mt-1">Cross-referencing against verified route rules</div>
+                </CardContent>
+              </Card>
+            )}
+
+            {report && (
+              <div className="space-y-3">
+                {/* Severity badge */}
+                <Card className={`border-2 ${severityConf.color}`}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{severityConf.icon}</span>
                       <div>
-                        <p className="text-sm uppercase tracking-wide text-gray-600">Root Cause</p>
-                        <p className="text-sm text-gray-900">{report.rootCauseSummary}</p>
+                        <div className="font-bold text-lg">{severityConf.label}</div>
+                        <div className="text-sm opacity-80">
+                          AI Confidence: {Math.round((report.confidence || 0.7) * 100)}%
+                          {report.knownPatternMatch && (
+                            <span className="ml-2 text-purple-700 font-medium">✓ Known Refusal Pattern</span>
+                          )}
+                        </div>
                       </div>
-                      <AlertTriangle className="w-10 h-10 text-inherit opacity-70" />
                     </div>
-                    <p className="text-sm text-gray-600 mt-2">Confidence: {(report.confidence * 100).toFixed(0)}%</p>
-                    <Button variant="ghost" size="sm" onClick={copySummary} className="mt-3 flex items-center space-x-2">
-                      <Copy className="w-4 h-4" />
-                      <span>Copy summary</span>
-                    </Button>
-                  </div>
+                    <button
+                      onClick={() => copyText(report.rootCauseSummary || '', 'summary')}
+                      className="text-gray-400 hover:text-gray-700"
+                    >
+                      {copiedSection === 'summary' ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Copy className="w-5 h-5" />
+                      )}
+                    </button>
+                  </CardContent>
+                </Card>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg border bg-red-50">
-                      <h4 className="font-semibold text-red-900 mb-2">Officer Concerns</h4>
-                      <ul className="space-y-2 text-sm text-red-900">
-                        {report.officerConcerns?.length ? report.officerConcerns.map((item: string, idx: number) => (
-                          <li key={idx} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{item}</span>
-                          </li>
-                        )) : <li>No concerns listed.</li>}
-                      </ul>
+                {/* Root Cause */}
+                <SectionCard
+                  id="summary"
+                  title="📋 Root Cause Analysis"
+                  expanded={expandedSection === 'summary'}
+                  onToggle={() => toggle('summary')}
+                >
+                  <p className="text-sm text-gray-700 leading-relaxed">{report.rootCauseSummary}</p>
+
+                  {report.routeSpecificWarnings?.length > 0 && (
+                    <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <div className="text-xs font-bold text-purple-800 mb-1">
+                        🗺 {formData.originCountry || 'Country'}-Specific Warnings
+                      </div>
+                      {report.routeSpecificWarnings.map((w: string, i: number) => (
+                        <div key={i} className="text-xs text-purple-700">• {w}</div>
+                      ))}
                     </div>
-                    <div className="p-4 rounded-lg border bg-amber-50">
-                      <h4 className="font-semibold text-amber-900 mb-2">Missing Evidence</h4>
-                      <ul className="space-y-2 text-sm text-amber-900">
-                        {report.missingEvidence?.length ? report.missingEvidence.map((item: string, idx: number) => (
-                          <li key={idx} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{item}</span>
-                          </li>
-                        )) : <li>No missing evidence detected.</li>}
-                      </ul>
-                    </div>
-                  </div>
+                  )}
+                </SectionCard>
 
-                  <div className="p-4 rounded-lg border bg-white">
-                    <h4 className="font-semibold text-gray-900 mb-2">Recommended Fixes</h4>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                      {report.recommendedFixes?.length ? report.recommendedFixes.map((item: string, idx: number) => (
-                        <li key={idx} className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>{item}</span>
-                        </li>
-                      )) : <li>No recommendations provided.</li>}
-                    </ul>
-                  </div>
+                {/* Officer Concerns */}
+                {report.officerConcerns?.length > 0 && (
+                  <SectionCard
+                    id="concerns"
+                    title={`🔍 Officer's Real Concerns (${report.officerConcerns.length})`}
+                    expanded={expandedSection === 'concerns'}
+                    onToggle={() => toggle('concerns')}
+                  >
+                    {report.officerConcerns.map((c: string, i: number) => (
+                      <div key={i} className="flex gap-2 text-sm text-gray-700 mb-1">
+                        <span className="text-orange-500 flex-shrink-0">⚠</span>
+                        {c}
+                      </div>
+                    ))}
+                  </SectionCard>
+                )}
 
-                  <div className="p-4 rounded-lg border bg-blue-50">
-                    <h4 className="font-semibold text-blue-900 mb-2">Immediate Next Steps</h4>
-                    <ul className="space-y-2 text-sm text-blue-900">
-                      {report.nextSteps?.length ? report.nextSteps.map((item: string, idx: number) => (
-                        <li key={idx} className="flex items-start">
-                          <span className="mr-2">✓</span>
-                          <span>{item}</span>
-                        </li>
-                      )) : <li>No next steps provided.</li>}
-                    </ul>
-                  </div>
+                {/* Missing Evidence */}
+                {report.missingEvidence?.length > 0 && (
+                  <SectionCard
+                    id="missing"
+                    title={`❌ Missing Evidence (${report.missingEvidence.length})`}
+                    expanded={expandedSection === 'missing'}
+                    onToggle={() => toggle('missing')}
+                  >
+                    {report.missingEvidence.map((e: string, i: number) => (
+                      <div key={i} className="flex gap-2 text-sm text-red-700 mb-1">
+                        <XCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        {e}
+                      </div>
+                    ))}
+                  </SectionCard>
+                )}
 
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900">Reapplication Timeline</h4>
+                {/* Recommended Fixes */}
+                {report.recommendedFixes?.length > 0 && (
+                  <SectionCard
+                    id="fixes"
+                    title={`✅ Recommended Fixes (${report.recommendedFixes.length})`}
+                    expanded={expandedSection === 'fixes'}
+                    onToggle={() => toggle('fixes')}
+                  >
+                    {report.recommendedFixes.map((f: string, i: number) => (
+                      <div key={i} className="flex gap-2 text-sm text-green-800 mb-1.5 bg-green-50 rounded px-2 py-1">
+                        <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-green-600" />
+                        {f}
+                      </div>
+                    ))}
+                  </SectionCard>
+                )}
+
+                {/* Timeline */}
+                {report.timeline?.length > 0 && (
+                  <SectionCard
+                    id="timeline"
+                    title="📅 Reapplication Timeline"
+                    expanded={expandedSection === 'timeline'}
+                    onToggle={() => toggle('timeline')}
+                  >
                     <div className="space-y-2">
-                      {report.timeline?.length ? report.timeline.map((item: any, idx: number) => (
-                        <div key={idx} className="border rounded-lg p-3 bg-gray-50 flex justify-between items-center">
-                          <span className="text-sm text-gray-900">{item.step}</span>
-                          <span className="text-xs font-semibold text-gray-500">{item.dueBy || 'Next'}</span>
-                        </div>
-                      )) : <p className="text-sm text-gray-600">No timeline provided.</p>}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900">Reapplication Checklist</h4>
-                    <div className="space-y-2">
-                      {report.reapplicationChecklist?.length ? report.reapplicationChecklist.map((item: any, idx: number) => (
-                        <div key={idx} className="border rounded-lg p-3 bg-white">
-                          <div className="flex items-center justify-between">
-                            <p className="font-semibold text-gray-900">{item.item}</p>
-                            <span className={`text-xs font-semibold ${
-                              item.status === 'required' ? 'text-red-600' : 'text-blue-600'
-                            }`}>
-                              {item.status.toUpperCase()}
-                            </span>
+                      {report.timeline.map((t: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#0F2557] text-white text-xs flex items-center justify-center font-bold">
+                            {i + 1}
                           </div>
-                          <p className="text-sm text-gray-600 mt-2">{item.details}</p>
+                          <div>
+                            <div className="text-sm font-medium text-gray-800">{t.step}</div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {t.dueBy}
+                            </div>
+                          </div>
                         </div>
-                      )) : <p className="text-sm text-gray-600">No checklist items provided.</p>}
+                      ))}
                     </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-300">
-                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No Analysis Yet</h4>
-                  <p className="text-gray-600 text-sm">Paste your rejection letter to see the officer’s concerns and winning fixes.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </SectionCard>
+                )}
+
+                {/* Reapplication Checklist */}
+                {report.reapplicationChecklist?.length > 0 && (
+                  <SectionCard
+                    id="checklist"
+                    title="📝 Reapplication Checklist"
+                    expanded={expandedSection === 'checklist'}
+                    onToggle={() => toggle('checklist')}
+                  >
+                    {report.reapplicationChecklist.map((item: any, i: number) => (
+                      <div key={i} className="border border-gray-100 rounded-lg p-3 mb-2 bg-white">
+                        <div className="flex items-start gap-2">
+                          <Badge className={`text-xs flex-shrink-0 ${item.status === 'required' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {item.status}
+                          </Badge>
+                          <div>
+                            <div className="text-sm font-medium text-gray-800">{item.item}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{item.details}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </SectionCard>
+                )}
+
+                {/* Risk Factors */}
+                {report.riskFactors?.length > 0 && (
+                  <SectionCard
+                    id="risks"
+                    title={`⚠ Risk Factors (${report.riskFactors.length})`}
+                    expanded={expandedSection === 'risks'}
+                    onToggle={() => toggle('risks')}
+                  >
+                    {report.riskFactors.map((r: string, i: number) => (
+                      <div key={i} className="text-sm text-orange-700 mb-1 flex gap-2">
+                        <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        {r}
+                      </div>
+                    ))}
+                  </SectionCard>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
   );
 }
 
+function SectionCard({
+  id, title, expanded, onToggle, children,
+}: {
+  id: string;
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="border-gray-200">
+      <button
+        onClick={onToggle}
+        className="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+      >
+        <span className="font-semibold text-gray-800 text-sm">{title}</span>
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-gray-400" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-gray-400" />
+        )}
+      </button>
+      {expanded && (
+        <CardContent className="pt-0 pb-4 px-4 border-t border-gray-100">{children}</CardContent>
+      )}
+    </Card>
+  );
+}

@@ -23,6 +23,12 @@ import {
   improveDocument,
   generatePreDocIntelligence
 } from '../services/aiService';
+import {
+  crossValidateDocuments,
+  calculateReadinessScore,
+  analyzeRejection,
+  scoreSilentEligibility,
+} from '../services/caseIntelligenceService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
 import { AuthRequest } from '../types/request';
@@ -1576,3 +1582,132 @@ export const resolveAlertAdmin = async (req: AuthRequest, res: Response) => {
   }
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CASE INTELLIGENCE CONTROLLERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/cases/:caseId/cross-validate
+ * Cross-validate all documents in a case for inconsistencies
+ */
+export const crossValidateController = async (req: AuthRequest, res: Response) => {
+  try {
+    const { caseId } = req.params;
+    const organizationId = req.organizationId!;
+    const result = await crossValidateDocuments(caseId, organizationId);
+    return sendSuccess(res, result, 'Cross-validation complete');
+  } catch (error: any) {
+    logger.error('Cross-validate error', { error: error.message });
+    return sendError(res, 'server_error', 'Cross-validation failed', 500);
+  }
+};
+
+/**
+ * GET /api/cases/:caseId/readiness-score
+ * Calculate submission readiness score for a case
+ */
+export const readinessScoreController = async (req: AuthRequest, res: Response) => {
+  try {
+    const { caseId } = req.params;
+    const organizationId = req.organizationId!;
+    const result = await calculateReadinessScore(caseId, organizationId);
+    return sendSuccess(res, result, 'Readiness score calculated');
+  } catch (error: any) {
+    logger.error('Readiness score error', { error: error.message });
+    return sendError(res, 'server_error', 'Failed to calculate readiness score', 500);
+  }
+};
+
+/**
+ * POST /api/ai/analyze-rejection-v2
+ * Route-aware rejection letter analysis using Visa Intelligence DB
+ */
+export const analyzeRejectionV2Controller = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      applicantName,
+      originCountry,
+      targetCountry,
+      visaType,
+      rejectionDate,
+      rejectionReason,
+      rejectionLetter,
+      previousAttempts,
+      documentsSubmitted,
+      concerns,
+    } = req.body;
+
+    if (!targetCountry || !visaType) {
+      return sendError(res, 'validation_error', 'targetCountry and visaType are required', 400);
+    }
+    if (!rejectionLetter && !rejectionReason) {
+      return sendError(res, 'validation_error', 'Provide rejection letter text or stated reason', 400);
+    }
+
+    const result = await analyzeRejection({
+      applicantName: applicantName || 'Applicant',
+      originCountry: originCountry || '',
+      targetCountry,
+      visaType,
+      rejectionDate,
+      rejectionReason,
+      rejectionLetter,
+      previousAttempts: parseInt(previousAttempts || '0', 10) || 0,
+      documentsSubmitted: Array.isArray(documentsSubmitted)
+        ? documentsSubmitted
+        : (documentsSubmitted || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+      concerns,
+    });
+
+    return sendSuccess(res, { analysis: result }, 'Rejection analysis complete');
+  } catch (error: any) {
+    logger.error('Rejection analysis v2 error', { error: error.message });
+    return sendError(res, 'server_error', 'Rejection analysis failed', 500);
+  }
+};
+
+/**
+ * POST /api/eligibility/silent-score
+ * Silent eligibility scoring — attaches score to leads without user-facing verdict
+ */
+export const silentEligibilityController = async (req: Request, res: Response) => {
+  try {
+    const {
+      originCountry,
+      destinationCountry,
+      visaType,
+      educationLevel,
+      workExperienceYears,
+      englishScore,
+      proofOfFunds,
+      previousRefusals,
+      age,
+      jobOffer,
+      sponsorAvailable,
+    } = req.body;
+
+    if (!originCountry || !destinationCountry || !visaType) {
+      return sendError(res, 'validation_error', 'originCountry, destinationCountry, visaType required', 400);
+    }
+
+    const result = await scoreSilentEligibility({
+      originCountry,
+      destinationCountry,
+      visaType,
+      educationLevel,
+      workExperienceYears: Number(workExperienceYears) || 0,
+      englishScore,
+      proofOfFunds,
+      previousRefusals: Number(previousRefusals) || 0,
+      age: Number(age) || 0,
+      jobOffer: Boolean(jobOffer),
+      sponsorAvailable: Boolean(sponsorAvailable),
+    });
+
+    return sendSuccess(res, result, 'Eligibility scored');
+  } catch (error: any) {
+    logger.error('Silent eligibility error', { error: error.message });
+    return sendError(res, 'server_error', 'Eligibility scoring failed', 500);
+  }
+};
