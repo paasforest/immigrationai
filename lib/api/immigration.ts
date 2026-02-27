@@ -596,7 +596,7 @@ export const immigrationApi = {
     );
     return res.success
       ? { success: true, data: { content: res.data!.sop, tokensUsed: res.data!.tokensUsed } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateCoverLetter(data: {
@@ -621,7 +621,7 @@ export const immigrationApi = {
     );
     return res.success
       ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateMotivationLetter(data: {
@@ -648,7 +648,7 @@ export const immigrationApi = {
     );
     return res.success
       ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateSponsorLetterForCase(data: {
@@ -665,7 +665,7 @@ export const immigrationApi = {
     const res = await apiClient.post<{ letter: string }>('/api/ai/sponsor-letter', data);
     return res.success
       ? { success: true, data: { content: res.data!.letter } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateFinancialLetter(data: {
@@ -683,7 +683,7 @@ export const immigrationApi = {
     );
     return res.success
       ? { success: true, data: { content: res.data!.letter, tokensUsed: res.data!.tokensUsed } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generatePurposeOfVisit(data: {
@@ -703,7 +703,7 @@ export const immigrationApi = {
           success: true,
           data: { content: res.data!.explanation, tokensUsed: res.data!.tokensUsed },
         }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateTiesToHomeCountry(data: {
@@ -725,7 +725,7 @@ export const immigrationApi = {
           success: true,
           data: { content: res.data!.assessment, tokensUsed: res.data!.tokensUsed },
         }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async generateTravelItinerary(data: {
@@ -744,7 +744,7 @@ export const immigrationApi = {
     );
     return res.success
       ? { success: true, data: { content: res.data!.itinerary, tokensUsed: res.data!.tokensUsed } }
-      : res;
+      : (res as unknown as ApiResponse<{ content: string; tokensUsed?: number }>);
   },
 
   async improveGeneratedDocument(data: {
