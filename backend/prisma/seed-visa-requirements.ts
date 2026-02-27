@@ -763,19 +763,14 @@ async function main() {
     const { lastVerifiedBy, ...data } = route;
 
     try {
+      // Cast to any so Prisma accepts typed arrays as JSON fields
+      const createData = { ...data, lastVerifiedAt: new Date(), lastVerifiedBy } as any;
+      const updateData = { ...data, lastVerifiedAt: new Date(), lastVerifiedBy, updatedAt: new Date() } as any;
+
       const result = await prisma.visaRequirement.upsert({
         where: { routeKey: data.routeKey },
-        update: {
-          ...data,
-          lastVerifiedAt: new Date(),
-          lastVerifiedBy,
-          updatedAt: new Date(),
-        },
-        create: {
-          ...data,
-          lastVerifiedAt: new Date(),
-          lastVerifiedBy,
-        },
+        update: updateData,
+        create: createData,
       });
 
       console.log(`  ✅  ${result.routeKey}  →  ${result.displayName}`);
