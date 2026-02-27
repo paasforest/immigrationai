@@ -757,4 +757,33 @@ export const immigrationApi = {
   }): Promise<ApiResponse<{ suggestions: string[]; improvedVersion: string }>> {
     return apiClient.post('/api/ai/improve-document', data);
   },
+
+  // Pre-Document Intelligence: AI-powered, case-specific required document list
+  async getPreDocRequirements(data: {
+    caseId?: string;
+    visaType?: string;
+    originCountry?: string;
+    destinationCountry?: string;
+    additionalContext?: string;
+  }): Promise<ApiResponse<{
+    summary: string;
+    requirements: Array<{
+      id: string;
+      name: string;
+      description: string;
+      category: string;
+      isRequired: boolean;
+      estimatedDays: number;
+      officialSource: string;
+      canAIGenerate: boolean;
+      aiDocType: string | null;
+      notes: string;
+      urgencyLevel: 'critical' | 'high' | 'medium' | 'low';
+    }>;
+    knownGotchas: string[];
+    criticalPath: string[];
+    estimatedReadinessWeeks: number;
+  }>> {
+    return apiClient.post('/api/ai/pre-doc-requirements', data);
+  },
 };

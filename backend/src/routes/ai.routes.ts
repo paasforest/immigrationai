@@ -22,7 +22,8 @@ import {
   generateAIChecklist,
   improveDocumentController,
   analyzeFinancialDocs,
-  generateSponsorLetter
+  generateSponsorLetter,
+  getPreDocRequirements
 } from '../controllers/aiController';
 import { optionalAuth, authenticateJWT, requirePlan } from '../middleware/auth';
 import { auth } from '../middleware/auth';
@@ -97,6 +98,10 @@ router.post('/ai/improve-document', authenticateJWT, requirePlan('professional',
 // Financial Documentation Assistant (Professional+ required, requires organization context)
 router.post('/ai/analyze-financial', auth, organizationContext, analyzeFinancialDocs);
 router.post('/ai/sponsor-letter', auth, organizationContext, generateSponsorLetter);
+
+// Pre-Document Intelligence (Professional+ required, requires organization context)
+// Accepts { caseId } OR { visaType, originCountry, destinationCountry }
+router.post('/ai/pre-doc-requirements', auth, organizationContext, getPreDocRequirements);
 
 export default router;
 

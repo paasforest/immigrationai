@@ -2211,28 +2211,52 @@ export const generateChecklistItems = async (params: {
       destinationCountry: params.destinationCountry,
     });
 
-    const prompt = `You are an expert immigration consultant specializing in African immigration cases. Generate a comprehensive document checklist for the following visa application:
+    const prompt = `You are a senior immigration consultant with 15+ years handling African nationals applying for visas to Western countries. Generate an EXHAUSTIVE, COUNTRY-SPECIFIC document checklist.
 
-Visa Type: ${params.visaType}
-Applicant's Country: ${params.originCountry}
-Destination Country: ${params.destinationCountry}
-Additional Context: ${params.additionalContext || 'None'}
+APPLICATION DETAILS:
+- Visa Type: ${params.visaType}
+- Applicant's Nationality: ${params.originCountry}
+- Destination Country: ${params.destinationCountry}
+- Additional Context: ${params.additionalContext || 'None'}
 
-Generate a JSON array of required and recommended documents. For each document include:
-- name: clear document name
-- description: brief explanation of what this document is and why needed
-- category: one of identity|financial|educational|employment|travel|supporting
-- isRequired: true if mandatory, false if optional
-- notes: any special requirements specific to ${params.originCountry} applicants
+CRITICAL INSTRUCTIONS:
+You must produce HIGHLY SPECIFIC requirements for this exact origin-destination-visa combination. Do NOT produce generic lists. Apply the following country-specific knowledge:
 
-Pay special attention to:
-1. Country-specific requirements (e.g. NYSC for Nigeria, apostille requirements, specific bank statement formats)
-2. African university credential evaluation requirements
-3. Financial documentation standards for applicants from cash-heavy economies
-4. Language proficiency requirements
-5. Any bilateral agreements between the countries
+SOUTH AFRICA → UK: Skilled Worker requires Confirmation of Sponsorship (COS) from UK employer, SOC code must be on shortage list, salary threshold £26,200+ (or going rate), TB test mandatory at BUPA clinic, IHS surcharge, English language proof (B1 level minimum). Student requires CAS from UKVI-registered institution. All documents must be certified true copies.
 
-Return ONLY a valid JSON array with no other text.`;
+SOUTH AFRICA → CANADA: Express Entry requires ECA (ICES or WES) for all qualifications, IELTS CLB minimum varies per stream, proof of funds (IRCC table), police clearance from SAPS + Interpol if lived abroad, birth certificate with apostille.
+
+SOUTH AFRICA → GERMANY: Blocked account (Sperrkonto) €11,208 for students, Studienkolleg may be needed, APS certificate mandatory for SA matric, TestDaF or German language proof. Work permit: employer-specific, BA approval may be needed.
+
+SOUTH AFRICA → NETHERLANDS: MVV for stays >90 days, apostille on all civic documents, DigiD process explanation, health insurance proof, legalised university transcripts.
+
+NIGERIA → UK: TB test mandatory at IOM clinic in Lagos/Abuja, NYSC discharge certificate essential for graduates, WAEC/NECO results must be presented, ICPC clearance may be needed, bank statements must show consistent balance (not sudden deposits), 6 months bank statement minimum.
+
+NIGERIA → CANADA: WES or ICES ECA, IELTS/CELPIP Academic for FSW/Canadian Experience, biometrics at VAC, police clearance from Nigeria Police Force (NPF) + INTERPOL, medical exam at panel physician.
+
+NIGERIA → USA: DS-160, SEVIS I-20 for F-1, IELTS/TOEFL score, demonstrated strong ties to Nigeria (property, employment letter), bank statements showing sufficient funds without sudden unexplained deposits.
+
+KENYA → UK: TB test at IOM clinic Nairobi, certified copies of KCPE/KCSE, Huduma number in some cases, Kenyatta University or other local university transcripts certified.
+
+GHANA → UK: TB test mandatory at IOM Accra, WASSCE certified results, certified copies from GES, KNUST/UG transcripts with official stamp.
+
+ZIMBABWE → UK: Apostille from Ministry of Justice, certified birth/marriage certificates, bank statements in USD preferred, employment letter on company letterhead with stamp.
+
+For ALL African nationals → Schengen: Schengen insurance minimum €30,000, hotel/accommodation confirmation or invitation letter, return ticket or itinerary, last 3 months bank statements, employment proof, travel history evidence.
+
+Generate a JSON array. Each item MUST include:
+- name: precise document name (specific, not generic)
+- description: exactly what this document is and WHY the specific destination requires it
+- category: identity | financial | educational | employment | travel | supporting | medical | legal
+- isRequired: boolean
+- estimatedDays: integer (days to obtain from scratch, 0 if already held by applicant)
+- officialSource: string (official government website URL or office name, e.g. "home.affairs.gov.za", "ukvi.homeoffice.gov.uk")
+- canAIGenerate: boolean (true only if this platform can generate it: SOP, cover letter, motivation letter, financial letter, purpose of visit, ties to home, travel itinerary, sponsor letter)
+- aiDocType: string or null (one of: sop|cover_letter|motivation_letter|sponsor_letter|financial_letter|purpose_of_visit|ties_to_home|travel_itinerary)
+- notes: string with origin-country-specific gotchas, common refusal reasons, and exact specifications
+- urgencyLevel: critical | high | medium | low
+
+Return ONLY a valid JSON array with no markdown, no preamble, no commentary.`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -2290,6 +2314,126 @@ Return ONLY a valid JSON array with no other text.`;
   } catch (error: any) {
     logger.error('Checklist generation error', { error: error.message });
     throw new Error('Failed to generate checklist items. Please try again.');
+  }
+};
+
+// ============================================
+// PRE-DOC INTELLIGENCE
+// ============================================
+
+export interface PreDocRequirement {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  isRequired: boolean;
+  estimatedDays: number;
+  officialSource: string;
+  canAIGenerate: boolean;
+  aiDocType: string | null;
+  notes: string;
+  urgencyLevel: 'critical' | 'high' | 'medium' | 'low';
+}
+
+export interface PreDocIntelligence {
+  summary: string;
+  requirements: PreDocRequirement[];
+  knownGotchas: string[];
+  criticalPath: string[];   // ordered list: what to start first
+  estimatedReadinessWeeks: number;
+}
+
+export const generatePreDocIntelligence = async (params: {
+  visaType: string;
+  originCountry: string;
+  destinationCountry: string;
+  applicantName: string;
+  additionalContext?: string;
+}): Promise<PreDocIntelligence> => {
+  const prompt = `You are a senior immigration lawyer and document intelligence expert with 20 years of experience in African visa applications. Produce a PRECISE, NON-GENERIC pre-document intelligence report.
+
+CASE:
+Applicant: ${params.applicantName}
+Nationality / Current Country: ${params.originCountry}
+Visa Type: ${params.visaType}
+Destination Country: ${params.destinationCountry}
+Additional Context: ${params.additionalContext || 'None'}
+
+RULES:
+- Every item must reflect the EXACT requirements for ${params.originCountry} applicants applying for ${params.visaType} to ${params.destinationCountry} as of 2024/2025.
+- Reference the current immigration rules (e.g. UK Immigration Rules, IRCC Express Entry CRS, German Aufenthaltsgesetz, US INA).
+- For African applicants, apply known country-pair specific requirements (NYSC for Nigeria, TB test clinics, APS for South Africa → Germany, WES/ICES for Canada, SAQA for South Africa, apostille requirements per country, etc.)
+- Flag common refusal reasons as gotchas.
+- Mark canAIGenerate=true ONLY for: SOP, cover letter, motivation letter, sponsor letter, financial letter, purpose of visit, ties to home country letter, travel itinerary.
+- estimatedDays = real-world days to obtain from scratch (e.g. SA police clearance = 21, SA passport = 42, TB test result = 3, IELTS result = 13, WES ECA = 45)
+
+Respond with ONLY valid JSON matching this schema:
+{
+  "summary": "One-paragraph summary of what this application involves and the key challenges for a ${params.originCountry} national.",
+  "requirements": [
+    {
+      "id": "snake_case_id",
+      "name": "Document Name",
+      "description": "What this is and why specifically required",
+      "category": "identity|financial|educational|employment|travel|supporting|medical|legal",
+      "isRequired": true,
+      "estimatedDays": 0,
+      "officialSource": "official URL or office name",
+      "canAIGenerate": false,
+      "aiDocType": null,
+      "notes": "Country-specific gotchas, exact specs, common refusal reasons for this doc",
+      "urgencyLevel": "critical|high|medium|low"
+    }
+  ],
+  "knownGotchas": [
+    "Specific refusal trigger 1 for ${params.originCountry} → ${params.destinationCountry} ${params.visaType} cases",
+    "Specific refusal trigger 2"
+  ],
+  "criticalPath": [
+    "Step 1: Start X first because it takes Y days",
+    "Step 2: ..."
+  ],
+  "estimatedReadinessWeeks": 8
+}
+
+No markdown, no commentary, only JSON.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert immigration intelligence system. Return only valid JSON with no markdown or explanation.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.2,
+      max_tokens: 4000,
+    });
+
+    const raw = response.choices[0]?.message?.content || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI returned no valid JSON');
+
+    const result: PreDocIntelligence = JSON.parse(jsonMatch[0]);
+
+    // Validate structure
+    if (!result.requirements || !Array.isArray(result.requirements)) {
+      throw new Error('Invalid AI response structure');
+    }
+
+    logger.info('Pre-doc intelligence generated', {
+      visaType: params.visaType,
+      originCountry: params.originCountry,
+      destinationCountry: params.destinationCountry,
+      itemCount: result.requirements.length,
+    });
+
+    return result;
+  } catch (error: any) {
+    logger.error('Pre-doc intelligence error', { error: error.message });
+    throw new Error('Failed to generate document requirements. Please try again.');
   }
 };
 

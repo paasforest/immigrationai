@@ -20,7 +20,8 @@ import {
   checkDocumentConsistency,
   generateStudentVisaPackage,
   generateChecklistItems,
-  improveDocument
+  improveDocument,
+  generatePreDocIntelligence
 } from '../services/aiService';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { logger } from '../utils/logger';
@@ -1078,6 +1079,82 @@ Focus on:
   } catch (error: any) {
     logger.error('Financial analysis error', { error: error.message });
     return sendError(res, 'ai_error', error.message || 'Failed to analyze financial documents', 500);
+  }
+};
+
+// ============================================
+// PRE-DOC INTELLIGENCE
+// ============================================
+
+export const getPreDocRequirements = async (req: AuthRequest, res: Response) => {
+  try {
+    const organizationId = (req as any).organizationId;
+    const { caseId, visaType, originCountry, destinationCountry, additionalContext } = req.body;
+
+    let resolvedVisa = visaType;
+    let resolvedOrigin = originCountry;
+    let resolvedDestination = destinationCountry;
+    let applicantName = 'the applicant';
+    let existingDocNames: string[] = [];
+
+    if (caseId) {
+      const prisma = (await import('../config/prisma')).default;
+      const { getCaseById } = await import('../helpers/prismaScopes');
+
+      const caseData = await getCaseById(organizationId, caseId);
+      if (!caseData) {
+        return sendError(res, 'not_found', 'Case not found or access denied', 404);
+      }
+
+      resolvedVisa = caseData.visaType || visaType || '';
+      resolvedOrigin = caseData.originCountry || originCountry || '';
+      resolvedDestination = caseData.destinationCountry || destinationCountry || '';
+
+      // Get applicant name
+      const applicant = await prisma.user.findUnique({
+        where: { id: caseData.applicantId },
+        select: { fullName: true },
+      });
+      applicantName = applicant?.fullName || 'the applicant';
+
+      // Get already-uploaded document names for cross-reference
+      const docs = await prisma.caseDocument.findMany({
+        where: { caseId },
+        select: { name: true, category: true, status: true },
+      });
+      existingDocNames = docs.map((d: { name: string; category: string; status: string }) => `${d.name} (${d.status})`);
+    }
+
+    if (!resolvedVisa || !resolvedOrigin || !resolvedDestination) {
+      return sendError(
+        res,
+        'validation_error',
+        'visaType, originCountry, and destinationCountry are required',
+        400
+      );
+    }
+
+    const contextWithDocs = [
+      additionalContext || '',
+      existingDocNames.length
+        ? `Documents already uploaded for this case: ${existingDocNames.join(', ')}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const intelligence = await generatePreDocIntelligence({
+      visaType: resolvedVisa,
+      originCountry: resolvedOrigin,
+      destinationCountry: resolvedDestination,
+      applicantName,
+      additionalContext: contextWithDocs || undefined,
+    });
+
+    return sendSuccess(res, intelligence, 'Pre-document intelligence generated');
+  } catch (error: any) {
+    logger.error('Pre-doc requirements error', { error: error.message });
+    return sendError(res, 'ai_error', error.message || 'Failed to generate requirements', 500);
   }
 };
 

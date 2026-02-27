@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { immigrationApi } from '@/lib/api/immigration';
 import { ImmigrationCase } from '@/types/immigration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   FileText,
   Wand2,
   Copy,
@@ -28,12 +22,10 @@ import {
   AlertTriangle,
   ChevronRight,
   Loader2,
-  Lightbulb,
-  Upload,
-  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import SmartDocRequirementsPanel from './SmartDocRequirementsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -314,57 +306,17 @@ const AI_DOC_TYPES: DocType[] = [
   },
 ];
 
-const CLIENT_REQUIRED_DOCS = [
-  {
-    id: 'bank_statements',
-    label: 'Bank Statements',
-    icon: '🏦',
-    guidance: '3–6 months of statements. Balance must meet destination-country threshold.',
-    tip: 'Ensure statements are stamped/certified by the bank.',
-  },
-  {
-    id: 'degree',
-    label: 'Degree / Diploma Copies',
-    icon: '🎓',
-    guidance: 'Certified copies of all academic qualifications.',
-    tip: 'May require SAQA evaluation or apostille depending on destination.',
-  },
-  {
-    id: 'police_clearance',
-    label: 'Police Clearance Certificate',
-    icon: '🛡️',
-    guidance: 'Issued by national police service. Takes 7–21 days.',
-    tip: 'South Africa: saps.gov.za/clearance. Valid for 3–6 months.',
-  },
-  {
-    id: 'passport',
-    label: 'Passport Copy',
-    icon: '🛂',
-    guidance: 'Clear photo of the bio-data page plus any visa/stamp pages.',
-    tip: 'Passport must be valid for at least 6 months beyond return date.',
-  },
-  {
-    id: 'proof_of_accommodation',
-    label: 'Proof of Accommodation',
-    icon: '🏠',
-    guidance: 'Hotel booking confirmation or host invitation letter.',
-    tip: 'Must show full address and dates of stay.',
-  },
-  {
-    id: 'medical_certificate',
-    label: 'Medical / TB Certificate',
-    icon: '🏥',
-    guidance: 'Required for some countries (UK, Canada for long stays).',
-    tip: 'Must be issued by an approved panel physician.',
-  },
-  {
-    id: 'employment_letter',
-    label: 'Employment / NOC Letter',
-    icon: '💼',
-    guidance: 'Letter from employer confirming position, salary, and leave approval.',
-    tip: 'Must be on company letterhead and signed by HR/director.',
-  },
-];
+// AI doc type IDs that link from SmartDocRequirementsPanel → generator
+const AI_DOC_TYPE_MAP: Record<string, string> = {
+  sop: 'sop',
+  cover_letter: 'cover_letter',
+  motivation_letter: 'motivation_letter',
+  sponsor_letter: 'sponsor_letter',
+  financial_letter: 'financial_letter',
+  purpose_of_visit: 'purpose_of_visit',
+  ties_to_home: 'ties_to_home',
+  travel_itinerary: 'travel_itinerary',
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -384,6 +336,37 @@ export default function DocumentStudioTab({
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedDocs, setUploadedDocs] = useState<{ name: string; status: string; category: string }[]>([]);
+  const generatorPanelRef = React.useRef<HTMLDivElement>(null);
+
+  // Fetch already-uploaded docs for cross-reference in SmartDocRequirementsPanel
+  useEffect(() => {
+    immigrationApi.getDocumentsByCase(caseId).then((res) => {
+      if (res.success && res.data?.documents) {
+        setUploadedDocs(
+          res.data.documents.map((d: any) => ({
+            name: d.name,
+            status: d.status,
+            category: d.category || '',
+          }))
+        );
+      }
+    });
+  }, [caseId]);
+
+  // Called from SmartDocRequirementsPanel when user clicks "Generate" on a doc type
+  const handleSmartPanelSelectDoc = useCallback((aiDocTypeId: string) => {
+    const mapped = AI_DOC_TYPE_MAP[aiDocTypeId];
+    const docType = AI_DOC_TYPES.find((d) => d.id === mapped);
+    if (docType) {
+      handleSelectDoc(docType);
+      // Scroll to generator panel
+      setTimeout(() => {
+        generatorPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Select a document type and auto-fill known fields from case ──────────
   const handleSelectDoc = useCallback(
@@ -524,17 +507,32 @@ export default function DocumentStudioTab({
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+    <div className="space-y-8">
+
+      {/* ── Smart Pre-Doc Requirements Panel (always at top) ────────────── */}
+      <SmartDocRequirementsPanel
+        caseData={caseData}
+        caseId={caseId}
+        uploadedDocs={uploadedDocs}
+        onSelectAIDocType={handleSmartPanelSelectDoc}
+      />
+
+      <Separator />
+
+      {/* ── Document Generator ────────────────────────────────────────────── */}
+      <div ref={generatorPanelRef} className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
       {/* ── Left panel: document type selector ─────────────────────────── */}
       <div className="space-y-4">
-        {/* AI-Generated section */}
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Wand2 className="w-4 h-4 text-[#0F2557]" />
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-              AI-Generated
+              AI Document Generator
             </h3>
           </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Select a document type to generate a professional draft
+          </p>
           <div className="space-y-1.5">
             {AI_DOC_TYPES.map((doc) => (
               <button
@@ -562,41 +560,6 @@ export default function DocumentStudioTab({
               </button>
             ))}
           </div>
-        </div>
-
-        <Separator />
-
-        {/* Client-required section */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Upload className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-amber-700 uppercase tracking-wide">
-              Client Must Provide
-            </h3>
-          </div>
-          <div className="space-y-1.5">
-            {CLIENT_REQUIRED_DOCS.map((doc) => (
-              <TooltipProvider key={doc.id} delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-amber-50 text-amber-800 cursor-help">
-                      <span className="text-base flex-shrink-0">{doc.icon}</span>
-                      <p className="text-sm font-medium flex-1">{doc.label}</p>
-                      <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-[220px]">
-                    <p className="font-medium mb-1">{doc.guidance}</p>
-                    <p className="text-xs text-gray-500">{doc.tip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </div>
-          <p className="text-xs text-amber-600 mt-2 flex items-start gap-1">
-            <Lightbulb className="w-3 h-3 mt-0.5 flex-shrink-0" />
-            Hover to see guidance for each document
-          </p>
         </div>
       </div>
 
@@ -819,6 +782,7 @@ export default function DocumentStudioTab({
           </div>
         )}
       </div>
+      </div> {/* end generator grid */}
     </div>
   );
 }
