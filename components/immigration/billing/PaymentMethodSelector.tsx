@@ -149,7 +149,7 @@ export default function PaymentMethodSelector({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleAttemptClose}>
-      <DialogContent className="max-w-md" onPointerDownOutside={(e) => { if (step === 'details' || step === 'upload') e.preventDefault(); }}
+      <DialogContent className="max-w-md" onPointerDownOutside={(e) => { if (step === 'details' || step === 'upload') e.preventDefault(); }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[#0F2557]" />
@@ -293,7 +293,7 @@ export default function PaymentMethodSelector({
             <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-800">
               You'll receive an email at your registered address once activated.
             </div>
-            <Button onClick={handleClose} className="w-full bg-[#0F2557] hover:bg-[#1a3570]">
+            <Button onClick={handleAttemptClose} className="w-full bg-[#0F2557] hover:bg-[#1a3570]">
               Close
             </Button>
           </div>
