@@ -135,22 +135,12 @@ const features = [
       href: "/dashboard/immigration",
       color: "from-blue-500 to-indigo-500",
     },
-    // STARTER PLAN ONLY (basic tier)
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "SOP Generator",
-      description: "Generate compelling Statements of Purpose with AI",
-      href: "/documents/sop",
-      color: "from-blue-500 to-indigo-500",
-      starterOnly: true
-    },
-    
     // ENTRY PLAN & ABOVE (most features)
     {
       icon: <CheckCircle className="w-8 h-8" />,
-      title: "SOP Reviewer",
-      description: "Get AI feedback and quality scores",
-      href: "/documents/review",
+      title: "AI Tools",
+      description: "Home Ties Scorer, Credential Evaluation and more",
+      href: "/dashboard/immigration/tools",
       color: "from-green-500 to-teal-500",
       entryRequired: true
     },

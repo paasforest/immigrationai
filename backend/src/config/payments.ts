@@ -35,23 +35,23 @@ export const localConfig = {
   instantEft: true,
 };
 
-// Plan Pricing (ZAR)
+// Plan Pricing (ZAR) — must match signup page prices
 export const PLAN_PRICING = {
   starter: {
-    monthly: 149,
-    annual: 1490,
-  },
-  entry: {
-    monthly: 299,
-    annual: 2990,
+    monthly: 499,
+    annual: 4790,   // 499 * 12 * 0.80 (20% off)
   },
   professional: {
-    monthly: 699,
-    annual: 6990,
+    monthly: 999,
+    annual: 9590,   // 999 * 12 * 0.80
+  },
+  agency: {
+    monthly: 1999,
+    annual: 19190,  // 1999 * 12 * 0.80
   },
   enterprise: {
-    monthly: 1499,
-    annual: 14990,
+    monthly: 0,     // custom — handled manually
+    annual: 0,
   },
 };
 

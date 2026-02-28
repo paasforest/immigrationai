@@ -78,45 +78,42 @@ export async function getPlans(req: Request, res: Response): Promise<void> {
       {
         id: 'starter',
         name: 'Starter',
-        price: 299,
-        priceAnnual: 2870, // 299 * 12 * 0.8 (20% discount)
+        price: 499,
+        priceAnnual: 4790,  // 499 * 12 * 0.80 (20% off)
         currency: 'ZAR',
         features: [
-          '10 active cases',
-          '2 team members',
-          'Case management',
+          'Up to 10 active cases',
+          'Basic case management',
+          'Client portal access',
           'Document upload',
-          'Basic checklists',
-          'Client portal',
+          'Email support',
         ],
       },
       {
         id: 'professional',
         name: 'Professional',
-        price: 699,
-        priceAnnual: 6710, // 699 * 12 * 0.8
+        price: 999,
+        priceAnnual: 9590,  // 999 * 12 * 0.80
         currency: 'ZAR',
         popular: true,
         features: [
-          '50 active cases',
-          '5 team members',
-          'Everything in Starter',
+          'Unlimited cases',
+          'Team collaboration',
+          'Lead routing',
+          'Analytics dashboard',
           'AI checklist generation',
-          'Financial assistant',
           'Priority support',
-          'Advanced reporting',
         ],
       },
       {
         id: 'agency',
         name: 'Agency',
-        price: 1499,
-        priceAnnual: 14390, // 1499 * 12 * 0.8
+        price: 1999,
+        priceAnnual: 19190,  // 1999 * 12 * 0.80
         currency: 'ZAR',
         features: [
-          'Unlimited cases',
-          'Unlimited team members',
-          'Everything in Professional',
+          'Unlimited cases & team members',
+          'Advanced analytics',
           'Custom branding',
           'API access',
           'Dedicated account manager',
