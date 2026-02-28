@@ -329,7 +329,6 @@ export default function HomePage() {
                 <a href="#who-its-for" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Who It's For</a>
                 <a href="#faq" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>FAQ</a>
                 <Link href="/find-a-specialist" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Find a Specialist</Link>
-                <Link href="/auth/login" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Log In</Link>
                 <Link
                   href="/get-help"
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors border ${scrolled ? 'border-amber-500 text-amber-600 hover:bg-amber-50' : 'border-amber-400/60 text-amber-300 hover:text-amber-200'}`}
@@ -356,16 +355,18 @@ export default function HomePage() {
                   { href: '#who-its-for', label: 'Who It\'s For' },
                   { href: '#faq', label: 'FAQ' },
                   { href: '/find-a-specialist', label: 'Find a Specialist' },
-                  { href: '/get-help', label: 'Get Help (Applicants)' },
-                  { href: '/auth/login', label: 'Log In' },
+                  { href: '/get-help', label: 'Get Help' },
                 ].map((item) => (
                   <a key={item.href} href={item.href} className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
                     {item.label}
                   </a>
                 ))}
-                <div className="px-4 pt-2">
+                <div className="px-4 pt-2 space-y-2">
                   <Link href="/auth/signup" className="block text-center bg-[#0F2557] text-white py-2 rounded-lg text-sm font-semibold">
                     Start Free Trial
+                  </Link>
+                  <Link href="/auth/login" className="block text-center text-xs text-gray-400 hover:text-gray-600 py-1">
+                    Already a member? Sign in →
                   </Link>
                 </div>
               </div>
