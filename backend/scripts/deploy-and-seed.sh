@@ -52,10 +52,7 @@ npx ts-node --project tsconfig.json prisma/seed-visa-requirements.ts
 
 # ── 5. Seed Service Catalog ────────────────────────────────
 echo "🌱  Seeding Service Catalog..."
-npx ts-node --project tsconfig.json -e "
-const { runSeed } = require('./src/data/seedServices');
-runSeed().then(() => { console.log('✅ Services seeded'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); });
-"
+npx ts-node --project tsconfig.json src/data/seedServices.ts
 
 # ── 6. Build backend TypeScript ────────────────────────────
 echo "🔨  Building backend TypeScript..."

@@ -87,12 +87,15 @@ export async function runSeed() {
   console.log(`✅ Seeded ${services.length} services`);
 }
 
-runSeed()
-  .then(() => {
-    console.log('Services seeded');
-    process.exit(0);
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+// Only auto-run when executed directly (not when imported as a module)
+if (require.main === module) {
+  runSeed()
+    .then(() => {
+      console.log('Services seeded');
+      process.exit(0);
+    })
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}

@@ -39,6 +39,18 @@ interface Service {
   description: string;
 }
 
+// Fallback services shown if the API returns empty (DB not yet seeded)
+const FALLBACK_SERVICES: Service[] = [
+  { id: 'visa-application', name: 'Visa Application', description: 'Expert assistance with visa applications for UK, Canada, USA, Germany, UAE and more' },
+  { id: 'visa-appeal', name: 'Visa Appeal / Refusal', description: 'Professional representation for visa refusals and appeals' },
+  { id: 'work-permit', name: 'Work Permit', description: 'Work permit and employment visa assistance' },
+  { id: 'study-permit', name: 'Study Permit / Student Visa', description: 'Student visa and study permit applications' },
+  { id: 'family-reunification', name: 'Family Reunification', description: 'Bring your family together through immigration' },
+  { id: 'eu-verification', name: 'EU Free Movement / EEA Rights', description: 'EU citizenship verification and EEA family permit services' },
+  { id: 'criminal-inadmissibility', name: 'Criminal Inadmissibility', description: 'Overcome criminal record barriers to immigration' },
+  { id: 'police-clearance', name: 'Police Clearance Certificate', description: 'Obtain police clearance certificates for immigration purposes' },
+];
+
 type Step = 1 | 2 | 3;
 
 export default function GetHelpPage() {
@@ -66,9 +78,17 @@ export default function GetHelpPage() {
     fetch(`${API_BASE_URL}/api/intake/services`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.success && data.data) setServices(data.data);
+        if (data.success && data.data && data.data.length > 0) {
+          setServices(data.data);
+        } else {
+          // API returned empty — use fallback so the form stays functional
+          setServices(FALLBACK_SERVICES);
+        }
       })
-      .catch(() => {})
+      .catch(() => {
+        // Network error — use fallback
+        setServices(FALLBACK_SERVICES);
+      })
       .finally(() => setLoadingServices(false));
   }, []);
 
