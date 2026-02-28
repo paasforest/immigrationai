@@ -313,6 +313,88 @@ export async function handlePaymentWebhook(req: Request, res: Response): Promise
 }
 
 /**
+ * Get billing usage — documents generated, tokens used, and subscription info
+ * Called by /api/billing/usage
+ */
+export async function getBillingUsage(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+
+    // Get user with subscription plan
+    const userRecord = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { subscriptionPlan: true, subscriptionStatus: true },
+    });
+
+    const plan = userRecord?.subscriptionPlan || 'starter';
+    const status = userRecord?.subscriptionStatus || 'pending';
+
+    // Count documents uploaded this month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const docCount = await prisma.document.count({
+      where: {
+        userId: user.userId,
+        createdAt: { gte: monthStart },
+      },
+    });
+
+    // Plan-based document limits
+    const DOC_LIMITS: Record<string, number> = {
+      starter: 50,
+      professional: 200,
+      agency: -1,       // unlimited
+      enterprise: -1,
+      marketing_test: -1,
+    };
+    const TOKEN_LIMITS: Record<string, number> = {
+      starter: 50000,
+      professional: 200000,
+      agency: -1,
+      enterprise: -1,
+      marketing_test: -1,
+    };
+
+    const docLimit = DOC_LIMITS[plan] ?? 50;
+    const tokenLimit = TOKEN_LIMITS[plan] ?? 50000;
+
+    // Get active subscription period end
+    let currentPeriodEnd: string | null = null;
+    if (req.organizationId) {
+      const sub = await prisma.subscription.findFirst({
+        where: { organizationId: req.organizationId, status: { in: ['active', 'trial'] } },
+        orderBy: { createdAt: 'desc' },
+      });
+      currentPeriodEnd = sub?.currentPeriodEnd?.toISOString() ?? null;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        currentUsage: {
+          documents: docCount,
+          tokensUsed: 0,        // token tracking not yet wired to DB
+        },
+        limits: {
+          documents: docLimit,
+          tokensPerMonth: tokenLimit,
+        },
+        subscription: {
+          plan,
+          status,
+          currentPeriodEnd,
+          stripeSubscriptionId: null,   // we use EFT, not Stripe
+        },
+      },
+    });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to get billing usage', 500);
+  }
+}
+
+/**
  * Cancel subscription
  */
 export async function cancelSubscription(req: Request, res: Response): Promise<void> {

@@ -7,6 +7,7 @@ import {
   initiatePayment,
   handlePaymentWebhook,
   cancelSubscription,
+  getBillingUsage,
 } from '../controllers/billingController';
 
 const router = Router();
@@ -22,6 +23,9 @@ router.post('/initiate', auth, organizationContext, initiatePayment);
 
 // Payment webhook (no auth - called by payment provider)
 router.post('/webhook', handlePaymentWebhook);
+
+// Get billing usage — documents, tokens, plan limits
+router.get('/usage', auth, getBillingUsage);
 
 // Cancel subscription (requires auth + org context)
 router.delete('/cancel', auth, organizationContext, cancelSubscription);export default router;
