@@ -283,7 +283,7 @@ export function buildRiskProfile(params: {
       riskLevel: 'medium',
       detail: 'EU free movement signals detected (non-EU spouse/family member of EU citizen). This is a different legal route from standard immigration — governed by Directive 2004/38/EC, not national immigration law. Different documentary requirements apply.',
       checklistHints: [
-        'EU citizen sponsor's passport or ID card',
+        "EU citizen sponsor's passport or ID card",
         'Proof of EU citizen exercising free movement rights (residence in host country)',
         'Marriage certificate (certified translation if required)',
         'Evidence of genuine relationship (photos, communication, joint documents)',
