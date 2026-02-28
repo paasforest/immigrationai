@@ -43,8 +43,8 @@ export default function LoginPage() {
         console.error('Failed to check onboarding status:', error);
       }
 
-      // Redirect based on role/admin status
-      if (formData.email === 'admin@immigrationai.co.za' || formData.email === 'testadmin@immigrationai.co.za') {
+      // Redirect based on role returned from API
+      if (result.user?.role === 'admin' || result.user?.role === 'super_admin') {
         router.push('/admin');
       } else if (result.user?.role === 'applicant') {
         router.push('/portal');

@@ -125,7 +125,7 @@ export default function SignupPage() {
       if (trackingData.utm_source) {
         console.log('📊 Signup attributed to:', trackingData.utm_source);
       }
-      
+
       // Track conversion in Google Analytics
       trackGAConversion('signup', 0);
       trackGAEvent('sign_up', {
@@ -134,8 +134,9 @@ export default function SignupPage() {
         utm_source: trackingData.utm_source,
         utm_campaign: trackingData.utm_campaign,
       });
-      
-      router.push('/dashboard');
+
+      // New users always need onboarding (no org yet)
+      router.push('/onboarding');
     } else {
       setError(result.error || 'Signup failed');
       setLoading(false);

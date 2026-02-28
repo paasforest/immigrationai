@@ -4,7 +4,6 @@ import { generateToken, generateRefreshToken } from '../config/jwt';
 import { User, UserPublic } from '../types/index';
 import { AppError } from '../middleware/errorHandler';
 import { sanitizeUser } from '../utils/helpers';
-import { query } from '../config/database';
 import crypto from 'crypto';
 
 export class AuthService {
@@ -18,46 +17,44 @@ export class AuthService {
     tracking?: any
   ): Promise<{ user: UserPublic; token: string; refreshToken: string }> {
     // Check if user already exists
-    const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
-    
-    if (existingUser.rows.length > 0) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
       throw new AppError('Email already registered', 409);
     }
-    
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
-    
-    // Marketing Test Mode: If enabled, all new signups get 'marketing_test' plan regardless of selection
-    // To enable: Set MARKETING_TEST_MODE=true in .env
-    // To disable: Set MARKETING_TEST_MODE=false or remove it (normal sales mode resumes)
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Marketing Test Mode: set MARKETING_TEST_MODE=true in .env to grant all new signups instant access
     const marketingTestMode = process.env.MARKETING_TEST_MODE === 'true';
     const finalPlan = marketingTestMode ? 'marketing_test' : (subscriptionPlan || 'starter');
-    const finalStatus = marketingTestMode ? 'active' : 'pending'; // Marketing test users get immediate access
-    
-    // Create user with appropriate plan based on mode
-    const result = await query(
-      `INSERT INTO users (email, password_hash, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-       RETURNING id, email, full_name, company_name, subscription_plan, subscription_status, created_at, updated_at`,
-      [email, password_hash, fullName || null, companyName || null, finalPlan, finalStatus]
-    );
-    
-    const user = result.rows[0];
-    
-    // Generate account number for the new user (with error handling)
+    const finalStatus = marketingTestMode ? 'active' : 'pending';
+
+    // Create user via Prisma (respects full schema — all columns populated correctly)
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        fullName: fullName || null,
+        companyName: companyName || null,
+        subscriptionPlan: finalPlan,
+        subscriptionStatus: finalStatus,
+      },
+    });
+
+    // Generate account number for EFT reference
     try {
       const { accountNumberService } = await import('./accountNumberService');
       const firstName = fullName?.split(' ')[0] || 'User';
-      const accountNumber = await accountNumberService.generateAccountNumber(user.id, firstName);
-      console.log(`✅ Account number generated for user ${user.id}: ${accountNumber}`);
+      await accountNumberService.generateAccountNumber(user.id, firstName);
     } catch (error) {
-      console.error('❌ Failed to generate account number during signup:', error);
-      // Don't fail signup if account number generation fails - it can be generated later
-      // But log it for debugging
+      // Non-fatal — account number can be generated later on first payment
+      console.error('Failed to generate account number during signup:', error);
     }
 
-    // Save UTM/Tracking data if present
+    // Save UTM / tracking data if present
     if (tracking && typeof tracking === 'object' && Object.keys(tracking).length > 0) {
       try {
         const { trackingService } = await import('./trackingService');
@@ -75,136 +72,119 @@ export class AuthService {
         console.error('Failed to save tracking data (non-fatal):', error);
       }
     }
-    
+
     // Generate tokens
     const token = generateToken({ userId: user.id, email: user.email });
     const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
-    
-    // Store refresh token
+
+    // Store refresh token via Prisma
     await this.storeRefreshToken(user.id, refreshToken);
-    
+
+    const { passwordHash: _, ...userWithoutPassword } = user;
+
     return {
-      user: sanitizeUser(user),
+      user: {
+        ...userWithoutPassword,
+        isEmailVerified: false,
+        role: (user as any).role || 'user',
+      } as unknown as UserPublic,
       token,
       refreshToken,
     };
   }
-  
+
   // Login user
   async login(
     email: string,
     password: string
   ): Promise<{ user: UserPublic; token: string; refreshToken: string }> {
-    // Find user using Prisma
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        companyName: true,
-        subscriptionPlan: true,
-        subscriptionStatus: true,
-        role: true,
-        organizationId: true,
-        createdAt: true,
-      },
-    }) as { id: string; email: string; fullName: string | null; companyName: string | null; subscriptionPlan: string | null; subscriptionStatus: string | null; role: string | null; organizationId: string | null; createdAt: Date } | null;
-    
+    // Single query — fetch full user including passwordHash
+    const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user) {
       throw new AppError('Invalid email or password', 401);
     }
-    
-    // Check password - need to fetch full user for password
-    const fullUser = await prisma.user.findUnique({
-      where: { email }
-    });
-    
-    if (!fullUser) {
-      throw new AppError('Invalid email or password', 401);
-    }
-    
-    const isValidPassword = await bcrypt.compare(password, fullUser.passwordHash);
-    
+
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+
     if (!isValidPassword) {
       throw new AppError('Invalid email or password', 401);
     }
-    
+
     // Generate tokens
     const token = generateToken({ userId: user.id, email: user.email });
     const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
-    
-    // Store refresh token
+
     await this.storeRefreshToken(user.id, refreshToken);
-    
+
+    const { passwordHash: _, ...userWithoutPassword } = user;
+
     return {
-      user: user as unknown as UserPublic,
+      user: {
+        ...userWithoutPassword,
+        isEmailVerified: false,
+        role: (user as any).role || 'user',
+      } as unknown as UserPublic,
       token,
       refreshToken,
     };
   }
-  
+
   // Logout user (revoke refresh token)
   async logout(userId: string, refreshToken: string): Promise<void> {
-    await query(
-      'UPDATE refresh_tokens SET revoked = true WHERE user_id = $1 AND token = $2',
-      [userId, refreshToken]
-    );
+    await prisma.refreshToken.updateMany({
+      where: { userId, token: refreshToken },
+      data: { revoked: true },
+    });
   }
-  
+
   // Refresh access token
   async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
-    // Verify refresh token
     const { verifyRefreshToken } = await import('../config/jwt');
-    let decoded;
-    
+    let decoded: any;
+
     try {
       decoded = verifyRefreshToken(refreshToken);
-    } catch (error) {
+    } catch {
       throw new AppError('Invalid refresh token', 401);
     }
-    
-    // Check if token is revoked
-    const tokenResult = await query(
-      'SELECT * FROM refresh_tokens WHERE token = $1 AND revoked = false AND expires_at > NOW()',
-      [refreshToken]
-    );
-    
-    if (tokenResult.rows.length === 0) {
+
+    // Check token is valid and not revoked
+    const tokenRecord = await prisma.refreshToken.findFirst({
+      where: {
+        token: refreshToken,
+        revoked: false,
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!tokenRecord) {
       throw new AppError('Refresh token is invalid or expired', 401);
     }
-    
-    // Get user
-    const userResult = await query(
-      'SELECT id, email FROM users WHERE id = $1',
-      [decoded.userId]
-    );
-    
-    if (userResult.rows.length === 0) {
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
       throw new AppError('User not found', 404);
     }
-    
-    const user = userResult.rows[0];
-    
-    // Generate new tokens
+
     const newToken = generateToken({ userId: user.id, email: user.email });
     const newRefreshToken = generateRefreshToken({ userId: user.id, email: user.email });
-    
-    // Revoke old refresh token
-    await query(
-      'UPDATE refresh_tokens SET revoked = true WHERE token = $1',
-      [refreshToken]
-    );
-    
-    // Store new refresh token
+
+    // Rotate: revoke old, store new
+    await prisma.refreshToken.updateMany({
+      where: { token: refreshToken },
+      data: { revoked: true },
+    });
+
     await this.storeRefreshToken(user.id, newRefreshToken);
-    
-    return {
-      token: newToken,
-      refreshToken: newRefreshToken,
-    };
+
+    return { token: newToken, refreshToken: newRefreshToken };
   }
-  
+
   // Get user by ID
   async getUserById(userId: string): Promise<UserPublic> {
     const user = await prisma.user.findUnique({
@@ -218,93 +198,95 @@ export class AuthService {
         subscriptionStatus: true,
         role: true,
         organizationId: true,
-        createdAt: true
-      } as any
+        createdAt: true,
+        updatedAt: true,
+      } as any,
     });
-    
+
     if (!user) {
       throw new AppError('User not found', 404);
     }
-    
-    return user as unknown as UserPublic;
+
+    return {
+      ...user,
+      isEmailVerified: false,
+    } as unknown as UserPublic;
   }
-  
+
   // Request password reset
   async requestPasswordReset(email: string): Promise<string> {
-    // Find user
-    const result = await query('SELECT id FROM users WHERE email = $1', [email]);
-    
-    if (result.rows.length === 0) {
-      // Don't reveal if email exists or not
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+
+    if (!user) {
       return 'If the email exists, a reset link has been sent';
     }
-    
-    const userId = result.rows[0].id;
-    
-    // Generate reset token
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    
-    // Store reset token (expires in 1 hour)
-    await query(
-      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
-       VALUES ($1, $2, NOW() + INTERVAL '1 hour')
-       ON CONFLICT (user_id) DO UPDATE SET token = $2, expires_at = NOW() + INTERVAL '1 hour', created_at = NOW()`,
-      [userId, hashedToken]
-    );
-    
+
+    await prisma.passwordResetToken.upsert({
+      where: { userId: user.id },
+      update: {
+        token: hashedToken,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        used: false,
+      },
+      create: {
+        userId: user.id,
+        token: hashedToken,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
     // TODO: Send email with reset link
     // await emailService.sendPasswordResetEmail(email, resetToken);
-    
-    return resetToken; // In production, don't return this - just send email
+
+    return resetToken;
   }
-  
+
   // Confirm password reset
   async confirmPasswordReset(token: string, newPassword: string): Promise<void> {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    
-    // Find valid token
-    const result = await query(
-      `SELECT user_id FROM password_reset_tokens 
-       WHERE token = $1 AND expires_at > NOW() AND used = false`,
-      [hashedToken]
-    );
-    
-    if (result.rows.length === 0) {
+
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        token: hashedToken,
+        expiresAt: { gt: new Date() },
+        used: false,
+      },
+    });
+
+    if (!resetToken) {
       throw new AppError('Invalid or expired reset token', 400);
     }
-    
-    const userId = result.rows[0].user_id;
-    
-    // Hash new password
+
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(newPassword, salt);
-    
-    // Update password
-    await query(
-      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-      [password_hash, userId]
-    );
-    
-    // Mark token as used
-    await query(
-      'UPDATE password_reset_tokens SET used = true WHERE token = $1',
-      [hashedToken]
-    );
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { used: true },
+      }),
+    ]);
   }
-  
-  // Private: Store refresh token
+
+  // Store refresh token via Prisma
   private async storeRefreshToken(userId: string, token: string): Promise<void> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
-    
-    await query(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-      [userId, token, expiresAt]
-    );
+
+    await prisma.refreshToken.create({
+      data: { userId, token, expiresAt },
+    });
   }
 }
 
 export const authService = new AuthService();
-
-

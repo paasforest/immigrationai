@@ -220,7 +220,7 @@ export async function initiatePayment(req: Request, res: Response): Promise<void
       accountNumber: process.env.BANK_ACCOUNT_NUMBER || '4115223741',
       branchCode: process.env.BANK_BRANCH_CODE || '632005',
       reference: accountNumber,           // ← customer uses their account number as reference
-      amount: (amount / 100).toFixed(2),  // PLAN_PRICING stores cents
+      amount: amount.toFixed(2),  // PLAN_PRICING stores ZAR rands directly
       amountRaw: amount,
       plan: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan – ${billingCycle === 'monthly' ? 'Monthly' : 'Annual'}`,
       instructions: [

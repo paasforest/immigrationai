@@ -52,7 +52,7 @@ export default function PaymentMethodSelector({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const planLabel = `${plan.charAt(0).toUpperCase() + plan.slice(1)} – ${billingCycle === 'monthly' ? 'Monthly' : 'Annual'}`;
-  const amountDisplay = `R${(amount / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
+  const amountDisplay = `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
 
   const handleGetBankDetails = async () => {
     setIsLoading(true);

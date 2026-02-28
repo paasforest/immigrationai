@@ -415,7 +415,7 @@ const features = [
               <User className="w-5 h-5 text-gray-600" />
               <span className="text-gray-700">{user.email}</span>
             </div>
-            {user.email === 'admin@immigrationai.co.za' || user.email === 'testadmin@immigrationai.co.za' ? (
+            {(user.role === 'admin' || user.role === 'super_admin') ? (
               <Link href="/admin">
                 <Button
                   variant="default"
