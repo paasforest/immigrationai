@@ -552,6 +552,21 @@ export const immigrationApi = {
     return apiClient.get('/api/intake/lead-usage');
   },
 
+  // Pre-case messaging
+  async sendIntakeMessage(data: {
+    referenceNumber: string;
+    senderEmail: string;
+    senderName: string;
+    senderRole?: 'applicant' | 'professional';
+    content: string;
+  }): Promise<ApiResponse<any>> {
+    return apiClient.post('/api/intake/messages', data);
+  },
+
+  async getIntakeMessages(referenceNumber: string): Promise<ApiResponse<any[]>> {
+    return apiClient.get(`/api/intake/messages/${referenceNumber}`);
+  },
+
   // Admin functions
   async getPendingVerifications(): Promise<ApiResponse<any>> {
     return apiClient.get('/api/intake/admin/verifications');

@@ -13,7 +13,9 @@ import {
   Info,
   AlertCircle,
   Clock,
+  MessageSquare,
 } from 'lucide-react';
+import PreCaseChat from '@/components/intake/PreCaseChat';
 
 interface StatusCheckerProps {
   initialRef?: string;
@@ -70,25 +72,42 @@ export default function StatusChecker({ initialRef }: StatusCheckerProps) {
 
       case 'assigned':
         return (
-          <Card className="bg-blue-50 border border-blue-200 rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Eye className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">Specialist Found</h3>
-                  <p className="text-blue-800 text-sm">
-                    A specialist has been assigned and is reviewing your case. You will hear from
-                    them within 24 hours.
-                  </p>
-                  {result.expiresAt && (
-                    <p className="text-xs text-blue-700 mt-2">
-                      Assignment expires: {new Date(result.expiresAt).toLocaleDateString()}
+          <div className="space-y-4">
+            <Card className="bg-blue-50 border border-blue-200 rounded-xl">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Eye className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-2">Specialist Found</h3>
+                    <p className="text-blue-800 text-sm">
+                      A specialist has been assigned and is reviewing your case. You can message them
+                      below while waiting for them to formally accept.
                     </p>
-                  )}
+                    {result.expiresAt && (
+                      <p className="text-xs text-blue-700 mt-2">
+                        Assignment expires: {new Date(result.expiresAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            {/* Pre-case chat */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-4 h-4 text-[#0F2557]" />
+                  <h3 className="font-semibold text-gray-900 text-sm">Message Your Specialist</h3>
+                </div>
+                <PreCaseChat
+                  referenceNumber={referenceNumber}
+                  applicantEmail={email}
+                  applicantName="You"
+                  role="applicant"
+                />
+              </CardContent>
+            </Card>
+          </div>
         );
 
       case 'converted':

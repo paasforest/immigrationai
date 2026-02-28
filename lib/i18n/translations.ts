@@ -112,6 +112,24 @@ export const translations: Record<string, Record<LanguageCode, string>> = {
   'portal.caseStatus':      { en: 'Case Status', fr: 'Statut du dossier', pt: 'Status do caso', ar: 'حالة القضية', es: 'Estado del caso', zh: '案例状态' },
   'portal.timeline':        { en: 'Timeline', fr: 'Calendrier', pt: 'Cronograma', ar: 'الجدول الزمني', es: 'Cronograma', zh: '时间线' },
 
+  // ── Case Portal Stages ───────────────────────────────────────────────────
+  'stage.created':          { en: 'Case Created', fr: 'Dossier créé', pt: 'Caso criado', ar: 'تم إنشاء القضية', es: 'Caso creado', zh: '案例已创建' },
+  'stage.documents':        { en: 'Documents Collected', fr: 'Documents collectés', pt: 'Documentos coletados', ar: 'المستندات المجمعة', es: 'Documentos recopilados', zh: '文件已收集' },
+  'stage.submitted':        { en: 'Application Submitted', fr: 'Demande soumise', pt: 'Pedido enviado', ar: 'تم تقديم الطلب', es: 'Solicitud enviada', zh: '申请已提交' },
+  'stage.decision':         { en: 'Decision', fr: 'Décision', pt: 'Decisão', ar: 'القرار', es: 'Decisión', zh: '决定' },
+  'stage.current':          { en: 'Current stage', fr: 'Étape actuelle', pt: 'Etapa atual', ar: 'المرحلة الحالية', es: 'Etapa actual', zh: '当前阶段' },
+
+  // ── Messages Portal ───────────────────────────────────────────────────────
+  'messages.title':         { en: 'Messages', fr: 'Messages', pt: 'Mensagens', ar: 'الرسائل', es: 'Mensajes', zh: '消息' },
+  'messages.subtitle':      { en: 'Communicate with your immigration consultant', fr: 'Communiquez avec votre consultant en immigration', pt: 'Comunique-se com seu consultor de imigração', ar: 'تواصل مع مستشار الهجرة الخاص بك', es: 'Comuníquese con su consultor de inmigración', zh: '与您的移民顾问沟通' },
+  'messages.yourCases':     { en: 'Your Cases', fr: 'Vos dossiers', pt: 'Seus casos', ar: 'قضاياك', es: 'Sus casos', zh: '您的案例' },
+  'messages.search':        { en: 'Search cases...', fr: 'Rechercher des dossiers...', pt: 'Pesquisar casos...', ar: 'البحث عن قضايا...', es: 'Buscar casos...', zh: '搜索案例...' },
+  'messages.selectCase':    { en: 'Select a case to view messages', fr: 'Sélectionnez un dossier pour voir les messages', pt: 'Selecione um caso para ver as mensagens', ar: 'حدد قضية لعرض الرسائل', es: 'Seleccione un caso para ver mensajes', zh: '选择案例查看消息' },
+  'messages.consultantSee': { en: 'Your consultant can see everything you send here', fr: 'Votre consultant peut voir tout ce que vous envoyez ici', pt: 'Seu consultor pode ver tudo que você enviar aqui', ar: 'يمكن لمستشارك رؤية كل ما ترسله هنا', es: 'Su consultor puede ver todo lo que envíe aquí', zh: '您的顾问可以看到您在这里发送的所有内容' },
+  'messages.updated':       { en: 'Updated', fr: 'Mis à jour', pt: 'Atualizado', ar: 'تم التحديث', es: 'Actualizado', zh: '已更新' },
+  'messages.backToCases':   { en: 'Back to Cases', fr: 'Retour aux dossiers', pt: 'Voltar aos casos', ar: 'العودة إلى القضايا', es: 'Volver a los casos', zh: '返回案例' },
+  'messages.noCases':       { en: 'No cases found', fr: 'Aucun dossier trouvé', pt: 'Nenhum caso encontrado', ar: 'لم يتم العثور على قضايا', es: 'No se encontraron casos', zh: '未找到案例' },
+
   // ── General UI ────────────────────────────────────────────────────────────
   'ui.save':                { en: 'Save', fr: 'Enregistrer', pt: 'Salvar', ar: 'حفظ', es: 'Guardar', zh: '保存' },
   'ui.cancel':              { en: 'Cancel', fr: 'Annuler', pt: 'Cancelar', ar: 'إلغاء', es: 'Cancelar', zh: '取消' },

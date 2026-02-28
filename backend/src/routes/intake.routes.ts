@@ -24,6 +24,8 @@ import {
   submitVerificationDoc,
   verificationUpload,
   getLeadUsage,
+  sendIntakeMessage,
+  getIntakeMessages,
 } from '../controllers/intakeController';
 
 const router = Router();
@@ -35,6 +37,10 @@ router.get('/status/:ref', getIntakeStatus); // GET /api/intake/status/:ref
 router.get('/directory', getPublicDirectory); // GET /api/intake/directory
 router.get('/directory/:userId', getPublicProfile); // GET /api/intake/directory/:userId
 router.patch('/:id/eligibility-score', patchEligibilityScore); // PATCH /api/intake/:id/eligibility-score (no auth — silent background call)
+
+// Pre-case messaging (public — identified by referenceNumber + email)
+router.post('/messages', sendIntakeMessage);          // POST /api/intake/messages
+router.get('/messages/:ref', getIntakeMessages);      // GET  /api/intake/messages/:ref
 
 // Protected routes (auth + organizationContext)
 router.use(auth);

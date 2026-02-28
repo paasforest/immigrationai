@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MessageSquare, ArrowLeft } from 'lucide-react';
 import MessagesTab from '@/components/immigration/cases/detail/tabs/MessagesTab';
 import { format } from 'date-fns';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface CaseItem {
   id: string;
@@ -21,6 +22,7 @@ interface CaseItem {
 }
 
 export default function PortalMessagesPage() {
+  const { t } = useLanguage();
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,8 +65,8 @@ export default function PortalMessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-        <p className="text-gray-600 mt-1">Communicate with your immigration consultant</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('messages.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('messages.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
@@ -73,13 +75,13 @@ export default function PortalMessagesPage() {
           <Card className="h-full">
             <CardContent className="p-4 space-y-4">
               <Input
-                placeholder="Search cases..."
+                placeholder={t('messages.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
 
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">Your Cases</p>
+                <p className="text-sm font-semibold text-gray-700">{t('messages.yourCases')}</p>
                 <Badge variant="outline" className="text-xs">
                   {cases.length}
                 </Badge>
@@ -95,7 +97,7 @@ export default function PortalMessagesPage() {
                 ) : filteredCases.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <MessageSquare className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">No cases found</p>
+                    <p className="text-sm">{t('messages.noCases')}</p>
                   </div>
                 ) : (
                   filteredCases.map((caseItem) => {
@@ -145,7 +147,7 @@ export default function PortalMessagesPage() {
                             isSelected ? 'text-blue-200' : 'text-gray-500'
                           }`}
                         >
-                          Updated {format(new Date(caseItem.updatedAt), 'MMM d, yyyy')}
+                          {t('messages.updated')} {format(new Date(caseItem.updatedAt), 'MMM d, yyyy')}
                         </p>
                       </button>
                     );
@@ -171,7 +173,7 @@ export default function PortalMessagesPage() {
                     }}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Cases
+                    {t('messages.backToCases')}
                   </Button>
                 </div>
 
@@ -195,9 +197,9 @@ export default function PortalMessagesPage() {
             <Card>
               <CardContent className="py-24 text-center">
                 <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-600 font-medium">Select a case to view messages</p>
+                <p className="text-gray-600 font-medium">{t('messages.selectCase')}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Your consultant can see everything you send here
+                  {t('messages.consultantSee')}
                 </p>
               </CardContent>
             </Card>

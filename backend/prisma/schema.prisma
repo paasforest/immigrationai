@@ -825,6 +825,7 @@ model CaseIntake {
   updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
 
   assignments IntakeAssignment[]
+  messages    IntakeMessage[]
 
   @@index([referenceNumber])
   @@index([serviceId])
@@ -832,6 +833,21 @@ model CaseIntake {
   @@index([applicantEmail])
   @@index([submittedAt(sort: Desc)])
   @@map("case_intakes")
+}
+
+model IntakeMessage {
+  id          String     @id @default(cuid())
+  intakeId    String     @map("intake_id")
+  intake      CaseIntake @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  senderEmail String     @map("sender_email") @db.VarChar(255)
+  senderName  String     @map("sender_name") @db.VarChar(255)
+  senderRole  String     @default("applicant") @map("sender_role") @db.VarChar(50) // 'applicant' | 'professional'
+  content     String     @db.Text
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([intakeId])
+  @@index([createdAt])
+  @@map("intake_messages")
 }
 
 model IntakeAssignment {

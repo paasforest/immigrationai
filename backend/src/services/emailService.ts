@@ -166,7 +166,7 @@ export async function sendInvitationEmail({
 }
 
 /**
- * Send case update email
+ * Send case update email — multilingual
  */
 export async function sendCaseUpdateEmail({
   toEmail,
@@ -176,6 +176,7 @@ export async function sendCaseUpdateEmail({
   updateType,
   updateMessage,
   caseUrl,
+  preferredLanguage,
 }: {
   toEmail: string;
   toName?: string;
@@ -184,11 +185,31 @@ export async function sendCaseUpdateEmail({
   updateType: string;
   updateMessage: string;
   caseUrl: string;
+  preferredLanguage?: string | null;
 }): Promise<void> {
+  const lang = toEmailLang(preferredLanguage);
+
+  // Multilingual strings for case update email
+  const updateStrings: Record<string, Record<EmailLang, string>> = {
+    header:    { en: 'Case Update', fr: 'Mise à jour du dossier', pt: 'Atualização do caso', ar: 'تحديث القضية', es: 'Actualización del caso', zh: '案例更新' },
+    intro:     { en: "There's an update on your immigration case:", fr: 'Il y a une mise à jour sur votre dossier d\'immigration :', pt: 'Há uma atualização no seu caso de imigração:', ar: 'هناك تحديث على قضية الهجرة الخاصة بك:', es: 'Hay una actualización en su caso de inmigración:', zh: '您的移民案例有更新：' },
+    caseLabel: { en: 'Case', fr: 'Dossier', pt: 'Caso', ar: 'القضية', es: 'Caso', zh: '案例' },
+    refLabel:  { en: 'Reference', fr: 'Référence', pt: 'Referência', ar: 'المرجع', es: 'Referencia', zh: '参考' },
+    updLabel:  { en: 'Update', fr: 'Mise à jour', pt: 'Atualização', ar: 'التحديث', es: 'Actualización', zh: '更新' },
+    cta:       { en: 'View Your Case', fr: 'Voir votre dossier', pt: 'Ver seu caso', ar: 'عرض قضيتك', es: 'Ver su caso', zh: '查看您的案例' },
+    subject:   { en: 'Update on your case {ref}', fr: 'Mise à jour de votre dossier {ref}', pt: 'Atualização do seu caso {ref}', ar: 'تحديث على قضيتك {ref}', es: 'Actualización de su caso {ref}', zh: '您的案例更新 {ref}' },
+  };
+
+  function u(key: string): string {
+    return (updateStrings[key]?.[lang] ?? updateStrings[key]?.['en'] ?? key);
+  }
+
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+
   try {
     const html = `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -200,19 +221,18 @@ export async function sendCaseUpdateEmail({
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; max-width: 600px;">
           <tr>
             <td style="background-color: #0F2557; padding: 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Case Update</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${u('header')}</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding: 40px 30px;">
-              <h2 style="color: #333333; margin-top: 0;">Update on your case</h2>
+            <td style="padding: 40px 30px;" dir="${dir}">
               <p style="color: #666666; font-size: 16px; line-height: 1.6;">
-                There's an update on your immigration case:
+                ${u('intro')}
               </p>
               <div style="background-color: #f9f9f9; padding: 20px; border-radius: 6px; margin: 20px 0;">
-                <p style="margin: 0; color: #333333;"><strong>Case:</strong> ${caseTitle}</p>
-                <p style="margin: 0; color: #333333;"><strong>Reference:</strong> ${caseReference}</p>
-                <p style="margin: 0; color: #333333;"><strong>Update:</strong> ${updateType}</p>
+                <p style="margin: 0 0 8px; color: #333333;"><strong>${u('caseLabel')}:</strong> ${caseTitle}</p>
+                <p style="margin: 0 0 8px; color: #333333;"><strong>${u('refLabel')}:</strong> ${caseReference}</p>
+                <p style="margin: 0; color: #333333;"><strong>${u('updLabel')}:</strong> ${updateType}</p>
               </div>
               <p style="color: #666666; font-size: 16px; line-height: 1.6;">
                 ${updateMessage}
@@ -220,7 +240,7 @@ export async function sendCaseUpdateEmail({
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${caseUrl}" style="display: inline-block; padding: 14px 32px; background-color: #F59E0B; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">View Your Case</a>
+                    <a href="${caseUrl}" style="display: inline-block; padding: 14px 32px; background-color: #F59E0B; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">${u('cta')}</a>
                   </td>
                 </tr>
               </table>
@@ -228,7 +248,7 @@ export async function sendCaseUpdateEmail({
           </tr>
           <tr>
             <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee;">
-              <p style="color: #999999; font-size: 12px; margin: 0;">Immigration AI</p>
+              <p style="color: #999999; font-size: 12px; margin: 0;">ImmigrationAI</p>
             </td>
           </tr>
         </table>
@@ -239,14 +259,16 @@ export async function sendCaseUpdateEmail({
 </html>
     `;
 
+    const subject = u('subject').replace('{ref}', caseReference);
+
     await getResend().emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: `Update on your case ${caseReference}`,
+      subject,
       html,
     });
 
-    logger.info('Case update email sent', { toEmail, caseReference });
+    logger.info('Case update email sent', { toEmail, caseReference, lang });
   } catch (error: any) {
     logger.error('Failed to send case update email', { error: error.message, toEmail });
   }

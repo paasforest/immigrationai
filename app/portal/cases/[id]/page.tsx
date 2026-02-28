@@ -14,12 +14,13 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import PortalDocumentUpload from '@/components/portal/PortalDocumentUpload';
 import MessagesTab from '@/components/immigration/cases/detail/tabs/MessagesTab';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const stages = [
-  { id: 'created', label: 'Case Created', icon: '📋' },
-  { id: 'documents', label: 'Documents Collected', icon: '📁' },
-  { id: 'submitted', label: 'Application Submitted', icon: '✉️' },
-  { id: 'decision', label: 'Decision', icon: '⚖️' },
+  { id: 'created', labelKey: 'stage.created', icon: '📋' },
+  { id: 'documents', labelKey: 'stage.documents', icon: '📁' },
+  { id: 'submitted', labelKey: 'stage.submitted', icon: '✉️' },
+  { id: 'decision', labelKey: 'stage.decision', icon: '⚖️' },
 ];
 
 function getCurrentStage(status: string, outcome: string | null): string {
@@ -32,6 +33,7 @@ function getCurrentStage(status: string, outcome: string | null): string {
 export default function PortalCaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
+  const { t } = useLanguage();
   const [caseData, setCaseData] = useState<ImmigrationCase | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,9 +101,9 @@ export default function PortalCaseDetailPage() {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <p className="text-gray-600">Case not found</p>
+          <p className="text-gray-600">{t('case.myCase')}</p>
           <Button asChild className="mt-4">
-            <Link href="/portal">Back to Dashboard</Link>
+            <Link href="/portal">{t('ui.back')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -117,7 +119,7 @@ export default function PortalCaseDetailPage() {
       <Button variant="ghost" asChild>
         <Link href="/portal">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
+          {t('ui.back')}
         </Link>
       </Button>
 
@@ -149,7 +151,7 @@ export default function PortalCaseDetailPage() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            Application Progress
+            {t('portal.appProgress')}
           </button>
           <button
             onClick={() => setActiveTab('documents')}
@@ -159,7 +161,7 @@ export default function PortalCaseDetailPage() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            My Documents
+            {t('case.documents')}
           </button>
           <button
             onClick={() => setActiveTab('messages')}
@@ -169,7 +171,7 @@ export default function PortalCaseDetailPage() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            Messages
+            {t('case.messages')}
           </button>
         </div>
       </div>
@@ -178,7 +180,7 @@ export default function PortalCaseDetailPage() {
       {activeTab === 'progress' && (
         <Card>
           <CardHeader>
-            <CardTitle>Application Progress</CardTitle>
+            <CardTitle>{t('portal.appProgress')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -187,7 +189,6 @@ export default function PortalCaseDetailPage() {
                 {stages.map((stage, idx) => {
                   const isCompleted = idx < stageIndex;
                   const isCurrent = idx === stageIndex;
-                  const isFuture = idx > stageIndex;
 
                   return (
                     <div key={stage.id} className="flex items-start gap-4 mb-6 last:mb-0">
@@ -212,10 +213,10 @@ export default function PortalCaseDetailPage() {
                               : 'text-gray-400'
                           }`}
                         >
-                          {stage.label}
+                          {t(stage.labelKey)}
                         </p>
                         {isCurrent && (
-                          <p className="text-sm text-gray-600 mt-1">Current stage</p>
+                          <p className="text-sm text-gray-600 mt-1">{t('stage.current')}</p>
                         )}
                       </div>
                     </div>
@@ -232,7 +233,7 @@ export default function PortalCaseDetailPage() {
           {/* Upload Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Upload Document</CardTitle>
+              <CardTitle>{t('case.uploadDoc')}</CardTitle>
             </CardHeader>
             <CardContent>
               <PortalDocumentUpload onUpload={handleDocumentUpload} />
@@ -242,13 +243,13 @@ export default function PortalCaseDetailPage() {
           {/* My Documents */}
           <Card>
             <CardHeader>
-              <CardTitle>My Documents</CardTitle>
+              <CardTitle>{t('case.documents')}</CardTitle>
             </CardHeader>
             <CardContent>
               {documents.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Upload className="w-12 h-12 mx-auto mb-4" />
-                  <p>No documents uploaded yet</p>
+                  <p>{t('portal.noCasesBody')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -273,10 +274,10 @@ export default function PortalCaseDetailPage() {
                         }
                       >
                         {doc.status === 'approved'
-                          ? 'Approved ✓'
+                          ? t('status.approved') + ' ✓'
                           : doc.status === 'rejected'
-                          ? 'Rejected — please re-upload'
-                          : 'Under Review'}
+                          ? t('status.rejected')
+                          : t('doc.required')}
                       </Badge>
                     </div>
                   ))}
@@ -298,30 +299,30 @@ export default function PortalCaseDetailPage() {
       {/* Case Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Case Details</CardTitle>
+          <CardTitle>{t('case.myCase')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-600">Visa Type</p>
+              <p className="text-gray-600">{t('case.status')}</p>
               <p className="font-medium">{caseData.visaType || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-gray-600">Destination</p>
+              <p className="text-gray-600">{t('intake.destination')}</p>
               <p className="font-medium">{caseData.destinationCountry || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-gray-600">Consultant</p>
+              <p className="text-gray-600">{t('portal.specialist')}</p>
               <p className="font-medium">
-                {caseData.assignedProfessional?.fullName || 'Not assigned'}
+                {caseData.assignedProfessional?.fullName || t('portal.noCasesTitle')}
               </p>
             </div>
             <div>
-              <p className="text-gray-600">Deadline</p>
+              <p className="text-gray-600">{t('portal.timeline')}</p>
               <p className="font-medium">
                 {caseData.submissionDeadline
                   ? format(new Date(caseData.submissionDeadline), 'MMM d, yyyy')
-                  : 'No deadline'}
+                  : '—'}
               </p>
             </div>
           </div>

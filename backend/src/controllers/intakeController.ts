@@ -1771,3 +1771,76 @@ export async function getLeadUsage(req: Request, res: Response): Promise<void> {
     throw new AppError(error.message || 'Failed to get lead usage', 500);
   }
 }
+
+/**
+ * Send a pre-case message (PUBLIC — identified by referenceNumber + applicantEmail)
+ * Professionals send via dashboard (identified by JWT) but we use email for simplicity here.
+ */
+export async function sendIntakeMessage(req: Request, res: Response): Promise<void> {
+  try {
+    const { referenceNumber, senderEmail, senderName, senderRole = 'applicant', content } = req.body;
+
+    if (!referenceNumber || !senderEmail || !senderName || !content) {
+      throw new AppError('referenceNumber, senderEmail, senderName and content are required', 400);
+    }
+
+    // Verify intake exists
+    const intake = await prisma.caseIntake.findUnique({
+      where: { referenceNumber },
+      select: { id: true, applicantEmail: true, status: true },
+    });
+
+    if (!intake) {
+      throw new AppError('Intake not found', 404);
+    }
+
+    // If senderRole is 'applicant', verify email matches
+    if (senderRole === 'applicant' && intake.applicantEmail.toLowerCase() !== senderEmail.toLowerCase()) {
+      throw new AppError('Email does not match intake record', 403);
+    }
+
+    const message = await (prisma as any).intakeMessage.create({
+      data: {
+        intakeId: intake.id,
+        senderEmail: senderEmail.toLowerCase(),
+        senderName,
+        senderRole,
+        content,
+      },
+    });
+
+    res.json({ success: true, data: message });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to send message', 500);
+  }
+}
+
+/**
+ * Get pre-case messages for an intake (PUBLIC — identified by referenceNumber)
+ * Returns messages visible to both applicant and professional.
+ */
+export async function getIntakeMessages(req: Request, res: Response): Promise<void> {
+  try {
+    const { ref } = req.params;
+
+    const intake = await prisma.caseIntake.findUnique({
+      where: { referenceNumber: ref },
+      select: { id: true },
+    });
+
+    if (!intake) {
+      throw new AppError('Intake not found', 404);
+    }
+
+    const messages = await (prisma as any).intakeMessage.findMany({
+      where: { intakeId: intake.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ success: true, data: messages });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to get messages', 500);
+  }
+}

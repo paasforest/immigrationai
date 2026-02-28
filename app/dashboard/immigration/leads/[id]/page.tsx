@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, X, MessageSquare } from 'lucide-react';
 import RespondToLeadDialog from '@/components/immigration/leads/RespondToLeadDialog';
+import PreCaseChat from '@/components/intake/PreCaseChat';
+import { useAuth } from '@/contexts/AuthContext';
 
 function getUrgencyBadge(urgencyLevel: string) {
   switch (urgencyLevel) {
@@ -56,6 +58,7 @@ function maskPhone(phone: string | null | undefined): string {
 export default function LeadDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
   const [assignment, setAssignment] = useState<IntakeAssignment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -246,6 +249,32 @@ export default function LeadDetailPage() {
                   </pre>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Pre-Case Chat */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-[#0F2557]" />
+                Pre-Case Chat
+                <Badge variant="secondary" className="text-xs ml-auto">
+                  Before case is created
+                </Badge>
+              </CardTitle>
+              <p className="text-sm text-gray-500">
+                Communicate with the applicant before accepting. Contact details are only revealed after you accept.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <PreCaseChat
+                referenceNumber={(assignment.intake as any).referenceNumber}
+                applicantEmail={(assignment.intake as any).applicantEmail}
+                applicantName={(assignment.intake as any).applicantName}
+                role="professional"
+                senderEmail={user?.email || ''}
+                senderName={user?.fullName || user?.email || 'Specialist'}
+              />
             </CardContent>
           </Card>
         </div>
