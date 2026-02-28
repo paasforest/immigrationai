@@ -14,6 +14,7 @@ import {
   sendClientPortalWelcomeEmail,
 } from '../services/emailService';
 import { eligibilityService, type EligibilityInput } from '../services/eligibilityService';
+import { buildRiskProfile } from '../services/riskProfileService';
 
 // Module-level cache for services
 const servicesCache: { data: any[] | null; cachedAt: number } = {
@@ -143,8 +144,17 @@ export async function submitIntake(req: Request, res: Response): Promise<void> {
         };
 
         const eligibilityResult = await eligibilityService.assessEligibility(eligibilityInput);
+
+        // Build structured factor-level risk profile (no AI cost — deterministic)
+        const riskProfile = buildRiskProfile({
+          applicantCountry,
+          destinationCountry,
+          serviceType: intake.service.caseType || 'visa_application',
+          urgencyLevel,
+          description,
+        });
         
-        // Store eligibility result with the intake
+        // Store both eligibility assessment AND risk profile with the intake
         await prisma.caseIntake.update({
           where: { id: intake.id },
           data: {
@@ -159,6 +169,7 @@ export async function submitIntake(req: Request, res: Response): Promise<void> {
                 recommendedSteps: eligibilityResult.recommendedSteps,
                 assessedAt: new Date().toISOString(),
               },
+              riskProfile,
             },
           },
         });

@@ -51,8 +51,134 @@ export interface HomeTiesResult {
 
 const MAX_SCORE = 24;
 
+// ─── Visa-Type Weight Profiles ────────────────────────────────────────────────
+// Each key maps to weights (0–1) applied per factor.
+// Total weights across all 8 factors should sum to 1.0.
+// Factors: employment_status, employment_duration, financial_means,
+//          property, family, financial_commitments, bank_profile, travel_history
+export type VisaWeightProfile = {
+  employment_status: number;
+  employment_duration: number;
+  financial_means: number;
+  property: number;
+  family: number;
+  financial_commitments: number;
+  bank_profile: number;
+  travel_history: number;
+};
+
+export const VISA_TYPE_WEIGHTS: Record<string, VisaWeightProfile> = {
+  // Schengen short-stay tourist / business — embassies heavily weight employment & finances
+  tourist: {
+    employment_status:    0.18,
+    employment_duration:  0.15,
+    financial_means:      0.18,
+    property:             0.10,
+    family:               0.10,
+    financial_commitments:0.09,
+    bank_profile:         0.12,
+    travel_history:       0.08,
+  },
+  // Standard visitor (UK Appendix V) — employment letter + return motive critical
+  visitor: {
+    employment_status:    0.20,
+    employment_duration:  0.16,
+    financial_means:      0.14,
+    property:             0.10,
+    family:               0.12,
+    financial_commitments:0.08,
+    bank_profile:         0.12,
+    travel_history:       0.08,
+  },
+  // Business short-stay — financial means + employment are key
+  business: {
+    employment_status:    0.18,
+    employment_duration:  0.12,
+    financial_means:      0.20,
+    property:             0.08,
+    family:               0.10,
+    financial_commitments:0.10,
+    bank_profile:         0.14,
+    travel_history:       0.08,
+  },
+  // Student visa — financial means & family ties matter, employment less so
+  student: {
+    employment_status:    0.08,
+    employment_duration:  0.06,
+    financial_means:      0.22,
+    property:             0.10,
+    family:               0.18,
+    financial_commitments:0.08,
+    bank_profile:         0.16,
+    travel_history:       0.12,
+  },
+  // UK Family visa — family ties are the dominant factor
+  family: {
+    employment_status:    0.10,
+    employment_duration:  0.08,
+    financial_means:      0.12,
+    property:             0.10,
+    family:               0.30,
+    financial_commitments:0.08,
+    bank_profile:         0.12,
+    travel_history:       0.10,
+  },
+  // US B1/B2 — strong non-immigrant intent required, all factors weighted, travel history important
+  us_b1b2: {
+    employment_status:    0.18,
+    employment_duration:  0.14,
+    financial_means:      0.14,
+    property:             0.12,
+    family:               0.12,
+    financial_commitments:0.10,
+    bank_profile:         0.10,
+    travel_history:       0.10,
+  },
+  // Canada TRV / visitor — similar to UK visitor but travel history more important
+  canada_visitor: {
+    employment_status:    0.18,
+    employment_duration:  0.12,
+    financial_means:      0.16,
+    property:             0.10,
+    family:               0.12,
+    financial_commitments:0.08,
+    bank_profile:         0.12,
+    travel_history:       0.12,
+  },
+  // Generic fallback — equal weighting
+  other: {
+    employment_status:    0.125,
+    employment_duration:  0.125,
+    financial_means:      0.125,
+    property:             0.125,
+    family:               0.125,
+    financial_commitments:0.125,
+    bank_profile:         0.125,
+    travel_history:       0.125,
+  },
+};
+
+/**
+ * Resolve which weight profile applies for a given visa type string.
+ * The input visa type can be a free-form string from the intake form.
+ */
+export function resolveWeightProfile(visaType: string): VisaWeightProfile {
+  const v = visaType.toLowerCase();
+  if (v.includes('tourist') || v.includes('schengen')) return VISA_TYPE_WEIGHTS.tourist;
+  if (v.includes('visitor') || v.includes('visit')) return VISA_TYPE_WEIGHTS.visitor;
+  if (v.includes('business')) return VISA_TYPE_WEIGHTS.business;
+  if (v.includes('student') || v.includes('study')) return VISA_TYPE_WEIGHTS.student;
+  if (v.includes('family') || v.includes('spouse') || v.includes('partner')) return VISA_TYPE_WEIGHTS.family;
+  if (v.includes('b1') || v.includes('b2') || v.includes('b-1') || v.includes('b-2')) return VISA_TYPE_WEIGHTS.us_b1b2;
+  if (v.includes('canada') && (v.includes('visitor') || v.includes('trv'))) return VISA_TYPE_WEIGHTS.canada_visitor;
+  return VISA_TYPE_WEIGHTS.other;
+}
+
 export function scoreHomeTies(input: HomeTiesInput): HomeTiesResult {
   const breakdown: { category: string; score: number; max: number; label: string }[] = [];
+
+  // Resolve weight profile for this visa type
+  const weights = resolveWeightProfile(input.visaType);
 
   // ── 1. Employment Status (max 3) ──────────────────────────────────────────
   let empScore = 0;
@@ -146,9 +272,28 @@ export function scoreHomeTies(input: HomeTiesInput): HomeTiesResult {
   }
   breakdown.push({ category: 'Prior Travel History', score: travelScore, max: 3, label: travelLabel });
 
-  // ── Calculate totals ───────────────────────────────────────────────────────
+  // ── Calculate totals with visa-type weighting ─────────────────────────────
+  // Each factor's raw score (0-3) is normalised to 0-1, then weighted.
+  const factorWeights = [
+    weights.employment_status,
+    weights.employment_duration,
+    weights.financial_means,
+    weights.property,
+    weights.family,
+    weights.financial_commitments,
+    weights.bank_profile,
+    weights.travel_history,
+  ];
+
+  const weightedScore = breakdown.reduce((sum, b, i) => {
+    const normalised = b.max > 0 ? b.score / b.max : 0;
+    return sum + normalised * (factorWeights[i] ?? 0.125);
+  }, 0);
+
+  const percentage = Math.round(weightedScore * 100);
+
+  // Retain raw totalScore for backwards compatibility
   const totalScore = breakdown.reduce((sum, b) => sum + b.score, 0);
-  const percentage = Math.round((totalScore / MAX_SCORE) * 100);
 
   let rating: HomeTiesResult['rating'];
   let riskLevel: HomeTiesResult['riskLevel'];

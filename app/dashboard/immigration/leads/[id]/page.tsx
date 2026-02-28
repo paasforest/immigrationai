@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, X, MessageSquare } from 'lucide-react';
 import RespondToLeadDialog from '@/components/immigration/leads/RespondToLeadDialog';
+import LeadRiskPanel from '@/components/immigration/leads/LeadRiskPanel';
 import PreCaseChat from '@/components/intake/PreCaseChat';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -241,16 +242,68 @@ export default function LeadDetailPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap">{assignment.intake.description}</p>
-              {(assignment.intake as any).additionalData && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs text-gray-500 mb-2">Additional Information:</p>
-                  <pre className="text-xs text-gray-600">
-                    {JSON.stringify((assignment.intake as any).additionalData, null, 2)}
-                  </pre>
-                </div>
-              )}
             </CardContent>
           </Card>
+
+          {/* AI Risk Pre-Diagnosis Panel */}
+          {(() => {
+            const riskProfile = (assignment.intake as any).additionalData?.riskProfile;
+            const eligibility = (assignment.intake as any).additionalData?.eligibilityAssessment;
+            if (!riskProfile && !eligibility) return null;
+
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    AI Pre-Diagnosis
+                    <span className="text-xs text-gray-400 font-normal ml-auto">
+                      Assessed silently — not shown to applicant
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Factor-level risk panel */}
+                  {riskProfile && <LeadRiskPanel riskProfile={riskProfile} />}
+
+                  {/* AI eligibility verdict */}
+                  {eligibility && (
+                    <div className="border-t pt-4 space-y-2">
+                      <p className="text-xs font-semibold text-gray-700">AI Eligibility Summary</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full ${
+                          eligibility.verdict === 'likely'
+                            ? 'bg-green-100 text-green-700'
+                            : eligibility.verdict === 'unlikely'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {eligibility.verdict?.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Confidence: {Math.round((eligibility.confidence || 0) * 100)}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">{eligibility.summary}</p>
+                      {eligibility.riskFactors?.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Risk factors:</p>
+                          <ul className="space-y-0.5">
+                            {eligibility.riskFactors.map((rf: string, i: number) => (
+                              <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+                                <span className="text-red-400 mt-0.5">•</span>
+                                <span>{rf}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Pre-Case Chat */}
           <Card>

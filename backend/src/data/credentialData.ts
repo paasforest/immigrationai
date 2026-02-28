@@ -195,7 +195,152 @@ export const africanUniversities = [
   },
 ];
 
-// Attestation Requirements by Origin Country
+// ─── Corridor Evaluation Body Lookup ─────────────────────────────────────────
+// Given an applicant's origin country and their destination country,
+// returns the primary evaluation body they will need to engage.
+// Used by the risk profile service to auto-flag credential evaluation needs.
+export interface CorridorEvalBody {
+  body: string;
+  url: string;
+  mandatory: boolean; // mandatory for the visa type, or advisory?
+  note?: string;
+}
+
+export function getCorridorEvaluationBody(
+  originCountry: string,
+  destinationCountry: string
+): CorridorEvalBody | null {
+  const dest = destinationCountry.toLowerCase();
+  const origin = originCountry.toLowerCase();
+
+  // ── United Kingdom ────────────────────────────────────────────────────────
+  if (dest.includes('united kingdom') || dest.includes('uk') || dest.includes('britain')) {
+    return {
+      body: 'UK ENIC (formerly NARIC)',
+      url: 'https://www.enic.org.uk',
+      mandatory: true,
+      note: 'Required for Skilled Worker and most professional licence applications.',
+    };
+  }
+
+  // ── Canada ────────────────────────────────────────────────────────────────
+  if (dest.includes('canada')) {
+    // Quebec has its own body
+    return {
+      body: 'WES (World Education Services)',
+      url: 'https://www.wes.org',
+      mandatory: true,
+      note: 'Required for Express Entry and most skilled worker streams. Quebec applicants use MIDI instead.',
+    };
+  }
+
+  // ── Australia ─────────────────────────────────────────────────────────────
+  if (dest.includes('australia')) {
+    return {
+      body: 'VETASSESS / Engineers Australia / relevant assessing body',
+      url: 'https://www.vetassess.com.au',
+      mandatory: true,
+      note: 'Assessing body depends on nominated occupation. Check ANZSCO code first.',
+    };
+  }
+
+  // ── Germany ───────────────────────────────────────────────────────────────
+  if (dest.includes('germany')) {
+    return {
+      body: 'anabin / KMK (Standing Conference of Education Ministers)',
+      url: 'https://anabin.kmk.org',
+      mandatory: false,
+      note: 'Check anabin first to confirm recognition status. If not listed, formal KMK recognition is required.',
+    };
+  }
+
+  // ── France ────────────────────────────────────────────────────────────────
+  if (dest.includes('france')) {
+    return {
+      body: 'ANABIN / ENIC-NARIC France',
+      url: 'https://www.ciep.fr/anabin',
+      mandatory: false,
+      note: 'Use ANABIN to check if the qualification is automatically recognised. Otherwise apply via ENIC-NARIC.',
+    };
+  }
+
+  // ── Netherlands ───────────────────────────────────────────────────────────
+  if (dest.includes('netherlands') || dest.includes('holland')) {
+    return {
+      body: 'Nuffic / EP-Nuffic',
+      url: 'https://www.nuffic.nl/en',
+      mandatory: false,
+      note: 'Required for regulated professions and certain academic routes. Free online check available.',
+    };
+  }
+
+  // ── Ireland ───────────────────────────────────────────────────────────────
+  if (dest.includes('ireland')) {
+    return {
+      body: 'QQI (Quality & Qualifications Ireland)',
+      url: 'https://www.qqi.ie',
+      mandatory: false,
+      note: 'Required for regulated professions. Employment permits do not always require formal recognition.',
+    };
+  }
+
+  // ── Belgium ───────────────────────────────────────────────────────────────
+  if (dest.includes('belgium')) {
+    return {
+      body: 'NARIC Belgium (Flemish/French Community)',
+      url: 'https://www.naricvlaanderen.be',
+      mandatory: false,
+      note: 'Body differs based on which community region the applicant will live in.',
+    };
+  }
+
+  // ── South Africa ─────────────────────────────────────────────────────────
+  if (dest.includes('south africa')) {
+    return {
+      body: 'SAQA (South African Qualifications Authority)',
+      url: 'https://www.saqa.org.za',
+      mandatory: true,
+      note: 'All foreign qualifications must be evaluated by SAQA. Processing: 6–12 weeks.',
+    };
+  }
+
+  // ── USA ───────────────────────────────────────────────────────────────────
+  if (dest.includes('united states') || dest.includes('usa') || dest.includes('america')) {
+    return {
+      body: 'NACES-member body (WES, ECE, SpanTran etc.)',
+      url: 'https://www.naces.org/members',
+      mandatory: false,
+      note: 'Required by most universities and many employers. Choice of body depends on the institution.',
+    };
+  }
+
+  // ── UAE ───────────────────────────────────────────────────────────────────
+  if (dest.includes('uae') || dest.includes('emirates') || dest.includes('dubai') || dest.includes('abu dhabi')) {
+    return {
+      body: 'UAE Ministry of Education — Attestation',
+      url: 'https://www.moe.gov.ae',
+      mandatory: true,
+      note: 'All academic documents must be attested through the UAE Ministry of Education before use.',
+    };
+  }
+
+  // ── EU General (Schengen member not listed above) ─────────────────────────
+  if (
+    ['austria', 'sweden', 'denmark', 'finland', 'norway', 'switzerland', 'spain', 'italy',
+     'portugal', 'poland', 'czech republic', 'hungary', 'romania', 'greece'].some(c => dest.includes(c))
+  ) {
+    return {
+      body: 'National ENIC-NARIC centre for destination country',
+      url: 'https://www.enic-naric.net/find-a-national-centre.aspx',
+      mandatory: false,
+      note: 'Each EU country has its own national ENIC-NARIC centre. Check the ENIC-NARIC directory for the correct body.',
+    };
+  }
+
+  return null; // No specific mapping — professional to advise
+}
+
+// ─── Attestation Requirements by Origin Country
 export const attestationRequirements = {
   Nigeria: {
     steps: [
