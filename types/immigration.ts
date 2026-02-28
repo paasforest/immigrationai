@@ -117,7 +117,7 @@ export interface Organization {
   name: string;
   slug: string;
   plan: 'starter' | 'professional' | 'agency';
-  planStatus: 'trial' | 'active' | 'suspended' | 'cancelled';
+  planStatus: 'trial' | 'active' | 'suspended' | 'cancelled' | 'expired';
   trialEndsAt: string | null;
   billingEmail: string | null;
   country: string | null;
