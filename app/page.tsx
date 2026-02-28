@@ -238,14 +238,14 @@ export default function HomePage() {
       color: 'from-green-500 to-teal-600',
       points: [
         'Visa rejected? Get expert help today',
-        'Find a verified immigration professional',
-        'Filter by destination country, visa type, and language',
+        'Submit your inquiry in 2 minutes',
+        'Matched to a specialist for your country & visa type',
         'Track your application status in real-time',
         'Secure document sharing with your consultant',
         'Direct messaging — no lost emails',
       ],
-      cta: 'Find a Specialist',
-      href: '/find-a-specialist',
+      cta: 'Get Help Now',
+      href: '/get-help',
     },
   ];
 
@@ -331,6 +331,12 @@ export default function HomePage() {
                 <Link href="/find-a-specialist" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Find a Specialist</Link>
                 <Link href="/auth/login" className={`text-sm font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0F2557]' : 'text-white/90 hover:text-white'}`}>Log In</Link>
                 <Link
+                  href="/get-help"
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors border ${scrolled ? 'border-amber-500 text-amber-600 hover:bg-amber-50' : 'border-amber-400/60 text-amber-300 hover:text-amber-200'}`}
+                >
+                  Get Help
+                </Link>
+                <Link
                   href="/auth/signup"
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${scrolled ? 'bg-[#0F2557] text-white hover:bg-[#1a3570]' : 'bg-amber-400 text-[#0F2557] hover:bg-amber-300'}`}
                 >
@@ -350,6 +356,7 @@ export default function HomePage() {
                   { href: '#who-its-for', label: 'Who It\'s For' },
                   { href: '#faq', label: 'FAQ' },
                   { href: '/find-a-specialist', label: 'Find a Specialist' },
+                  { href: '/get-help', label: 'Get Help (Applicants)' },
                   { href: '/auth/login', label: 'Log In' },
                 ].map((item) => (
                   <a key={item.href} href={item.href} className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
@@ -488,19 +495,29 @@ export default function HomePage() {
               For Visa Applicants
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Visa Rejected? Application Delayed?
+              Visa Rejected? Application Delayed? Need Expert Help?
             </h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 mb-4 max-w-2xl mx-auto">
               Immigration law is complex and changes constantly. A verified professional who knows your destination country and visa category can mean the difference between another rejection and a successful application.
             </p>
+            <p className="text-sm text-gray-500 mb-8 max-w-xl mx-auto">
+              Submit your inquiry in 2 minutes — tell us your situation and we'll match you with the right specialist.
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/get-help"
+                className="bg-amber-500 text-white px-8 py-4 rounded-xl font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 text-base shadow-lg"
+              >
+                Get Help Now <ArrowRight className="w-5 h-5" />
+              </Link>
               <Link
                 href="/find-a-specialist"
                 className="bg-[#0F2557] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#1a3570] transition-colors flex items-center justify-center gap-2 text-base"
               >
-                Find a Verified Specialist <ArrowRight className="w-5 h-5" />
+                Browse Specialists <Search className="w-5 h-5" />
               </Link>
             </div>
+            <p className="text-xs text-gray-400 mt-4">Free to submit · No obligation · Verified specialists only</p>
           </div>
         </section>
 
@@ -711,10 +728,10 @@ export default function HomePage() {
               <div>
                 <h4 className="text-white font-semibold mb-4 text-sm">For Applicants</h4>
                 <ul className="space-y-2 text-sm">
+                  <li><Link href="/get-help" className="hover:text-white transition-colors">Get Help Now</Link></li>
                   <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Find a Specialist</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Visa Rejection Help</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Immigration Consultant</Link></li>
-                  <li><Link href="/find-a-specialist" className="hover:text-white transition-colors">Immigration Lawyer</Link></li>
+                  <li><Link href="/get-help" className="hover:text-white transition-colors">Visa Rejection Help</Link></li>
+                  <li><Link href="/get-help" className="hover:text-white transition-colors">Book a Consultation</Link></li>
                 </ul>
               </div>
               <div>
