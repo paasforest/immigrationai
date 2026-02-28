@@ -34,6 +34,7 @@ import credentialsRoutes from './routes/credentials.routes';
 import vacRoutes from './routes/vac.routes';
 import immigrationAnalyticsRoutes from './routes/immigration-analytics.routes';
 import intakeRoutes from './routes/intake.routes';
+import toolsRoutes from './routes/tools.routes';
 
 // Load environment variables
 dotenv.config();
@@ -144,6 +145,7 @@ app.use('/api/credentials', credentialsRoutes); // Credential evaluation guide
 app.use('/api/vac', vacRoutes); // VAC appointment tracker
 app.use('/api/immigration-analytics', immigrationAnalyticsRoutes); // Immigration analytics
 app.use('/api/intake', intakeRoutes); // Marketplace intake and lead routing
+app.use('/api/tools', toolsRoutes); // AI Tools: Home Ties Scorer, Credential Evaluation
 
 // ============================================================================
 // ERROR HANDLING

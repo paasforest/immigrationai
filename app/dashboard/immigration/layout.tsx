@@ -26,6 +26,8 @@ import {
   Bot,
   Brain,
   LogOut,
+  Home,
+  GraduationCap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -65,6 +67,8 @@ const navigation = [
   {
     title: 'AI TOOLS',
     items: [
+      { href: '/dashboard/immigration/tools/home-ties', label: 'Home Ties Scorer', icon: Home },
+      { href: '/dashboard/immigration/tools/credential-evaluation', label: 'Credential Evaluation', icon: GraduationCap },
       { href: '/dashboard/immigration/tools/financial-assistant', label: 'Financial Assistant', icon: Landmark },
       { href: '/dashboard/immigration/tools/vac-tracker', label: 'VAC Tracker', icon: MapPin },
       { href: '/dashboard/immigration/tools/credentials', label: 'Credentials', icon: Award },
