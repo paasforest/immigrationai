@@ -14,6 +14,8 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  // 'setup' param is present when arriving from a new-client welcome email
+  const isFirstTimeSetup = searchParams.get('setup') === '1' || !searchParams.get('setup') && !!token;
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -72,7 +74,7 @@ export default function ResetPasswordPage() {
 
       if (response.ok && data.success) {
         setSuccess(true);
-        // Redirect to login after 3 seconds
+        // Redirect to login after 3 seconds (portal setup redirects to login too, so they log in fresh)
         setTimeout(() => {
           router.push('/auth/login');
         }, 3000);
@@ -118,12 +120,16 @@ export default function ResetPasswordPage() {
               )}
             </div>
             <CardTitle className="text-2xl">
-              {success ? 'Password Reset Successful!' : 'Reset Your Password'}
+              {success
+                ? (isFirstTimeSetup ? 'Portal Account Ready!' : 'Password Reset Successful!')
+                : (isFirstTimeSetup ? 'Set Up Your Portal Account' : 'Reset Your Password')}
             </CardTitle>
             <CardDescription>
-              {success 
-                ? 'Your password has been updated. You can now log in with your new password.'
-                : 'Enter your new password below. Make sure it\'s strong and secure.'}
+              {success
+                ? 'Your password has been set. You can now log in and access your immigration portal.'
+                : isFirstTimeSetup
+                  ? 'Choose a password to activate your client portal and track your case.'
+                  : 'Enter your new password below. Make sure it\'s strong and secure.'}
             </CardDescription>
           </CardHeader>
 

@@ -74,7 +74,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your agency account to manage cases
+              Sign in to your account — agency, consultant, or client
             </CardDescription>
           </CardHeader>
           <CardContent>

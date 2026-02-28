@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,22 @@ import { SUPPORTED_LANGUAGES, type LanguageCode } from '@/lib/i18n/translations'
 // Inner layout that has access to LanguageContext
 function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { organization } = useOrganization();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { lang, setLang, t } = useLanguage();
+
+  // Guard: redirect unauthenticated users to login
+  useEffect(() => {
+    // Give AuthContext a moment to hydrate from localStorage before redirecting
+    const timer = setTimeout(() => {
+      if (!user) {
+        router.push('/auth/login');
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [user, router]);
 
   const navigation = [
     { href: '/portal', label: t('case.myCase'), icon: FolderOpen },

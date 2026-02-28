@@ -456,16 +456,29 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
     };
     const priority = urgencyMap[intake.urgencyLevel] || 'normal';
 
+    // Ensure professional has an organization FIRST (we need the orgId for the applicant)
+    const organizationId = await ensurePersonalOrganization(professionalId);
+
     // Find or create applicant user
     let applicantId: string;
+    let isNewClient = false;
+    let clientResetToken: string | null = null;
+
     const existingUser = await prisma.user.findUnique({
       where: { email: intake.applicantEmail },
     });
 
     if (existingUser) {
       applicantId = existingUser.id;
+      // If existing user has no org, link them to this professional's org so they can access portal APIs
+      if (!existingUser.organizationId) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { organizationId },
+        });
+      }
     } else {
-      // Create new applicant user
+      // Create new applicant user — linked to professional's org so portal APIs work
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
       const newUser = await prisma.user.create({
         data: {
@@ -474,14 +487,33 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
           passwordHash: randomPassword,
           role: 'applicant',
           isActive: true,
-          organizationId: null,
+          organizationId, // ← linked to professional's org
         },
       });
       applicantId = newUser.id;
-    }
+      isNewClient = true;
 
-    // Ensure professional has an organization (creates one for independent professionals if needed)
-    const organizationId = await ensurePersonalOrganization(professionalId);
+      // Generate a 48-hour password-setup token so they can log in
+      const crypto = await import('crypto');
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+      await prisma.passwordResetToken.upsert({
+        where: { userId: newUser.id },
+        update: {
+          token: hashedToken,
+          expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+          used: false,
+        },
+        create: {
+          userId: newUser.id,
+          token: hashedToken,
+          expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        },
+      });
+
+      clientResetToken = rawToken; // raw token goes in the email link
+    }
 
     // Generate case reference
     const referenceNumber = await generateCaseReference();
@@ -512,7 +544,14 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
       },
     });
 
-    return newCase;
+    // Return case + metadata about whether a new client was created
+    return {
+      ...newCase,
+      _isNewClient: isNewClient,
+      _clientEmail: intake.applicantEmail,
+      _clientName: intake.applicantName,
+      _clientResetToken: clientResetToken,
+    };
   } catch (error: any) {
     logger.error('Error converting intake to case', {
       error: error.message,

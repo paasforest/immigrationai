@@ -984,3 +984,131 @@ export async function sendVerificationRejectedEmail({
     logger.error('Failed to send verification rejection email', { error: error.message, toEmail });
   }
 }
+
+/**
+ * Send portal welcome email to a brand-new client when their first case is opened.
+ * Includes a 48-hour link to set up their password.
+ */
+export async function sendClientPortalWelcomeEmail({
+  toEmail,
+  clientName,
+  caseReference,
+  setupToken,
+  professionalName,
+  preferredLanguage,
+}: {
+  toEmail: string;
+  clientName: string;
+  caseReference: string;
+  setupToken: string;
+  professionalName: string;
+  preferredLanguage?: string | null;
+}): Promise<void> {
+  const lang = toEmailLang(preferredLanguage);
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const setupUrl = `${FRONTEND_URL}/auth/reset-password?token=${setupToken}&setup=1`;
+
+  // Multilingual strings
+  const strings: Record<string, Record<EmailLang, string>> = {
+    subject:  { en: 'Your immigration portal is ready — {ref}', fr: 'Votre portail d\'immigration est prêt — {ref}', pt: 'Seu portal de imigração está pronto — {ref}', ar: 'بوابة الهجرة الخاصة بك جاهزة — {ref}', es: 'Su portal de inmigración está listo — {ref}', zh: '您的移民门户已就绪 — {ref}' },
+    header:   { en: 'Your Case Is Open!', fr: 'Votre dossier est ouvert !', pt: 'Seu caso está aberto!', ar: 'قضيتك مفتوحة!', es: '¡Su caso está abierto!', zh: '您的案例已开启！' },
+    greeting: { en: 'Hi {name},', fr: 'Bonjour {name},', pt: 'Olá {name},', ar: 'مرحباً {name}،', es: 'Hola {name},', zh: '您好 {name}，' },
+    body1:    { en: '{professional} has accepted your immigration case and it\'s now active in your personal portal.', fr: '{professional} a accepté votre dossier d\'immigration et il est désormais actif dans votre portail personnel.', pt: '{professional} aceitou seu caso de imigração e ele está ativo no seu portal pessoal.', ar: 'قبل {professional} قضية الهجرة الخاصة بك وهي الآن نشطة في بوابتك الشخصية.', es: '{professional} ha aceptado su caso de inmigración y ahora está activo en su portal personal.', zh: '{professional} 已接受您的移民案例，现在可在您的个人门户中查看。' },
+    body2:    { en: 'Your portal lets you:', fr: 'Votre portail vous permet de :', pt: 'Seu portal permite que você:', ar: 'يتيح لك بوابتك:', es: 'Su portal le permite:', zh: '您的门户允许您：' },
+    feat1:    { en: '📁 View your case status in real time', fr: '📁 Suivre l\'état de votre dossier en temps réel', pt: '📁 Ver o status do seu caso em tempo real', ar: '📁 متابعة حالة قضيتك في الوقت الفعلي', es: '📁 Ver el estado de su caso en tiempo real', zh: '📁 实时查看案例状态' },
+    feat2:    { en: '💬 Message your consultant directly inside the platform', fr: '💬 Envoyer des messages à votre consultant directement sur la plateforme', pt: '💬 Enviar mensagens para seu consultor diretamente na plataforma', ar: '💬 مراسلة مستشارك مباشرة داخل المنصة', es: '💬 Enviar mensajes a su consultor directamente en la plataforma', zh: '💬 在平台内直接与顾问沟通' },
+    feat3:    { en: '📄 Upload and track all required documents', fr: '📄 Téléverser et suivre tous les documents requis', pt: '📄 Enviar e acompanhar todos os documentos necessários', ar: '📄 رفع ومتابعة جميع المستندات المطلوبة', es: '📄 Subir y rastrear todos los documentos requeridos', zh: '📄 上传和跟踪所有所需文件' },
+    caseRef:  { en: 'Case Reference', fr: 'Référence du dossier', pt: 'Referência do caso', ar: 'مرجع القضية', es: 'Referencia del caso', zh: '案例参考' },
+    ctaTitle: { en: 'Set up your password to access your portal', fr: 'Configurez votre mot de passe pour accéder à votre portail', pt: 'Configure sua senha para acessar seu portal', ar: 'قم بإعداد كلمة المرور للوصول إلى بوابتك', es: 'Configure su contraseña para acceder a su portal', zh: '设置密码以访问您的门户' },
+    cta:      { en: 'Set Up My Password & Open Portal', fr: 'Configurer mon mot de passe et ouvrir le portail', pt: 'Configurar minha senha e abrir o portal', ar: 'إعداد كلمة المرور وفتح البوابة', es: 'Configurar mi contraseña y abrir el portal', zh: '设置密码并打开门户' },
+    expiry:   { en: 'This link is valid for 48 hours.', fr: 'Ce lien est valable pendant 48 heures.', pt: 'Este link é válido por 48 horas.', ar: 'هذا الرابط صالح لمدة 48 ساعة.', es: 'Este enlace es válido por 48 horas.', zh: '此链接有效期为48小时。' },
+    footer:   { en: 'Questions? Your consultant {professional} is here to help.', fr: 'Des questions ? Votre consultant {professional} est là pour vous aider.', pt: 'Dúvidas? Seu consultor {professional} está aqui para ajudar.', ar: 'هل لديك أسئلة؟ مستشارك {professional} هنا للمساعدة.', es: '¿Preguntas? Su consultor {professional} está aquí para ayudar.', zh: '有疑问？您的顾问 {professional} 随时为您提供帮助。' },
+  };
+
+  const s = (key: string, vars?: Record<string, string>) => {
+    let text = strings[key]?.[lang] ?? strings[key]?.['en'] ?? key;
+    if (vars) {
+      for (const [k, v] of Object.entries(vars)) {
+        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      }
+    }
+    return text;
+  };
+
+  const isRtl = lang === 'ar';
+  const dir = isRtl ? 'rtl' : 'ltr';
+
+  const html = `<!DOCTYPE html>
+<html dir="${dir}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${s('subject', { ref: caseReference })}</title>
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#0F2557 0%,#1e3a8a 100%);padding:32px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:26px;letter-spacing:-0.5px;">Immigration AI</h1>
+          <p style="color:#93c5fd;margin:6px 0 0;font-size:14px;">${s('header')}</p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="padding:40px 36px;" dir="${dir}">
+          <p style="font-size:18px;color:#111827;font-weight:600;margin:0 0 8px;">${s('greeting', { name: clientName })}</p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 20px;">${s('body1', { professional: professionalName })}</p>
+
+          <!-- Case Reference Box -->
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px 20px;margin:0 0 24px;">
+            <p style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">${s('caseRef')}</p>
+            <p style="font-size:20px;font-weight:700;color:#0F2557;font-family:monospace;margin:0;">${caseReference}</p>
+          </div>
+
+          <!-- Features -->
+          <p style="font-size:14px;color:#6b7280;font-weight:600;margin:0 0 12px;">${s('body2')}</p>
+          <table style="width:100%;margin:0 0 28px;">
+            <tr><td style="padding:8px 12px;background:#f8fafc;border-radius:6px;margin-bottom:8px;font-size:14px;color:#374151;">${s('feat1')}</td></tr>
+            <tr><td style="height:6px;"></td></tr>
+            <tr><td style="padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:14px;color:#374151;">${s('feat2')}</td></tr>
+            <tr><td style="height:6px;"></td></tr>
+            <tr><td style="padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:14px;color:#374151;">${s('feat3')}</td></tr>
+          </table>
+
+          <!-- CTA -->
+          <p style="font-size:14px;color:#374151;font-weight:600;margin:0 0 12px;">${s('ctaTitle')}</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+            <tr><td align="center">
+              <a href="${setupUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;">${s('cta')}</a>
+            </td></tr>
+          </table>
+
+          <p style="font-size:12px;color:#9ca3af;text-align:center;margin:0 0 24px;">${s('expiry')}</p>
+          <p style="font-size:14px;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:16px;margin:0;">${s('footer', { professional: professionalName })}</p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f9fafb;padding:16px 36px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="color:#9ca3af;font-size:11px;margin:0;">Immigration AI · <a href="${FRONTEND_URL}" style="color:#6b7280;">immigrationai.co.za</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: toEmail,
+      subject: s('subject', { ref: caseReference }),
+      html,
+    });
+    logger.info('Client portal welcome email sent', { toEmail, caseReference });
+  } catch (error: any) {
+    logger.error('Failed to send client portal welcome email', { error: error.message, toEmail });
+  }
+}

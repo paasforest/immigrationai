@@ -11,6 +11,7 @@ import {
 import {
   sendApplicantConfirmationEmail,
   sendProfessionalContactEmail,
+  sendClientPortalWelcomeEmail,
 } from '../services/emailService';
 import { eligibilityService, type EligibilityInput } from '../services/eligibilityService';
 
@@ -492,7 +493,7 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
         },
       });
 
-      // Send professional contact email (non-blocking)
+      // Send emails (non-blocking)
       setImmediate(async () => {
         try {
           const professional = await prisma.user.findUnique({
@@ -511,9 +512,11 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
             },
           });
 
+          const intakeAdditional = (assignment.intake.additionalData as any) || {};
+          const preferredLang = intakeAdditional.preferredLanguage ?? null;
+
           if (professional) {
-            // Retrieve preferredLanguage from the intake's additionalData
-            const intakeAdditional = (assignment.intake.additionalData as any) || {};
+            // 1. Notify client that their specialist has accepted
             await sendProfessionalContactEmail({
               toEmail: assignment.intake.applicantEmail,
               applicantName: assignment.intake.applicantName,
@@ -523,11 +526,23 @@ export async function respondToLead(req: Request, res: Response): Promise<void> 
               professionalPhone: professional.phone || undefined,
               serviceName: assignment.intake.service.name,
               caseReference: newCase.referenceNumber,
-              preferredLanguage: intakeAdditional.preferredLanguage ?? null,
+              preferredLanguage: preferredLang,
+            });
+          }
+
+          // 2. If this is a brand-new client account, send the portal welcome email
+          if (newCase._isNewClient && newCase._clientResetToken) {
+            await sendClientPortalWelcomeEmail({
+              toEmail: newCase._clientEmail,
+              clientName: newCase._clientName,
+              caseReference: newCase.referenceNumber,
+              setupToken: newCase._clientResetToken,
+              professionalName: professional?.fullName || professional?.email?.split('@')[0] || 'your consultant',
+              preferredLanguage: preferredLang,
             });
           }
         } catch (emailError: any) {
-          logger.error('Professional contact email failed', {
+          logger.error('Post-accept email failed', {
             error: emailError.message || emailError,
             assignmentId,
           });
