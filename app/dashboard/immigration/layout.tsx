@@ -25,7 +25,9 @@ import {
   Award,
   Bot,
   Brain,
+  LogOut,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -92,11 +94,22 @@ export default function ImmigrationLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingLeadsCount, setPendingLeadsCount] = useState(0);
 
   const isAdmin = user?.role === 'org_admin';
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
+
+  // Build user initials for avatar
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   useEffect(() => {
     if (user && user.role !== 'applicant') {
@@ -185,6 +198,30 @@ export default function ImmigrationLayout({
           );
         })}
       </nav>
+
+      {/* ── User footer + Logout ── */}
+      <div className="p-4 border-t border-white/10 space-y-2">
+        {/* User info */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-bold">{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-medium truncate">
+              {user?.fullName || 'My Account'}
+            </p>
+            <p className="text-gray-400 text-[10px] truncate">{user?.email}</p>
+          </div>
+        </div>
+        {/* Logout button */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Log Out</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -214,9 +251,26 @@ export default function ImmigrationLayout({
 
         {/* Main content */}
         <main className="flex-1 lg:ml-[220px] min-h-screen">
-          {/* Top bar with notifications */}
-          <div className="sticky top-0 z-40 bg-white border-b px-6 py-3 flex items-center justify-end">
-            <NotificationPanel />
+          {/* Top bar with user info + notifications */}
+          <div className="sticky top-0 z-40 bg-white border-b px-6 py-3 flex items-center justify-between">
+            {/* Breadcrumb / page context */}
+            <div className="hidden lg:block">
+              <p className="text-sm text-gray-500">
+                Welcome back, <span className="font-semibold text-gray-800">{user?.fullName?.split(' ')[0] || user?.email}</span>
+              </p>
+            </div>
+            {/* Right side: notifications + logout shortcut */}
+            <div className="flex items-center gap-3">
+              <NotificationPanel />
+              <button
+                onClick={handleLogout}
+                title="Log out"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded-md hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
           <div className="p-6">
             {children}
