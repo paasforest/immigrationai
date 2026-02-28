@@ -571,9 +571,9 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
       },
     });
 
-    // ── Auto-generate smart checklist from risk profile ──────────────────────
-    // Read the risk profile that was built at intake submission time.
-    // Collect all checklistHints from flagged factors and create a DocumentChecklist.
+    // ── Auto-generate smart checklist ────────────────────────────────────────
+    // Always create a checklist with at minimum 4 core documents.
+    // If a risk profile was built at intake time, add AI-flagged items too.
     try {
       const additionalData = (intake as any).additionalData as Record<string, any> | null;
       const riskProfile = additionalData?.riskProfile as {
@@ -586,10 +586,17 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
         overallRisk?: string;
       } | null;
 
-      if (riskProfile?.factors && riskProfile.factors.length > 0) {
-        // Collect all hints from high/medium risk factors
-        const allHints: { name: string; isRequired: boolean; source: string }[] = [];
+      // Core documents — always required regardless of visa type
+      const coreItems = [
+        { name: 'Valid passport (all pages — biographic + stamps)', isRequired: true },
+        { name: 'Completed visa application form', isRequired: true },
+        { name: 'Recent passport-size photographs (per destination requirements)', isRequired: true },
+        { name: 'Proof of travel insurance (if required by destination)', isRequired: false },
+      ];
 
+      // Collect risk-profile-derived hints (high/medium factors only)
+      const allHints: { name: string; isRequired: boolean; source: string }[] = [];
+      if (riskProfile?.factors && riskProfile.factors.length > 0) {
         for (const factor of riskProfile.factors) {
           if (factor.riskLevel === 'high' || factor.riskLevel === 'medium') {
             for (const hint of factor.checklistHints || []) {
@@ -601,63 +608,54 @@ export async function convertIntakeToCase(intakeId: string, professionalId: stri
             }
           }
         }
-
-        // Always add core documents regardless of risk
-        const coreItems = [
-          { name: 'Valid passport (all pages — biographic + stamps)', isRequired: true },
-          { name: 'Completed visa application form', isRequired: true },
-          { name: 'Recent passport-size photographs (per destination requirements)', isRequired: true },
-          { name: 'Proof of travel insurance (if required by destination)', isRequired: false },
-        ];
-
-        if (allHints.length > 0 || coreItems.length > 0) {
-          // Create the checklist
-          const checklist = await prisma.documentChecklist.create({
-            data: {
-              caseId: newCase.id,
-              organizationId,
-              name: `Smart Checklist — ${intake.service.name} (${intake.destinationCountry})`,
-              visaType: intake.service.caseType,
-              originCountry: intake.applicantCountry,
-              destinationCountry: intake.destinationCountry,
-            },
-          });
-
-          // Add core items first
-          for (const item of coreItems) {
-            await prisma.checklistItem.create({
-              data: {
-                checklistId: checklist.id,
-                name: item.name,
-                description: 'Standard document required for all applications.',
-                isRequired: item.isRequired,
-              },
-            });
-          }
-
-          // Add risk-profile-derived items (deduplicated)
-          const seen = new Set<string>();
-          for (const hint of allHints) {
-            const key = hint.name.toLowerCase().trim();
-            if (seen.has(key)) continue;
-            seen.add(key);
-            await prisma.checklistItem.create({
-              data: {
-                checklistId: checklist.id,
-                name: hint.name,
-                description: `Flagged by AI risk assessment — ${hint.source}`,
-                isRequired: hint.isRequired,
-              },
-            });
-          }
-
-          logger.info('Smart checklist created from risk profile', {
-            caseId: newCase.id,
-            checklistId: checklist.id,
-            itemCount: coreItems.length + allHints.length,
-          });
-        }
       }
+
+      // Create the checklist
+      const checklist = await prisma.documentChecklist.create({
+        data: {
+          caseId: newCase.id,
+          organizationId,
+          name: `Smart Checklist — ${intake.service.name} (${intake.destinationCountry})`,
+          visaType: intake.service.caseType,
+          originCountry: intake.applicantCountry,
+          destinationCountry: intake.destinationCountry,
+        },
+      });
+
+      // Add core items first
+      for (const item of coreItems) {
+        await prisma.checklistItem.create({
+          data: {
+            checklistId: checklist.id,
+            name: item.name,
+            description: 'Standard document required for all applications.',
+            isRequired: item.isRequired,
+          },
+        });
+      }
+
+      // Add risk-profile-derived items (deduplicated)
+      const seen = new Set<string>();
+      for (const hint of allHints) {
+        const key = hint.name.toLowerCase().trim();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        await prisma.checklistItem.create({
+          data: {
+            checklistId: checklist.id,
+            name: hint.name,
+            description: `Flagged by AI risk assessment — ${hint.source}`,
+            isRequired: hint.isRequired,
+          },
+        });
+      }
+
+      logger.info('Smart checklist created', {
+        caseId: newCase.id,
+        checklistId: checklist.id,
+        coreItems: coreItems.length,
+        aiItems: allHints.length,
+      });
     } catch (checklistError: any) {
       // Non-blocking — don't fail the case creation if checklist generation fails
       logger.error('Failed to auto-generate checklist from risk profile', {
