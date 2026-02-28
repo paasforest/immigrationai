@@ -651,6 +651,30 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
       },
     });
 
+    // Auto-create specializations for ALL services so the professional immediately
+    // appears in the routing engine without manual setup.  They can refine which
+    // services they cover from their profile settings later.
+    try {
+      const allServices = await prisma.serviceCatalog.findMany({ select: { id: true } });
+      if (allServices.length > 0) {
+        await prisma.professionalSpecialization.createMany({
+          data: allServices.map((svc) => ({
+            userId: user.id,
+            organizationId: organization.id,
+            serviceId: svc.id,
+            originCorridors: [],       // [] = accept all origins
+            destinationCorridors: [],  // [] = accept all destinations
+            isAcceptingLeads: true,
+            maxConcurrentLeads: 10,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    } catch (error) {
+      // Specialization creation failure shouldn't break onboarding
+      console.error('Failed to create default specializations:', error);
+    }
+
     // Send welcome email
     try {
       const { sendWelcomeEmail } = await import('../services/emailService');
