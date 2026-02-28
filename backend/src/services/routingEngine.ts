@@ -113,8 +113,35 @@ export async function findMatchingProfessionals(intake: any): Promise<MatchedPro
     // Filter by active users
     const activeSpecs = specializations.filter((spec) => spec.user.isActive === true);
 
+    // ── Skip professionals whose trial has expired ──────────────────────────
+    const orgIds = activeSpecs
+      .map((s) => s.user.organizationId)
+      .filter(Boolean) as string[];
+
+    const orgs = orgIds.length
+      ? await prisma.organization.findMany({
+          where: { id: { in: orgIds } },
+          select: { id: true, planStatus: true, trialEndsAt: true },
+        })
+      : [];
+
+    const orgStatusMap = new Map(orgs.map((o) => [o.id, o]));
+
+    const eligibleSpecs = activeSpecs.filter((spec) => {
+      const org = spec.user.organizationId
+        ? orgStatusMap.get(spec.user.organizationId)
+        : null;
+      if (!org) return true; // independent — no org record, allow through
+      if (org.planStatus === 'expired') return false;
+      if (org.planStatus === 'trial' && org.trialEndsAt) {
+        return new Date() <= new Date(org.trialEndsAt);
+      }
+      return true;
+    });
+    // ───────────────────────────────────────────────────────────────────────
+
     // Apply corridor logic
-    const corridorMatches = activeSpecs.filter((spec) => {
+    const corridorMatches = eligibleSpecs.filter((spec) => {
       const originPass =
         spec.originCorridors.length === 0 || spec.originCorridors.includes(intake.applicantCountry);
       const destinationPass =

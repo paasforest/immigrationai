@@ -11,6 +11,7 @@ export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  code?: string; // e.g. 'TRIAL_EXPIRED'
 }
 
 class ApiClient {
@@ -115,9 +116,21 @@ class ApiClient {
       }
 
       if (!response.ok) {
+        // Trial expired — fire a global event so the dashboard can show the wall
+        if (
+          response.status === 402 &&
+          (data?.error === 'TRIAL_EXPIRED' || data?.message === 'TRIAL_EXPIRED')
+        ) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('trial:expired'));
+          }
+          return { success: false, error: 'TRIAL_EXPIRED', code: 'TRIAL_EXPIRED' };
+        }
+
         return {
           success: false,
           error: data.error || data.message || 'Request failed',
+          code: data.code,
         };
       }
 

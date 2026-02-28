@@ -34,7 +34,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import TrialBanner from '@/components/immigration/TrialBanner';
+import TrialExpiredWall from '@/components/immigration/TrialExpiredWall';
 import NotificationPanel from '@/components/immigration/notifications/NotificationPanel';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { Badge } from '@/components/ui/badge';
 import { immigrationApi } from '@/lib/api/immigration';
 
@@ -100,8 +102,31 @@ export default function ImmigrationLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { organization } = useOrganization();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingLeadsCount, setPendingLeadsCount] = useState(0);
+  const [trialExpired, setTrialExpired] = useState(false);
+
+  // Listen for TRIAL_EXPIRED events from the API client
+  useEffect(() => {
+    const handler = () => setTrialExpired(true);
+    window.addEventListener('trial:expired', handler);
+    return () => window.removeEventListener('trial:expired', handler);
+  }, []);
+
+  // Also detect expiry directly from org context (no API call needed)
+  useEffect(() => {
+    if (!organization) return;
+    if (organization.planStatus === 'expired') {
+      setTrialExpired(true);
+      return;
+    }
+    if (organization.planStatus === 'trial' && organization.trialEndsAt) {
+      if (new Date() > new Date(organization.trialEndsAt)) {
+        setTrialExpired(true);
+      }
+    }
+  }, [organization]);
 
   const isAdmin = user?.role === 'org_admin';
 
@@ -231,6 +256,8 @@ export default function ImmigrationLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Trial expired wall — full-screen block until payment is done */}
+      {trialExpired && <TrialExpiredWall />}
       <TrialBanner />
       
       {/* Mobile menu button */}

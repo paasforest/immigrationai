@@ -27,53 +27,35 @@ export default function TrialBanner() {
     isExpired = daysRemaining < 0;
   }
 
-  if (isExpired) {
-    return (
-      <div className="bg-red-600 text-white px-4 py-3 relative">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <p className="font-medium">
-            Your trial has ended. Upgrade now to keep full access.
-          </p>
-          <div className="flex items-center gap-2">
-            <Link href="/dashboard/immigration/billing">
-              <Button size="sm" variant="secondary">
-                Upgrade Now
-              </Button>
-            </Link>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-white hover:bg-red-700"
-              onClick={() => setDismissed(true)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Don't show the banner if the wall will render (expired)
+  if (isExpired) return null;
+
+  const isUrgent = daysRemaining <= 3;
 
   return (
-    <div className="bg-amber-500 text-white px-4 py-3 relative">
+    <div className={cn('text-white px-4 py-3 relative', isUrgent ? 'bg-red-600' : 'bg-amber-500')}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <p className="font-medium">
-          Your free trial ends in {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} — upgrade to keep full access
+          {isUrgent
+            ? `⚠️ Only ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left in your trial — activate your account now to avoid losing access`
+            : `Your free trial ends in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} — pay via EFT to keep full access`}
         </p>
         <div className="flex items-center gap-2">
           <Link href="/dashboard/immigration/billing">
-            <Button size="sm" variant="secondary">
-              Upgrade Now
-            </Button>
-          </Link>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="text-white hover:bg-amber-600"
-            onClick={() => setDismissed(true)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+              <Button size="sm" variant="secondary">
+                Pay Now
+              </Button>
+            </Link>
+            {!isUrgent && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-amber-600"
+                onClick={() => setDismissed(true)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
         </div>
       </div>
     </div>

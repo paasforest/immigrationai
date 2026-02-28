@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { organizationContext } from '../middleware/organizationContext';
+import { organizationContext, organizationContextAllowExpired } from '../middleware/organizationContext';
 import {
   getSubscriptionDetails,
   getPlans,
@@ -12,19 +12,19 @@ import {
 
 const router = Router();
 
-// Get subscription details (requires auth + org context)
-router.get('/subscription', auth, organizationContext, getSubscriptionDetails);
+// Get subscription details — allow expired trial so user can see billing page
+router.get('/subscription', auth, organizationContextAllowExpired, getSubscriptionDetails);
 
 // Get available plans (public, but auth recommended)
 router.get('/plans', auth, getPlans);
 
-// Initiate payment (requires auth + org context)
-router.post('/initiate', auth, organizationContext, initiatePayment);
+// Initiate payment — allow expired trial so user can submit EFT reference
+router.post('/initiate', auth, organizationContextAllowExpired, initiatePayment);
 
 // Payment webhook (no auth - called by payment provider)
 router.post('/webhook', handlePaymentWebhook);
 
-// Get billing usage — documents, tokens, plan limits
+// Get billing usage — allow expired trial
 router.get('/usage', auth, getBillingUsage);
 
 // Cancel subscription (requires auth + org context)
