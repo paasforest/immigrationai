@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ImmigrationCase } from '@/types/immigration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,9 +79,27 @@ export default function ValidationTab({ caseData }: ValidationTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
 
+  // Get document count from case data
+  const documentCount = caseData._count?.caseDocuments || 0;
+  const hasEnoughDocuments = documentCount >= 2;
+
+  // Clear result if document count drops below threshold
+  useEffect(() => {
+    if (!hasEnoughDocuments && result) {
+      setResult(null);
+      setError(null);
+    }
+  }, [hasEnoughDocuments, documentCount, result]);
+
   const runValidation = useCallback(async () => {
+    if (!hasEnoughDocuments) {
+      setError(`Only ${documentCount} document(s) uploaded. Cross-validation requires at least 2 documents. Upload more documents to enable validation.`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setResult(null);
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       const res = await fetch(`${API_BASE}/api/cases/${caseData.id}/cross-validate`, {
@@ -97,12 +115,12 @@ export default function ValidationTab({ caseData }: ValidationTabProps) {
       } else {
         setError(json.message || 'Validation failed');
       }
-    } catch {
-      setError('Could not run validation. Check connection.');
+    } catch (err: any) {
+      setError(err.message || 'Could not run validation. Check connection.');
     } finally {
       setLoading(false);
     }
-  }, [caseData.id]);
+  }, [caseData.id, hasEnoughDocuments, documentCount]);
 
   const toggleIssue = (idx: number) => {
     setExpandedIssues((prev) => {
@@ -131,8 +149,8 @@ export default function ValidationTab({ caseData }: ValidationTabProps) {
         </div>
         <Button
           onClick={runValidation}
-          disabled={loading}
-          className="bg-[#0F2557] hover:bg-[#1a3a7a] text-white"
+          disabled={loading || !hasEnoughDocuments}
+          className="bg-[#0F2557] hover:bg-[#1a3a7a] text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
@@ -160,21 +178,37 @@ export default function ValidationTab({ caseData }: ValidationTabProps) {
         </Card>
       )}
 
-      {/* Empty state */}
-      {!result && !loading && !error && (
+      {/* Not enough documents state */}
+      {!hasEnoughDocuments && !result && !loading && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="py-12 text-center">
+            <FileWarning className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-amber-800 font-medium mb-2">Insufficient Documents</h3>
+            <p className="text-sm text-amber-700 max-w-md mx-auto mb-4">
+              Only {documentCount} document(s) uploaded. Cross-validation requires at least 2 documents to compare for inconsistencies.
+            </p>
+            <p className="text-xs text-amber-600">
+              Upload more documents in the Documents tab to enable validation.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state - ready to validate */}
+      {hasEnoughDocuments && !result && !loading && !error && (
         <Card className="border-dashed border-2 border-gray-200">
           <CardContent className="py-16 text-center">
             <FileWarning className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-gray-700 font-medium mb-2">Ready to validate</h3>
             <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Click "Run Validation" to scan all documents in this case for inconsistencies that could trigger a refusal — names, dates, financial figures, addresses, and more.
+              Click "Run Validation" to scan all {documentCount} documents in this case for inconsistencies that could trigger a refusal — names, dates, financial figures, addresses, and more.
             </p>
           </CardContent>
         </Card>
       )}
 
       {/* Results */}
-      {result && (
+      {result && hasEnoughDocuments && (
         <div className="space-y-4">
           {/* Score card */}
           <Card className={result.passed ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
@@ -190,7 +224,7 @@ export default function ValidationTab({ caseData }: ValidationTabProps) {
                     <div className={`text-lg font-bold ${result.passed ? 'text-green-800' : 'text-red-800'}`}>
                       {result.passed ? 'Validation Passed' : 'Issues Found'}
                     </div>
-                    <div className="text-sm text-gray-600">{result.summary}</div>
+                    <div className="text-sm text-gray-600">{result.summary || `Validated ${documentCount} document(s)`}</div>
                   </div>
                 </div>
                 <div className="text-right">
