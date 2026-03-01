@@ -81,11 +81,14 @@ export default function EnhancedDocumentsTab({ caseId, onRefresh }: Props) {
     setIsLoading(true);
     try {
       const [docsRes, checkRes] = await Promise.all([
-        apiClient.get(`/case-documents/case/${caseId}`),
-        apiClient.get(`/checklists/case/${caseId}`),
+        apiClient.get<{ documents: Doc[] }>(`/case-documents/case/${caseId}`),
+        apiClient.get<{ checklists: Checklist[] } | Checklist[]>(`/checklists/case/${caseId}`),
       ]);
-      if (docsRes.success) setDocuments(docsRes.data?.documents || []);
-      if (checkRes.success) setChecklists(checkRes.data?.checklists || checkRes.data || []);
+      if (docsRes.success) setDocuments((docsRes.data as any)?.documents || []);
+      if (checkRes.success) {
+        const checkData = checkRes.data as any;
+        setChecklists(checkData?.checklists || (Array.isArray(checkData) ? checkData : []));
+      }
     } catch (e) {
       console.error(e);
     } finally {

@@ -59,14 +59,17 @@ export default function PortalCaseDetailPage() {
     try {
       const [caseRes, docsRes, checkRes, embassyRes] = await Promise.all([
         immigrationApi.getCaseById(caseId),
-        apiClient.get(`/case-documents/case/${caseId}`),
-        apiClient.get(`/checklists/case/${caseId}`),
-        apiClient.get(`/case-documents/case/${caseId}/embassy-package`),
+        apiClient.get<{ documents: any[] }>(`/case-documents/case/${caseId}`),
+        apiClient.get<{ checklists: any[] } | any[]>(`/checklists/case/${caseId}`),
+        apiClient.get<{ documents: any[] }>(`/case-documents/case/${caseId}/embassy-package`),
       ]);
       if (caseRes.success && caseRes.data) setCaseData(caseRes.data);
-      if (docsRes.success) setDocuments(docsRes.data?.documents || []);
-      if (checkRes.success) setChecklists(checkRes.data?.checklists || checkRes.data || []);
-      if (embassyRes.success) setEmbassyDocs(embassyRes.data?.documents || []);
+      if (docsRes.success) setDocuments((docsRes.data as any)?.documents || []);
+      if (checkRes.success) {
+        const checkData = checkRes.data as any;
+        setChecklists(checkData?.checklists || (Array.isArray(checkData) ? checkData : []));
+      }
+      if (embassyRes.success) setEmbassyDocs((embassyRes.data as any)?.documents || []);
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
   };
