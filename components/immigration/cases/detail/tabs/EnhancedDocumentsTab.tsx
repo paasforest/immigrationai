@@ -290,8 +290,9 @@ export default function EnhancedDocumentsTab({ caseId, onRefresh }: Props) {
                         )}
                         {item.document ? (
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => handleDownload(item.document!.id, item.document!.name)}>
-                              <Download className="w-3 h-3" />
+                            <Button size="sm" variant="outline" onClick={() => handleDownload(item.document!.id, item.document!.name)}>
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
                             </Button>
                             {isPro && item.document.status !== 'verified' && (
                               <Button size="sm" variant="ghost" className="text-green-600" onClick={() => handleVerify(item.document!.id)}>
@@ -347,8 +348,9 @@ export default function EnhancedDocumentsTab({ caseId, onRefresh }: Props) {
                           onClick={() => isPro && handleToggleEmbassy(doc.id, doc.isEmbassyPackage)}>
                           {doc.isEmbassyPackage ? '📦 In Package' : '+ Package'}
                         </Badge>
-                        <Button size="sm" variant="ghost" onClick={() => handleDownload(doc.id, doc.name)}>
-                          <Download className="w-3 h-3" />
+                        <Button size="sm" variant="outline" onClick={() => handleDownload(doc.id, doc.name)}>
+                          <Download className="w-3 h-3 mr-1" />
+                          Download
                         </Button>
                         {isPro && doc.status !== 'verified' && (
                           <Button size="sm" variant="ghost" className="text-green-600" title="Mark verified" onClick={() => handleVerify(doc.id)}>
@@ -417,8 +419,9 @@ export default function EnhancedDocumentsTab({ caseId, onRefresh }: Props) {
                           onClick={() => isPro && handleToggleEmbassy(doc.id, doc.isEmbassyPackage)}>
                           {doc.isEmbassyPackage ? '📦 In Package' : '+ Package'}
                         </Badge>
-                        <Button size="sm" variant="ghost" onClick={() => handleDownload(doc.id, doc.name)}>
-                          <Download className="w-3 h-3" />
+                        <Button size="sm" variant="outline" onClick={() => handleDownload(doc.id, doc.name)}>
+                          <Download className="w-3 h-3 mr-1" />
+                          Download
                         </Button>
                         {isPro && (
                           <AlertDialog>
@@ -479,8 +482,9 @@ export default function EnhancedDocumentsTab({ caseId, onRefresh }: Props) {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => handleDownload(doc.id, doc.name)}>
-                            <Download className="w-3 h-3" />
+                          <Button size="sm" variant="outline" onClick={() => handleDownload(doc.id, doc.name)}>
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
                           </Button>
                           {isPro && (
                             <Button size="sm" variant="ghost" className="text-gray-400" onClick={() => handleToggleEmbassy(doc.id, true)}>

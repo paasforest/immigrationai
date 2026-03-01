@@ -223,8 +223,10 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
             onClick={handleSend}
             disabled={!newMessage.trim() || isSending}
             className="bg-[#0F2557] hover:bg-[#0a1d42]"
+            size="default"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4 mr-2" />
+            {isSending ? 'Sending...' : 'Send'}
           </Button>
         </div>
       </div>
