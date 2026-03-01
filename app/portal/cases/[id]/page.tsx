@@ -1,20 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { immigrationApi } from '@/lib/api/immigration';
+import { apiClient } from '@/lib/api/client';
 import { ImmigrationCase } from '@/types/immigration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Upload, MessageSquare } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeft, Upload, CheckCircle2, AlertCircle, Clock, Download, FileText, Package, PackageCheck } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import PortalDocumentUpload from '@/components/portal/PortalDocumentUpload';
 import MessagesTab from '@/components/immigration/cases/detail/tabs/MessagesTab';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { toast } from 'sonner';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.immigrationai.co.za/api';
 
 const stages = [
   { id: 'created', labelKey: 'stage.created', icon: '📋' },
@@ -36,56 +42,95 @@ export default function PortalCaseDetailPage() {
   const { t } = useLanguage();
   const [caseData, setCaseData] = useState<ImmigrationCase | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [checklists, setChecklists] = useState<any[]>([]);
+  const [embassyDocs, setEmbassyDocs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'progress' | 'documents' | 'messages'>('progress');
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadItem, setUploadItem] = useState<any | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetchCase();
-    fetchDocuments();
-  }, [caseId]);
+  useEffect(() => { loadAll(); }, [caseId]);
 
-  const fetchCase = async () => {
+  const loadAll = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const response = await immigrationApi.getCaseById(caseId);
-      if (response.success && response.data) {
-        setCaseData(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch case:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      const [caseRes, docsRes, checkRes, embassyRes] = await Promise.all([
+        immigrationApi.getCaseById(caseId),
+        apiClient.get(`/case-documents/case/${caseId}`),
+        apiClient.get(`/checklists/case/${caseId}`),
+        apiClient.get(`/case-documents/case/${caseId}/embassy-package`),
+      ]);
+      if (caseRes.success && caseRes.data) setCaseData(caseRes.data);
+      if (docsRes.success) setDocuments(docsRes.data?.documents || []);
+      if (checkRes.success) setChecklists(checkRes.data?.checklists || checkRes.data || []);
+      if (embassyRes.success) setEmbassyDocs(embassyRes.data?.documents || []);
+    } catch (e) { console.error(e); }
+    finally { setIsLoading(false); }
   };
 
-  const fetchDocuments = async () => {
-    try {
-      const response = await immigrationApi.getDocumentsByCase(caseId);
-      if (response.success && response.data) {
-        setDocuments(response.data.documents);
-      }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error);
-    }
+  const openUpload = (item?: any) => {
+    setUploadItem(item || null);
+    setUploadFile(null);
+    setUploadDialogOpen(true);
   };
 
-  const handleDocumentUpload = async (file: File) => {
+  const handleUpload = async () => {
+    if (!uploadFile) { toast.error('Please select a file'); return; }
+    setIsUploading(true);
     try {
+      const token = localStorage.getItem('auth_token');
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', uploadFile);
       formData.append('caseId', caseId);
-      formData.append('name', file.name);
+      formData.append('name', uploadItem?.name || uploadFile.name);
+      if (uploadItem?.id) formData.append('checklistItemId', uploadItem.id);
 
-      const response = await immigrationApi.uploadDocument(formData);
-      if (response.success) {
-        await fetchDocuments();
-        return Promise.resolve();
-      } else {
-        throw new Error(response.error || 'Upload failed');
-      }
-    } catch (error: any) {
-      throw error;
-    }
+      const res = await fetch(`${API_BASE}/case-documents/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Document uploaded ✅');
+        setUploadDialogOpen(false);
+        loadAll();
+      } else toast.error(data.message || 'Upload failed');
+    } catch (e) { toast.error('Upload failed'); }
+    finally { setIsUploading(false); }
+  };
+
+  const handleDownload = async (docId: string, fileName: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/case-documents/${docId}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { toast.error('Download failed'); return; }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fileName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) { toast.error('Download failed'); }
+  };
+
+  const handleDownloadZip = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/case-documents/case/${caseId}/embassy-package/zip`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { toast.error('ZIP download failed'); return; }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'embassy-package.zip';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) { toast.error('Download failed'); }
   };
 
   if (isLoading) {
@@ -230,61 +275,129 @@ export default function PortalCaseDetailPage() {
 
       {activeTab === 'documents' && (
         <div className="space-y-6">
-          {/* Upload Section */}
+
+          {/* Embassy Package — shown when professional has sent it */}
+          {embassyDocs.length > 0 && (
+            <Card className="border-green-300 bg-green-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2 text-green-800">
+                  <PackageCheck className="w-5 h-5" /> Your Embassy Documents Are Ready!
+                </CardTitle>
+                <p className="text-sm text-green-700">
+                  Your specialist has prepared {embassyDocs.length} document(s) for you to take to the embassy.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {embassyDocs.map((doc: any) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium">{doc.name}</span>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleDownload(doc.id, doc.name)}>
+                      <Download className="w-3 h-3 mr-1" /> Download
+                    </Button>
+                  </div>
+                ))}
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleDownloadZip}>
+                  <Download className="w-4 h-4 mr-2" /> Download All as ZIP
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Checklist — what the specialist needs from you */}
+          {checklists.length > 0 && checklists.map((cl: any) => {
+            const items = cl.items || [];
+            const done = items.filter((i: any) => i.isCompleted).length;
+            const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
+            return (
+              <Card key={cl.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <span>📋 Documents Required from You</span>
+                    <Badge variant={pct === 100 ? 'default' : 'secondary'}>{pct}%</Badge>
+                  </CardTitle>
+                  <Progress value={pct} className="mt-1" />
+                  <p className="text-xs text-gray-500 mt-1">{done} of {items.length} uploaded</p>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {items.map((item: any) => (
+                    <div key={item.id} className={`flex items-start justify-between p-3 rounded-lg border ${item.isCompleted ? 'bg-green-50 border-green-200' : item.isRequired ? 'bg-red-50 border-red-100' : 'bg-gray-50'}`}>
+                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                        {item.isCompleted
+                          ? <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+                          : item.isRequired
+                            ? <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                            : <Clock className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{item.name}</p>
+                          {item.description && <p className="text-xs text-gray-500">{item.description}</p>}
+                          {item.document && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-green-700">📎 {item.document.name}</span>
+                              <Badge variant={item.document.status === 'verified' ? 'default' : 'secondary'} className="text-xs">
+                                {item.document.status === 'verified' ? '✅ Verified' : '⏳ Under Review'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="ml-2 shrink-0 flex items-center gap-2">
+                        {item.isRequired && !item.isCompleted && (
+                          <Badge variant="destructive" className="text-xs">Required</Badge>
+                        )}
+                        {item.isCompleted && item.document ? (
+                          <Button size="sm" variant="ghost" onClick={() => handleDownload(item.document.id, item.document.name)}>
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => openUpload(item)}>
+                            <Upload className="w-3 h-3 mr-1" /> Upload
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {/* Documents from your specialist */}
+          {documents.filter((d: any) => d.uploadedByRole === 'professional').length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">💼 Documents from Your Specialist</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {documents.filter((d: any) => d.uploadedByRole === 'professional').map((doc: any) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium">{doc.name}</p>
+                        <p className="text-xs text-gray-500">{format(new Date(doc.createdAt), 'MMM d, yyyy')}</p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleDownload(doc.id, doc.name)}>
+                      <Download className="w-3 h-3 mr-1" /> Download
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Upload a document (not tied to checklist item) */}
           <Card>
-            <CardHeader>
-              <CardTitle>{t('case.uploadDoc')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PortalDocumentUpload onUpload={handleDocumentUpload} />
+            <CardContent className="pt-4">
+              <Button variant="outline" className="w-full" onClick={() => openUpload()}>
+                <Upload className="w-4 h-4 mr-2" /> Upload Additional Document
+              </Button>
             </CardContent>
           </Card>
 
-          {/* My Documents */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('case.documents')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Upload className="w-12 h-12 mx-auto mb-4" />
-                  <p>{t('portal.noCasesBody')}</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{doc.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {doc.category} • {format(new Date(doc.createdAt), 'MMM d, yyyy')}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          doc.status === 'approved'
-                            ? 'default'
-                            : doc.status === 'rejected'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {doc.status === 'approved'
-                          ? t('status.approved') + ' ✓'
-                          : doc.status === 'rejected'
-                          ? t('status.rejected')
-                          : t('doc.required')}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
 
@@ -328,6 +441,28 @@ export default function PortalCaseDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{uploadItem ? `Upload: ${uploadItem.name}` : 'Upload Document'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>File (PDF, JPG, PNG, DOC — max 10MB)</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={e => setUploadFile(e.target.files?.[0] || null)} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleUpload} disabled={isUploading || !uploadFile}>
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

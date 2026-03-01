@@ -8,15 +8,17 @@ import { toast } from 'sonner';
 import WelcomeStep from './steps/WelcomeStep';
 import OrganizationStep from './steps/OrganizationStep';
 import UsageStep from './steps/UsageStep';
+import ServicesStep from './steps/ServicesStep';
 import TrialStep from './steps/TrialStep';
 
-type Step = 'welcome' | 'organization' | 'usage' | 'trial';
+type Step = 'welcome' | 'organization' | 'usage' | 'services' | 'trial';
 
 export default function OnboardingWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>('welcome');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [organizationData, setOrganizationData] = useState<any>(null);
+  const [usageData, setUsageData] = useState<any>(null);
 
   const handleWelcomeNext = () => {
     setCurrentStep('organization');
@@ -32,7 +34,12 @@ export default function OnboardingWizard() {
     setCurrentStep('usage');
   };
 
-  const handleUsageNext = async (data: { teamSize: string; primaryUseCase: string }) => {
+  const handleUsageNext = (data: { teamSize: string; primaryUseCase: string }) => {
+    setUsageData(data);
+    setCurrentStep('services');
+  };
+
+  const handleServicesNext = async (data: { selectedServices: string[] }) => {
     try {
       setIsSubmitting(true);
       const response = await immigrationApi.completeOnboarding({
@@ -40,8 +47,9 @@ export default function OnboardingWizard() {
         country: organizationData.country,
         phone: organizationData.phone,
         billingEmail: organizationData.billingEmail,
-        teamSize: data.teamSize,
-        primaryUseCase: data.primaryUseCase,
+        teamSize: usageData.teamSize,
+        primaryUseCase: usageData.primaryUseCase,
+        selectedServices: data.selectedServices,
       });
 
       if (response.success && response.data) {
@@ -60,39 +68,33 @@ export default function OnboardingWizard() {
 
   const getProgress = (): number => {
     switch (currentStep) {
-      case 'welcome':
-        return 0;
-      case 'organization':
-        return 33;
-      case 'usage':
-        return 66;
-      case 'trial':
-        return 100;
-      default:
-        return 0;
+      case 'welcome': return 0;
+      case 'organization': return 25;
+      case 'usage': return 50;
+      case 'services': return 75;
+      case 'trial': return 100;
+      default: return 0;
     }
   };
 
-  const getStepNumber = (): number => {
+  const getStepLabel = (): string => {
     switch (currentStep) {
-      case 'organization':
-        return 1;
-      case 'usage':
-        return 2;
-      case 'trial':
-        return 3;
-      default:
-        return 0;
+      case 'organization': return 'Step 1 of 3';
+      case 'usage': return 'Step 2 of 3';
+      case 'services': return 'Step 3 of 3';
+      default: return '';
     }
   };
+
+  const showProgress = currentStep !== 'welcome' && currentStep !== 'trial';
 
   return (
     <div className="space-y-8">
       {/* Progress Bar */}
-      {currentStep !== 'welcome' && currentStep !== 'trial' && (
+      {showProgress && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-            <span>Step {getStepNumber()} of 2</span>
+            <span>{getStepLabel()}</span>
             <span>{getProgress()}%</span>
           </div>
           <Progress value={getProgress()} className="h-2" />
@@ -111,6 +113,12 @@ export default function OnboardingWizard() {
         <UsageStep
           onNext={handleUsageNext}
           onBack={() => setCurrentStep('organization')}
+        />
+      )}
+      {currentStep === 'services' && (
+        <ServicesStep
+          onNext={handleServicesNext}
+          onBack={() => setCurrentStep('usage')}
         />
       )}
       {currentStep === 'trial' && (

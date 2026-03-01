@@ -9,6 +9,11 @@ import {
   getDocumentDownload,
   getAllDocumentsByOrg,
   uploadMiddleware,
+  toggleEmbassyPackage,
+  verifyDocument,
+  sendEmbassyPackage,
+  getEmbassyPackage,
+  downloadEmbassyPackageZip,
 } from '../controllers/documentController';
 import {
   generateCaseDocument,
@@ -30,6 +35,13 @@ router.get('/case/:caseId', getDocumentsByCase); // GET /api/case-documents/case
 router.put('/:id', updateDocument); // PUT /api/case-documents/:id
 router.delete('/:id', deleteDocument); // DELETE /api/case-documents/:id
 router.get('/:id/download', getDocumentDownload); // GET /api/case-documents/:id/download
+
+// Embassy package routes
+router.patch('/:id/embassy-package', toggleEmbassyPackage);         // toggle isEmbassyPackage on a document
+router.patch('/:id/verify', verifyDocument);                         // mark client doc as verified
+router.post('/case/:caseId/send-embassy-package', sendEmbassyPackage); // notify client package is ready
+router.get('/case/:caseId/embassy-package', getEmbassyPackage);      // get all embassy docs (pro + client)
+router.get('/case/:caseId/embassy-package/zip', downloadEmbassyPackageZip); // download all as ZIP
 
 // Case document generation routes
 router.post('/case/:caseId/generate', generateCaseDocument); // POST /api/case-documents/case/:caseId/generate

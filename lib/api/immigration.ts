@@ -326,6 +326,7 @@ export const immigrationApi = {
     teamSize?: string;
     primaryUseCase?: string;
     hearAboutUs?: string;
+    selectedServices?: string[];
   }): Promise<ApiResponse<{ organization: any; subscription: any }>> {
     return apiClient.post<{ organization: any; subscription: any }>('/api/organizations/complete-onboarding', data);
   },

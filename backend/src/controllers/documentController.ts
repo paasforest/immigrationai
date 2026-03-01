@@ -84,18 +84,22 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
       throw new AppError('Case not found or access denied', 404);
     }
 
+    // Determine who is uploading (client or professional)
+    const uploaderRole = (req as any).organizationRole === 'applicant' ? 'client' : 'professional';
+
     // Create document record
     const document = await prisma.caseDocument.create({
       data: {
         caseId,
         organizationId,
         uploadedById: user.userId,
+        uploadedByRole: uploaderRole,
         name: name || req.file.originalname,
-        category: category || 'supporting',
+        category: category || (uploaderRole === 'client' ? 'client' : 'supporting'),
         fileUrl: req.file.path,
         fileSize: BigInt(req.file.size),
         fileType: req.file.mimetype,
-        status: 'pending_review',
+        status: uploaderRole === 'client' ? 'pending_review' : 'verified',
         notes,
         ...(expiryDate && { expiryDate: new Date(expiryDate) }),
       },
@@ -440,6 +444,229 @@ export async function getDocumentDownload(req: Request, res: Response): Promise<
       throw error;
     }
     throw new AppError(error.message || 'Failed to download document', 500);
+  }
+}
+
+/**
+ * Toggle embassy package flag on a document
+ * Only professionals/org_admin can do this
+ */
+export async function toggleEmbassyPackage(req: Request, res: Response): Promise<void> {
+  try {
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+    const { id } = req.params;
+
+    if (organizationRole !== 'org_admin' && organizationRole !== 'professional' && organizationRole !== 'staff') {
+      throw new AppError('Only professionals can manage the embassy package', 403);
+    }
+
+    const document = await prisma.caseDocument.findFirst({ where: { id, organizationId } });
+    if (!document) throw new AppError('Document not found', 404);
+
+    const updated = await (prisma.caseDocument as any).update({
+      where: { id },
+      data: { isEmbassyPackage: !document.isEmbassyPackage },
+    });
+
+    res.json({ success: true, data: updated, message: updated.isEmbassyPackage ? 'Added to embassy package' : 'Removed from embassy package' });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to update embassy package', 500);
+  }
+}
+
+/**
+ * Verify a client-uploaded document (mark as verified)
+ */
+export async function verifyDocument(req: Request, res: Response): Promise<void> {
+  try {
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+    const { id } = req.params;
+
+    if (organizationRole !== 'org_admin' && organizationRole !== 'professional' && organizationRole !== 'staff') {
+      throw new AppError('Only professionals can verify documents', 403);
+    }
+
+    const document = await prisma.caseDocument.findFirst({ where: { id, organizationId } });
+    if (!document) throw new AppError('Document not found', 404);
+
+    const updated = await prisma.caseDocument.update({
+      where: { id },
+      data: { status: 'verified' },
+    });
+
+    res.json({ success: true, data: updated, message: 'Document verified' });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to verify document', 500);
+  }
+}
+
+/**
+ * Send embassy package to client — notifies client that documents are ready
+ */
+export async function sendEmbassyPackage(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+    const { caseId } = req.params;
+
+    if (organizationRole !== 'org_admin' && organizationRole !== 'professional' && organizationRole !== 'staff') {
+      throw new AppError('Only professionals can send the embassy package', 403);
+    }
+
+    const caseData = await getCaseById(organizationId, caseId);
+    if (!caseData) throw new AppError('Case not found', 404);
+
+    // Get embassy package documents
+    const embassyDocs = await (prisma.caseDocument as any).findMany({
+      where: { caseId, organizationId, isEmbassyPackage: true },
+      select: { id: true, name: true, fileType: true },
+    });
+
+    if (embassyDocs.length === 0) {
+      throw new AppError('No documents marked for embassy package. Please mark documents first.', 400);
+    }
+
+    // Update case status to submitted
+    await prisma.case.update({
+      where: { id: caseId },
+      data: { status: 'submitted', submittedAt: new Date() },
+    });
+
+    // Notify the applicant
+    if (caseData.applicantId) {
+      try {
+        const { createNotification } = await import('./notificationController');
+        await createNotification({
+          organizationId,
+          userId: caseData.applicantId,
+          type: 'embassy_package_ready',
+          title: '📦 Your embassy documents are ready!',
+          body: `${embassyDocs.length} document(s) prepared for ${caseData.title}. Log in to your portal to download.`,
+          resourceType: 'case',
+          resourceId: caseId,
+        });
+
+        // Send email
+        const applicant = await prisma.user.findUnique({ where: { id: caseData.applicantId }, select: { email: true, fullName: true } });
+        const professional = await prisma.user.findUnique({ where: { id: user.userId }, select: { fullName: true } });
+
+        if (applicant?.email) {
+          const { sendCaseUpdateEmail } = await import('../services/emailService');
+          await sendCaseUpdateEmail({
+            toEmail: applicant.email,
+            applicantName: applicant.fullName || 'Applicant',
+            caseReference: caseData.referenceNumber,
+            updateType: 'embassy_package_ready',
+            message: `Your specialist ${professional?.fullName || 'your specialist'} has prepared your embassy document package (${embassyDocs.length} files). Please log in to your portal to download and take to the embassy.`,
+            portalUrl: `${process.env.FRONTEND_URL}/portal/cases/${caseId}`,
+          });
+        }
+      } catch (notifyErr) {
+        console.error('Failed to notify applicant:', notifyErr);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { documentsCount: embassyDocs.length, caseStatus: 'submitted' },
+      message: `Embassy package sent to client. ${embassyDocs.length} document(s) ready for download.`,
+    });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to send embassy package', 500);
+  }
+}
+
+/**
+ * Get embassy package documents for a case
+ * Accessible by both professional and client
+ */
+export async function getEmbassyPackage(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+    const { caseId } = req.params;
+
+    const caseData = await getCaseById(organizationId, caseId);
+    if (!caseData) throw new AppError('Case not found', 404);
+
+    // Applicant can only view their own case
+    if (organizationRole === 'applicant' && caseData.applicantId !== user.userId) {
+      throw new AppError('Access denied', 403);
+    }
+
+    const docs = await (prisma.caseDocument as any).findMany({
+      where: { caseId, organizationId, isEmbassyPackage: true },
+      include: { uploadedBy: { select: { fullName: true, email: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ success: true, data: { documents: docs, count: docs.length } });
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to get embassy package', 500);
+  }
+}
+
+/**
+ * Download all embassy package documents as ZIP
+ */
+export async function downloadEmbassyPackageZip(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+    const { caseId } = req.params;
+
+    const caseData = await getCaseById(organizationId, caseId);
+    if (!caseData) throw new AppError('Case not found', 404);
+
+    if (organizationRole === 'applicant' && caseData.applicantId !== user.userId) {
+      throw new AppError('Access denied', 403);
+    }
+
+    const docs = await (prisma.caseDocument as any).findMany({
+      where: { caseId, organizationId, isEmbassyPackage: true },
+    });
+
+    if (docs.length === 0) throw new AppError('No documents in embassy package', 404);
+
+    // Create a simple tar-like ZIP using archiver
+    try {
+      const archiver = await import('archiver');
+      const archive = archiver.default('zip', { zlib: { level: 9 } });
+
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="embassy-package-${caseData.referenceNumber}.zip"`);
+
+      archive.pipe(res);
+
+      for (const doc of docs) {
+        if (fs.existsSync(doc.fileUrl)) {
+          const ext = path.extname(doc.fileUrl);
+          const safeName = doc.name.replace(/[^a-zA-Z0-9.-]/g, '_') + ext;
+          archive.file(doc.fileUrl, { name: safeName });
+        }
+      }
+
+      await archive.finalize();
+    } catch (archiveErr: any) {
+      // Fallback: if archiver not available, return list of download links
+      res.json({
+        success: false,
+        message: 'ZIP download not available. Please download files individually.',
+        data: { documents: docs.map((d: any) => ({ id: d.id, name: d.name })) },
+      });
+    }
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || 'Failed to create zip', 500);
   }
 }
 

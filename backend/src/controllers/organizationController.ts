@@ -571,6 +571,7 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
       teamSize,
       primaryUseCase,
       hearAboutUs,
+      selectedServices, // array of caseType strings (e.g. ['visa_application', 'work_permit'])
     } = req.body;
 
     if (!organizationName || !country || !billingEmail) {
@@ -651,14 +652,20 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
       },
     });
 
-    // Auto-create specializations for ALL services so the professional immediately
-    // appears in the routing engine without manual setup.  They can refine which
-    // services they cover from their profile settings later.
+    // Create specializations for selected services (from the onboarding wizard).
+    // If selectedServices is not provided (old clients / API callers), fall back to all services.
     try {
-      const allServices = await prisma.serviceCatalog.findMany({ select: { id: true } });
-      if (allServices.length > 0) {
+      const serviceFilter =
+        Array.isArray(selectedServices) && selectedServices.length > 0
+          ? { caseType: { in: selectedServices } }
+          : {};
+      const targetServices = await prisma.serviceCatalog.findMany({
+        where: serviceFilter,
+        select: { id: true, name: true, caseType: true },
+      });
+      if (targetServices.length > 0) {
         await prisma.professionalSpecialization.createMany({
-          data: allServices.map((svc) => ({
+          data: targetServices.map((svc) => ({
             userId: user.id,
             organizationId: organization.id,
             serviceId: svc.id,
@@ -672,7 +679,7 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
       }
     } catch (error) {
       // Specialization creation failure shouldn't break onboarding
-      console.error('Failed to create default specializations:', error);
+      console.error('Failed to create specializations:', error);
     }
 
     // Send welcome email

@@ -581,30 +581,33 @@ model Case {
 // Separate from existing Document model (AI-generated)
 // ============================================
 model CaseDocument {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  caseId         String       @map("case_id") @db.Uuid
-  case           Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id") @db.Uuid
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  uploadedById   String       @map("uploaded_by_id") @db.Uuid
-  uploadedBy     User         @relation(fields: [uploadedById], references: [id])
-  name           String       @db.VarChar(255)
-  category       String?      @db.VarChar(100)
-  fileUrl        String       @map("file_url") @db.VarChar(500)
-  fileSize       BigInt?      @map("file_size")
-  fileType       String?      @map("file_type") @db.VarChar(100)
-  status         String       @default("pending_review") @db.VarChar(50)
-  expiryDate     DateTime?    @map("expiry_date") @db.Timestamp(6)
-  notes          String?      @db.Text
-  version        Int          @default(1)
-  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseId           String       @map("case_id") @db.Uuid
+  case             Case         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  organizationId   String       @map("organization_id") @db.Uuid
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedById     String       @map("uploaded_by_id") @db.Uuid
+  uploadedBy       User         @relation(fields: [uploadedById], references: [id])
+  uploadedByRole   String       @default("professional") @map("uploaded_by_role") @db.VarChar(50) // 'client' | 'professional'
+  name             String       @db.VarChar(255)
+  category         String?      @db.VarChar(100)
+  fileUrl          String       @map("file_url") @db.VarChar(500)
+  fileSize         BigInt?      @map("file_size")
+  fileType         String?      @map("file_type") @db.VarChar(100)
+  status           String       @default("pending_review") @db.VarChar(50) // pending_review | verified | rejected
+  isEmbassyPackage Boolean      @default(false) @map("is_embassy_package") // included in final handoff to client
+  expiryDate       DateTime?    @map("expiry_date") @db.Timestamp(6)
+  notes            String?      @db.Text
+  version          Int          @default(1)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
 
   checklistItems ChecklistItem[]
 
   @@index([caseId])
   @@index([organizationId])
   @@index([uploadedById])
+  @@index([isEmbassyPackage])
   @@map("case_documents")
 }
 
