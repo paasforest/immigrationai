@@ -64,12 +64,22 @@ export default function PortalCaseDetailPage() {
         apiClient.get<{ documents: any[] }>(`/case-documents/case/${caseId}/embassy-package`),
       ]);
       if (caseRes.success && caseRes.data) setCaseData(caseRes.data);
-      if (docsRes.success) setDocuments((docsRes.data as any)?.documents || []);
-      if (checkRes.success) {
-        const checkData = checkRes.data as any;
-        setChecklists(checkData?.checklists || (Array.isArray(checkData) ? checkData : []));
+      if (docsRes.success && docsRes.data) {
+        const docsData = docsRes.data as { documents?: any[] };
+        setDocuments(docsData.documents || []);
       }
-      if (embassyRes.success) setEmbassyDocs((embassyRes.data as any)?.documents || []);
+      if (checkRes.success && checkRes.data) {
+        const checkData = checkRes.data as { checklists?: any[] } | any[];
+        if (Array.isArray(checkData)) {
+          setChecklists(checkData);
+        } else {
+          setChecklists(checkData.checklists || []);
+        }
+      }
+      if (embassyRes.success && embassyRes.data) {
+        const embassyData = embassyRes.data as { documents?: any[] };
+        setEmbassyDocs(embassyData.documents || []);
+      }
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
   };
