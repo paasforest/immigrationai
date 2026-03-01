@@ -40,6 +40,7 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<CaseMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -47,9 +48,11 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
   const isApplicant = user?.role === 'applicant';
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
+    if (caseId) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 30000); // Poll every 30 seconds
+      return () => clearInterval(interval);
+    }
   }, [caseId]);
 
   useEffect(() => {
@@ -61,20 +64,29 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
   };
 
   const fetchMessages = async () => {
+    if (!caseId) {
+      setError('Case ID is required');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setError(null);
       const response = await immigrationApi.getMessagesByCase(caseId, 1);
+      
       if (response.success && response.data) {
         // Handle PaginatedResponse structure: { data: CaseMessage[], pagination: {...} }
-        const messagesData = response.data as { data?: CaseMessage[]; pagination?: any };
-        const fetchedMessages = messagesData.data || (Array.isArray(response.data) ? response.data : []);
+        const paginatedData = response.data as unknown as { data?: CaseMessage[]; pagination?: any };
+        const fetchedMessages = Array.isArray(paginatedData.data) ? paginatedData.data : [];
         setMessages(fetchedMessages);
         
         // Mark unread messages as read
-        if (user?.id) {
+        if (user?.id && fetchedMessages.length > 0) {
           const unreadIds = fetchedMessages
-            .filter((m) => !m.readAt && m.senderId !== user.id)
-            .map((m) => m.id);
+            .filter((m) => m && !m.readAt && m.senderId !== user.id)
+            .map((m) => m.id)
+            .filter((id) => id); // Filter out any undefined/null IDs
         
           if (unreadIds.length > 0) {
             try {
@@ -88,10 +100,15 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
       } else {
         // If API call succeeded but no data, set empty array
         setMessages([]);
+        if (response.error) {
+          setError(response.error);
+        }
       }
     } catch (error: any) {
       console.error('Failed to fetch messages:', error);
-      toast.error('Failed to load messages. Please try again.');
+      const errorMessage = error?.message || 'Failed to load messages. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
       setMessages([]); // Set empty array on error to prevent UI crash
     } finally {
       setIsLoading(false);
@@ -162,7 +179,14 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
     <div className="flex flex-col" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
       {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-lg">
-        {isLoading ? (
+        {error ? (
+          <div className="text-center text-red-600 py-8">
+            <p className="font-medium mb-2">⚠️ {error}</p>
+            <Button variant="outline" size="sm" onClick={fetchMessages}>
+              Try Again
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="text-center text-gray-500 py-8">Loading messages...</div>
         ) : visibleMessages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">No messages yet</div>

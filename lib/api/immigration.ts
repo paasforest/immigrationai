@@ -176,7 +176,7 @@ export const immigrationApi = {
   },
 
   async markMessagesRead(ids: string[]): Promise<ApiResponse<{ count: number }>> {
-    return apiClient.put<{ count: number }>('/api/messages/read', { ids });
+    return apiClient.put<{ count: number }>('/api/messages/read', { messageIds: ids });
   },
 
   async getUnreadCount(): Promise<ApiResponse<{ count: number }>> {

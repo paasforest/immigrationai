@@ -146,7 +146,7 @@ export async function getMessagesByCase(req: Request, res: Response): Promise<vo
     res.json({
       success: true,
       data: {
-        messages,
+        data: messages, // Match PaginatedResponse<T> interface
         pagination: {
           page: pageNum,
           limit: limitNum,
