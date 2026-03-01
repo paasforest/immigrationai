@@ -59,25 +59,25 @@ export default function PortalCaseDetailPage() {
     try {
       const [caseRes, docsRes, checkRes, embassyRes] = await Promise.all([
         immigrationApi.getCaseById(caseId),
-        apiClient.get<{ documents: any[] }>(`/case-documents/case/${caseId}`),
-        apiClient.get<{ checklists: any[] } | any[]>(`/checklists/case/${caseId}`),
-        apiClient.get<{ documents: any[] }>(`/case-documents/case/${caseId}/embassy-package`),
+        apiClient.get(`/case-documents/case/${caseId}`),
+        apiClient.get(`/checklists/case/${caseId}`),
+        apiClient.get(`/case-documents/case/${caseId}/embassy-package`),
       ]);
       if (caseRes.success && caseRes.data) setCaseData(caseRes.data);
       if (docsRes.success && docsRes.data) {
-        const docsData = docsRes.data as { documents?: any[] };
+        const docsData = docsRes.data as unknown as { documents?: any[] };
         setDocuments(docsData.documents || []);
       }
       if (checkRes.success && checkRes.data) {
-        const checkData = checkRes.data as { checklists?: any[] } | any[];
+        const checkData = checkRes.data as unknown as { checklists?: any[] } | any[];
         if (Array.isArray(checkData)) {
           setChecklists(checkData);
         } else {
-          setChecklists(checkData.checklists || []);
+          setChecklists((checkData as { checklists?: any[] }).checklists || []);
         }
       }
       if (embassyRes.success && embassyRes.data) {
-        const embassyData = embassyRes.data as { documents?: any[] };
+        const embassyData = embassyRes.data as unknown as { documents?: any[] };
         setEmbassyDocs(embassyData.documents || []);
       }
     } catch (e) { console.error(e); }
