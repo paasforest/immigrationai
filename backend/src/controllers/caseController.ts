@@ -150,7 +150,7 @@ export async function getCases(req: Request, res: Response): Promise<void> {
     res.json({
       success: true,
       data: {
-        cases: paginatedCases,
+        data: paginatedCases, // Match PaginatedResponse<T> interface
         pagination: {
           page: pageNum,
           limit: limitNum,

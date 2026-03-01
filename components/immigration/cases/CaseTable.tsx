@@ -167,7 +167,9 @@ export default function CaseTable({ cases, isLoading, pagination, onPageChange }
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-sm">
-                            {caseItem.assignedProfessional.fullName.split(' ')[0]}
+                            {caseItem.assignedProfessional.fullName
+                              ? caseItem.assignedProfessional.fullName.split(' ')[0]
+                              : 'Unassigned'}
                           </span>
                         </div>
                       ) : (
