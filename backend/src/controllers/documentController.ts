@@ -544,7 +544,7 @@ export async function sendEmbassyPackage(req: Request, res: Response): Promise<v
         await createNotification({
           organizationId,
           userId: caseData.applicantId,
-          type: 'embassy_package_ready',
+          type: 'case_update',
           title: '📦 Your embassy documents are ready!',
           body: `${embassyDocs.length} document(s) prepared for ${caseData.title}. Log in to your portal to download.`,
           resourceType: 'case',
@@ -559,11 +559,12 @@ export async function sendEmbassyPackage(req: Request, res: Response): Promise<v
           const { sendCaseUpdateEmail } = await import('../services/emailService');
           await sendCaseUpdateEmail({
             toEmail: applicant.email,
-            applicantName: applicant.fullName || 'Applicant',
+            toName: applicant.fullName || 'Applicant',
             caseReference: caseData.referenceNumber,
+            caseTitle: caseData.title,
             updateType: 'embassy_package_ready',
-            message: `Your specialist ${professional?.fullName || 'your specialist'} has prepared your embassy document package (${embassyDocs.length} files). Please log in to your portal to download and take to the embassy.`,
-            portalUrl: `${process.env.FRONTEND_URL}/portal/cases/${caseId}`,
+            updateMessage: `Your specialist ${professional?.fullName || 'your specialist'} has prepared your embassy document package (${embassyDocs.length} files). Please log in to your portal to download and take to the embassy.`,
+            caseUrl: `${process.env.FRONTEND_URL}/portal/cases/${caseId}`,
           });
         }
       } catch (notifyErr) {
@@ -637,33 +638,37 @@ export async function downloadEmbassyPackageZip(req: Request, res: Response): Pr
 
     if (docs.length === 0) throw new AppError('No documents in embassy package', 404);
 
-    // Create a simple tar-like ZIP using archiver
+    // Stream a simple ZIP using Node's built-in zlib + archiver
+    // We use a lazy require so missing package degrades gracefully
+    let archiverLib: any;
     try {
-      const archiver = await import('archiver');
-      const archive = archiver.default('zip', { zlib: { level: 9 } });
-
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', `attachment; filename="embassy-package-${caseData.referenceNumber}.zip"`);
-
-      archive.pipe(res);
-
-      for (const doc of docs) {
-        if (fs.existsSync(doc.fileUrl)) {
-          const ext = path.extname(doc.fileUrl);
-          const safeName = doc.name.replace(/[^a-zA-Z0-9.-]/g, '_') + ext;
-          archive.file(doc.fileUrl, { name: safeName });
-        }
-      }
-
-      await archive.finalize();
-    } catch (archiveErr: any) {
-      // Fallback: if archiver not available, return list of download links
+      archiverLib = require('archiver');
+    } catch (_) {
+      // archiver not installed — return list of individual download URLs
       res.json({
         success: false,
-        message: 'ZIP download not available. Please download files individually.',
+        message: 'ZIP download not available on this server. Please download files individually.',
         data: { documents: docs.map((d: any) => ({ id: d.id, name: d.name })) },
       });
+      return;
     }
+
+    const archive = archiverLib('zip', { zlib: { level: 9 } });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="embassy-package-${caseData.referenceNumber}.zip"`);
+
+    archive.pipe(res);
+
+    for (const doc of docs) {
+      if (fs.existsSync(doc.fileUrl)) {
+        const ext = path.extname(doc.fileUrl);
+        const safeName = doc.name.replace(/[^a-zA-Z0-9.-]/g, '_') + ext;
+        archive.file(doc.fileUrl, { name: safeName });
+      }
+    }
+
+    await archive.finalize();
   } catch (error: any) {
     if (error instanceof AppError) throw error;
     throw new AppError(error.message || 'Failed to create zip', 500);
