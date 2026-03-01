@@ -62,22 +62,37 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
 
   const fetchMessages = async () => {
     try {
+      setIsLoading(true);
       const response = await immigrationApi.getMessagesByCase(caseId, 1);
       if (response.success && response.data) {
-        const fetchedMessages = response.data.data;
+        // Handle PaginatedResponse structure: { data: CaseMessage[], pagination: {...} }
+        const messagesData = response.data as { data?: CaseMessage[]; pagination?: any };
+        const fetchedMessages = messagesData.data || (Array.isArray(response.data) ? response.data : []);
         setMessages(fetchedMessages);
         
         // Mark unread messages as read
-        const unreadIds = fetchedMessages
-          .filter((m) => !m.readAt && m.senderId !== user?.id)
-          .map((m) => m.id);
+        if (user?.id) {
+          const unreadIds = fetchedMessages
+            .filter((m) => !m.readAt && m.senderId !== user.id)
+            .map((m) => m.id);
         
-        if (unreadIds.length > 0) {
-          await immigrationApi.markMessagesRead(unreadIds);
+          if (unreadIds.length > 0) {
+            try {
+              await immigrationApi.markMessagesRead(unreadIds);
+            } catch (markError) {
+              console.error('Failed to mark messages as read:', markError);
+              // Don't fail the whole fetch if marking as read fails
+            }
+          }
         }
+      } else {
+        // If API call succeeded but no data, set empty array
+        setMessages([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch messages:', error);
+      toast.error('Failed to load messages. Please try again.');
+      setMessages([]); // Set empty array on error to prevent UI crash
     } finally {
       setIsLoading(false);
     }
@@ -139,9 +154,9 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
   };
 
   // Filter out internal messages for applicants
-  const visibleMessages = isApplicant
+  const visibleMessages = (isApplicant && Array.isArray(messages))
     ? messages.filter((m) => !m.isInternal)
-    : messages;
+    : (Array.isArray(messages) ? messages : []);
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
@@ -153,8 +168,8 @@ export default function MessagesTab({ caseId }: MessagesTabProps) {
           <div className="text-center text-gray-500 py-8">No messages yet</div>
         ) : (
           visibleMessages.map((message) => {
-            const isCurrentUser = message.senderId === user?.id;
-            const isInternalNote = message.isInternal;
+            const isCurrentUser = user?.id && message.senderId === user.id;
+            const isInternalNote = message.isInternal || false;
 
             return (
               <div
