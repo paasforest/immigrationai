@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: '%s | ImmigrationAI',
   },
   description:
-    'The AI-powered immigration case management platform for agencies, consultants, and lawyers worldwide. Manage cases to UK, Canada, USA, Australia, South Africa, Germany, UAE and any country. Prevent visa rejections with AI, client portals, and live regulation monitoring.',
+    'The AI-powered immigration case management platform for agencies, consultants, and lawyers worldwide. UK work visa from South Africa, Portugal golden visa for South Africans, and cases to UK, Canada, USA, Australia, Germany, UAE and any country. Prevent visa rejections with AI, client portals, and live regulation monitoring.',
   keywords: [
     // For practitioners
     'immigration case management software',
@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     'study visa help',
     'business visa',
     'intra company transfer visa',
+    // GSC top queries (impressions)
+    'uk work visa south africa',
+    'portugal golden visa for south africans',
   ],
   openGraph: {
     type: 'website',
@@ -57,7 +60,7 @@ export const metadata: Metadata = {
     siteName: 'ImmigrationAI',
     title: 'ImmigrationAI — AI Immigration Case Management for Professionals Worldwide',
     description:
-      'Manage immigration cases to any country with AI tools that prevent rejections. Built for agencies, consultants, and lawyers. UK · Canada · USA · Australia · South Africa · UAE and beyond.',
+      'Manage immigration cases to any country with AI tools that prevent rejections. UK work visa from South Africa, Portugal golden visa for South Africans, UK · Canada · USA · Australia · South Africa · UAE and beyond.',
     images: [
       {
         url: '/og-image.png',

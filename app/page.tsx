@@ -110,6 +110,14 @@ const faqSchema = {
         text: 'ImmigrationAI maintains a directory of verified immigration professionals. All listed practitioners have submitted their credentials for review. You can search by visa type specialty, destination country, city, and language. Visit immigrationai.co.za/find-a-specialist to find a verified professional.',
       },
     },
+    {
+      '@type': 'Question',
+      name: 'Do you help with UK work visa from South Africa or Portugal golden visa for South Africans?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes. ImmigrationAI professionals handle UK work visa applications from South Africa (Skilled Worker, Health and Care Worker, and other routes) and Portugal golden visa and residence-by-investment cases for South African applicants. Use Get Help or Find a Specialist to connect with a verified consultant who specialises in your route.',
+      },
+    },
   ],
 };
 
@@ -299,6 +307,11 @@ export default function HomePage() {
       question: 'How do I get started?',
       answer:
         'Sign up for a 14-day free trial — no credit card required. You\'ll be guided through creating your practice workspace, inviting your team, and setting up your first case. We also offer live demo sessions for larger agencies. Payment is by EFT/bank transfer only.',
+    },
+    {
+      question: 'Do you help with UK work visa from South Africa or Portugal golden visa for South Africans?',
+      answer:
+        'Yes. ImmigrationAI professionals handle UK work visa applications from South Africa (Skilled Worker, Health and Care Worker, and other routes) and Portugal golden visa and residence-by-investment cases for South African applicants. Use Get Help or Find a Specialist to connect with a verified consultant who specialises in your route.',
     },
   ];
 
