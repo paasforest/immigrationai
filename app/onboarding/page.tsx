@@ -21,6 +21,12 @@ export default function OnboardingPage() {
         return;
       }
 
+      // Admin/super_admin should never be on onboarding - redirect to admin
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        router.push('/admin');
+        return;
+      }
+
       try {
         const response = await immigrationApi.checkOnboardingStatus();
         if (response.success && response.data) {

@@ -541,6 +541,129 @@ export class AdminController {
       'System health retrieved successfully'
     );
   });
+
+  // GET /api/admin/organizations
+  getOrganizations = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const search = (req.query.search as string) || '';
+    const planStatus = req.query.planStatus as string;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+        { billingEmail: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (planStatus) where.planStatus = planStatus;
+
+    const [organizations, total] = await Promise.all([
+      prisma.organization.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          plan: true,
+          planStatus: true,
+          trialEndsAt: true,
+          billingEmail: true,
+          country: true,
+          isActive: true,
+          createdAt: true,
+          _count: {
+            select: {
+              users: true,
+              cases: true,
+              subscriptions: true,
+            },
+          },
+        } as any,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.organization.count({ where }),
+    ]);
+
+    return sendSuccess(
+      res,
+      {
+        organizations,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+      'Organizations retrieved successfully'
+    );
+  });
+
+  // GET /api/admin/analytics/platform-kpis
+  getPlatformKPIs = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
+    }
+
+    const now = new Date();
+    const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalOrgs,
+      activeOrgs,
+      trialOrgs,
+      totalUsers,
+      totalIntakes,
+      intakesLast30d,
+      convertedIntakes,
+      revenueData,
+    ] = await Promise.all([
+      prisma.organization.count(),
+      prisma.organization.count({ where: { isActive: true } }),
+      prisma.organization.count({ where: { planStatus: 'trial' } }),
+      prisma.user.count(),
+      prisma.caseIntake?.count?.() ?? Promise.resolve(0),
+      prisma.caseIntake?.count?.({ where: { submittedAt: { gte: last30d } } }) ?? Promise.resolve(0),
+      prisma.caseIntake?.count?.({ where: { convertedCaseId: { not: null } } }) ?? Promise.resolve(0),
+      (async () => {
+        try {
+          const { query } = await import('../config/database');
+          const r = await query(
+            `SELECT COALESCE(SUM(amount_paid), 0)::float as total FROM payments WHERE status = 'completed'`,
+            []
+          );
+          const total = (r.rows[0]?.total as number) || 0;
+          return total / 100; // Convert cents to currency units
+        } catch {
+          return 0;
+        }
+      })(),
+    ]);
+
+    return sendSuccess(
+      res,
+      {
+        organizations: { total: totalOrgs, active: activeOrgs, trial: trialOrgs },
+        users: totalUsers,
+        intakes: {
+          total: totalIntakes,
+          last30d: intakesLast30d,
+          converted: convertedIntakes,
+        },
+        revenue: revenueData,
+      },
+      'Platform KPIs retrieved successfully'
+    );
+  });
 }
 
 export const adminController = new AdminController();

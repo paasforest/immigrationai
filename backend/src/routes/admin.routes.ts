@@ -51,6 +51,12 @@ router.get('/system/health', adminController.getSystemHealth);
 router.get('/users', adminController.getUsers);
 router.put('/users/:userId', adminController.updateUser);
 
+// Organizations (platform admin)
+router.get('/organizations', adminController.getOrganizations);
+
+// Platform KPIs
+router.get('/analytics/platform-kpis', adminController.getPlatformKPIs);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // VISA INTELLIGENCE — Verified Rules Database
 // Admin-only CRUD for the VisaRequirements table (the RAG ground truth layer).

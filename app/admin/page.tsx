@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,57 +18,23 @@ import {
   Activity,
   Target,
   Compass,
-  Globe
+  Globe,
+  Store,
+  Building2
 } from 'lucide-react';
 import Link from 'next/link';
+import PlatformKPIStrip from '@/components/admin/PlatformKPIStrip';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [eligibilityInsights, setEligibilityInsights] = useState<any>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchEligibilityInsights();
-    }
-  }, [isAdmin]);
-
-  const checkAdminAccess = async () => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setIsAdmin(true);
-      } else if (response.status === 403) {
-        alert('Access Denied: Admin privileges required');
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Admin access check failed:', error);
-      router.push('/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchEligibilityInsights();
+  }, []);
 
   const fetchEligibilityInsights = async () => {
     try {
@@ -91,21 +56,6 @@ export default function AdminDashboardPage() {
       setInsightsLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="w-12 h-12 animate-pulse text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Verifying admin access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
 
   const adminFeatures = [
     {
@@ -157,6 +107,14 @@ export default function AdminDashboardPage() {
       stats: "Revenue tracking"
     },
     {
+      icon: <Store className="w-8 h-8" />,
+      title: "Marketplace",
+      description: "Platform-wide intake and routing statistics",
+      href: "/admin/marketplace",
+      color: "from-amber-500 to-orange-600",
+      stats: "Lead funnel"
+    },
+    {
       icon: <Activity className="w-8 h-8" />,
       title: "System Health",
       description: "Monitor system performance and uptime",
@@ -167,42 +125,28 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Shield className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">Immigration AI Administration</p>
-              </div>
-            </div>
-            <Link href="/dashboard">
-              <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to App
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Platform overview and administrative tools</p>
+        </div>
+
+        {/* Platform KPIs - fetch and display */}
+        <PlatformKPIStrip />
+
         {/* Welcome Card */}
         <Card className="mb-8 border-l-4 border-l-blue-600">
           <CardHeader>
             <CardTitle className="flex items-center">
               <LayoutDashboard className="w-6 h-6 mr-2 text-blue-600" />
-              Welcome, Administrator
+              Quick access
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              Access administrative tools and analytics to manage your Immigration AI platform.
-              Select a feature below to get started.
+              Access administrative tools and analytics. Use the sidebar to navigate.
             </p>
           </CardContent>
         </Card>

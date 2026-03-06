@@ -30,27 +30,30 @@ export default function LoginPage() {
     const result = await login(formData);
 
     if (result.success) {
-      // Check onboarding status before redirecting
+      // Admin/super_admin always go to admin dashboard (skip onboarding)
+      if (result.user?.role === 'admin' || result.user?.role === 'super_admin') {
+        router.push('/admin');
+        return;
+      }
+
+      // Applicants go to portal
+      if (result.user?.role === 'applicant') {
+        router.push('/portal');
+        return;
+      }
+
+      // Other users: check onboarding status
       try {
         const onboardingResponse = await immigrationApi.checkOnboardingStatus();
-        if (onboardingResponse.success && onboardingResponse.data) {
-          if (onboardingResponse.data.needsOnboarding) {
-            router.push('/onboarding');
-            return;
-          }
+        if (onboardingResponse.success && onboardingResponse.data?.needsOnboarding) {
+          router.push('/onboarding');
+          return;
         }
       } catch (error) {
         console.error('Failed to check onboarding status:', error);
       }
 
-      // Redirect based on role returned from API
-      if (result.user?.role === 'admin' || result.user?.role === 'super_admin') {
-        router.push('/admin');
-      } else if (result.user?.role === 'applicant') {
-        router.push('/portal');
-      } else {
-        router.push('/dashboard/immigration');
-      }
+      router.push('/dashboard/immigration');
     } else {
       setError(result.error || 'Login failed');
       setLoading(false);
