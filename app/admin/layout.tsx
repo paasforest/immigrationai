@@ -24,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/api/client';
 
+const PLATFORM_ADMIN_ROLES = ['admin', 'super_admin'];
+
 const navSections = [
   {
     label: 'Overview',
@@ -74,61 +76,56 @@ export default function AdminLayout({
   }, [user, pathname]);
 
   const checkAdminAccess = async () => {
-    const url = `${API_BASE_URL}/api/admin/check`;
-    console.debug('[AdminLayout] checkAdminAccess', { pathname, hasUser: !!user, url });
+    // Use GET /api/auth/user (always exists) and check role — no dependency on admin routes
+    const authUserUrl = `${API_BASE_URL}/api/auth/user`;
+    console.debug('[AdminLayout] checkAdminAccess', { pathname, hasUser: !!user, url: authUserUrl });
 
-    // /admin/login: dedicated admin entry — render login if not authenticated
+    // /admin/login: render login if not authenticated
     if (pathname === '/admin/login') {
       if (!user) {
-        setIsAdmin(null); // Renders login page
+        setIsAdmin(null);
         return;
       }
-      // User is logged in — verify admin and redirect
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const status = response.status;
-        const body = await response.text().catch(() => '');
-        console.debug('[AdminLayout] /admin/login check:', { status, body: body.slice(0, 200) });
-        if (response.ok) {
+        const response = await fetch(authUserUrl, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await response.json().catch(() => ({}));
+        const role = data?.data?.user?.role;
+        const isPlatformAdmin = PLATFORM_ADMIN_ROLES.includes(role || '');
+        console.debug('[AdminLayout] /admin/login auth/user:', { status: response.status, role, isPlatformAdmin });
+        if (isPlatformAdmin) {
           router.replace('/admin');
         } else {
-          console.warn('[AdminLayout] admin check failed, logging out');
           await logout();
           setIsAdmin(null);
         }
       } catch (err: any) {
-        console.error('[AdminLayout] admin check error:', err?.message ?? err);
+        console.error('[AdminLayout] auth/user error:', err?.message ?? err);
         await logout();
         setIsAdmin(null);
       }
       return;
     }
 
-    // Other /admin/* routes: require auth
     if (!user) {
       router.replace('/admin/login');
       return;
     }
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const status = response.status;
-      const body = await response.text().catch(() => '');
-      console.debug('[AdminLayout] /admin/* check:', { status, body: body.slice(0, 200) });
-      if (response.ok) {
+      const response = await fetch(authUserUrl, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await response.json().catch(() => ({}));
+      const role = data?.data?.user?.role;
+      const isPlatformAdmin = PLATFORM_ADMIN_ROLES.includes(role || '');
+      console.debug('[AdminLayout] /admin/* auth/user:', { status: response.status, role, isPlatformAdmin });
+      if (isPlatformAdmin) {
         setIsAdmin(true);
       } else {
-        console.warn('[AdminLayout] not admin, redirecting to dashboard');
         setIsAdmin(false);
         router.replace('/dashboard');
       }
     } catch (err: any) {
-      console.error('[AdminLayout] admin check error:', err?.message ?? err);
+      console.error('[AdminLayout] auth/user error:', err?.message ?? err);
       setIsAdmin(false);
       router.replace('/dashboard');
     }

@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Loader2 } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api/client';
+
+const PLATFORM_ADMIN_ROLES = ['admin', 'super_admin'];
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -26,49 +27,19 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
 
-    // Debug: show API base URL in console
-    console.debug('[AdminLogin] API_BASE_URL:', API_BASE_URL);
-
     try {
       const result = await login(formData);
-      console.debug('[AdminLogin] login result:', { success: result.success, hasUser: !!result.user, error: result.error });
+      console.debug('[AdminLogin] login result:', { success: result.success, role: result.user?.role, error: result.error });
 
       if (result.success && result.user) {
-        const adminCheckUrl = `${API_BASE_URL}/api/admin/check`;
-        console.debug('[AdminLogin] checking admin access:', adminCheckUrl);
-
-        let adminCheck: Response;
-        try {
-          adminCheck = await fetch(adminCheckUrl, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            },
-          });
-        } catch (netErr: any) {
-          console.error('[AdminLogin] network error calling admin check:', netErr?.message ?? netErr);
-          setError('Cannot reach the server. Check your connection and try again.');
-          setLoading(false);
+        const isPlatformAdmin = PLATFORM_ADMIN_ROLES.includes(result.user.role || '');
+        if (isPlatformAdmin) {
+          router.push('/admin');
           return;
         }
-
-        const status = adminCheck.status;
-        const statusText = adminCheck.statusText;
-        let bodyText = '';
-        try {
-          bodyText = await adminCheck.text();
-        } catch (_) {}
-        console.debug('[AdminLogin] admin check response:', { status, statusText, body: bodyText || '(empty)' });
-
-        if (adminCheck.ok) {
-          router.push('/admin');
-        } else {
-          console.warn('[AdminLogin] admin check failed:', status, bodyText);
-          setError('Platform admin access only. Consultants and clients sign in at the main login.');
-          await logout();
-          // No reload — console stays so you can read the logs
-        }
+        setError('Platform admin access only. Consultants and clients sign in at the main login.');
+        await logout();
       } else {
-        console.warn('[AdminLogin] login failed:', result.error);
         setError(result.error || 'Login failed');
       }
     } catch (err: any) {
