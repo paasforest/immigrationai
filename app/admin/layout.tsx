@@ -66,7 +66,7 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -90,10 +90,12 @@ export default function AdminLayout({
         if (response.ok) {
           router.replace('/admin');
         } else {
-          router.replace('/dashboard');
+          await logout();
+          setIsAdmin(null);
         }
       } catch {
-        router.replace('/dashboard');
+        await logout();
+        setIsAdmin(null);
       }
       return;
     }
@@ -111,7 +113,7 @@ export default function AdminLayout({
       if (response.ok) {
         setIsAdmin(true);
       } else {
-        // Non-admin (agency/user) — redirect to their dashboard
+        // Not platform admin — redirect to their dashboard
         setIsAdmin(false);
         router.replace('/dashboard');
       }

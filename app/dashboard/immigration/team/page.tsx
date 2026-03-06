@@ -85,7 +85,7 @@ export default function TeamManagementPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Administrators</p>
+                <p className="text-sm text-gray-600">Organization owners</p>
                 <p className="text-2xl font-bold">{admins.length}</p>
               </div>
               <Shield className="w-8 h-8 text-blue-400" />
@@ -145,12 +145,12 @@ export default function TeamManagementPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* Administrators */}
+          {/* Organization owners */}
           {admins.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-600" />
-                Administrators
+                Organization owners
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {admins.map((member) => (

@@ -102,7 +102,7 @@ export default function EditMemberSheet({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="professional">Professional</SelectItem>
-                <SelectItem value="org_admin">Administrator</SelectItem>
+                <SelectItem value="org_admin">Organization owner</SelectItem>
                 <SelectItem value="applicant">Applicant</SelectItem>
               </SelectContent>
             </Select>

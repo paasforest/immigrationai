@@ -247,8 +247,11 @@ export class AuthService {
     return resetToken;
   }
 
-  // Confirm password reset
-  async confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  // Confirm password reset. Returns auth tokens for first-time portal setup (applicants don't need to login).
+  async confirmPasswordReset(
+    token: string,
+    newPassword: string
+  ): Promise<{ token: string; refreshToken: string; user: UserPublic } | void> {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const resetToken = await prisma.passwordResetToken.findFirst({
@@ -276,6 +279,38 @@ export class AuthService {
         data: { used: true },
       }),
     ]);
+
+    // Return tokens for first-time portal setup — applicants go straight to portal without login
+    const user = await prisma.user.findUnique({
+      where: { id: resetToken.userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        companyName: true,
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        role: true,
+        organizationId: true,
+        createdAt: true,
+        updatedAt: true,
+      } as any,
+    });
+    if (!user) return;
+
+    const accessToken = generateToken({ userId: user.id, email: user.email });
+    const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
+    await this.storeRefreshToken(user.id, refreshToken);
+
+    return {
+      token: accessToken,
+      refreshToken,
+      user: {
+        ...user,
+        isEmailVerified: false,
+        role: (user as any).role || 'user',
+      } as unknown as UserPublic,
+    };
   }
 
   // Store refresh token via Prisma

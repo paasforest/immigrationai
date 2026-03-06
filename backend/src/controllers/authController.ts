@@ -118,6 +118,7 @@ export class AuthController {
   });
   
   // POST /api/auth/confirm-reset
+  // For first-time portal setup (applicants): returns token so they go straight to portal without login
   confirmPasswordReset = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { token, newPassword } = req.body;
     
@@ -139,8 +140,11 @@ export class AuthController {
       );
     }
     
-    await authService.confirmPasswordReset(token, newPassword);
+    const result = await authService.confirmPasswordReset(token, newPassword);
     
+    if (result) {
+      return sendSuccess(res, result, 'Password set. You can now access your portal.');
+    }
     return sendSuccess(res, null, 'Password reset successfully');
   });
 }

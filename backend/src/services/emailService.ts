@@ -83,7 +83,7 @@ export async function sendInvitationEmail({
   try {
     const roleLabel =
       role === 'org_admin'
-        ? 'Administrator'
+        ? 'Organization owner'
         : role === 'professional'
         ? 'Professional'
         : 'Applicant';

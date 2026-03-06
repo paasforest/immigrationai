@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   login: (data: LoginData) => Promise<{ success: boolean; user?: User; error?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
+  setAuthFromTokens: (data: { token: string; refreshToken: string; user: User }) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -87,6 +88,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const setAuthFromTokens = (data: { token: string; refreshToken: string; user: User }) => {
+    setUser(data.user);
+    apiClient.setToken(data.token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('refresh_token', data.refreshToken);
+    }
+  };
+
   const signup = async (data: SignupData) => {
     try {
       const response = await authApi.signup(data);
@@ -138,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         login,
         signup,
+        setAuthFromTokens,
         logout,
         refreshUser,
       }}

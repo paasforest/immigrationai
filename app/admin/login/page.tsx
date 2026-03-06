@@ -41,8 +41,7 @@ export default function AdminLoginPage() {
         if (adminCheck.ok) {
           router.push('/admin');
         } else {
-          setError('Access Denied: Admin privileges required. Use the main login for agency access.');
-          // Log out so they can use agency login
+          setError('Platform admin access only. Consultants and clients sign in at the main login.');
           localStorage.removeItem('auth_token');
           localStorage.removeItem('refresh_token');
           window.location.reload();
@@ -124,7 +123,7 @@ export default function AdminLoginPage() {
             </Button>
 
             <p className="text-center text-sm text-gray-500 mt-4">
-              Agency or client?{' '}
+              Consultant or client?{' '}
               <a href="/auth/login" className="text-blue-600 hover:underline">
                 Sign in here
               </a>

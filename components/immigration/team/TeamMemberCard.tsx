@@ -90,7 +90,7 @@ export default function TeamMemberCard({
           <div>
             <Badge className={roleColors[member.organizationRole as keyof typeof roleColors] || ''}>
               {member.organizationRole === 'org_admin'
-                ? 'Administrator'
+                ? 'Organization owner'
                 : member.organizationRole === 'professional'
                 ? 'Professional'
                 : 'Applicant'}
@@ -108,7 +108,7 @@ export default function TeamMemberCard({
             <Switch
               checked={isActive}
               onCheckedChange={handleToggleStatus}
-              disabled={member.organizationRole === 'org_admin'} // Can't deactivate yourself if admin
+              disabled={member.organizationRole === 'org_admin'} // Can't deactivate yourself if owner
             />
           </div>
 

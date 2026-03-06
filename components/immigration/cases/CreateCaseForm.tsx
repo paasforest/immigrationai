@@ -259,7 +259,7 @@ export default function CreateCaseForm() {
                       <div className="flex items-center gap-2">
                         <span>{user.fullName}</span>
                         <span className="text-xs text-gray-500">
-                          ({user.organizationRole === 'org_admin' ? 'Admin' : 'Professional'})
+                          ({user.organizationRole === 'org_admin' ? 'Owner' : 'Professional'})
                         </span>
                       </div>
                     </SelectItem>

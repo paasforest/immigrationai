@@ -77,7 +77,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your account — agency, consultant, or client
+              Consultant? Sign in here. Applicants — use the link from your email to set your password and access your portal.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -141,18 +141,12 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <div className="text-center space-y-2">
+              <div className="text-center">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-gray-600 hover:text-blue-600 block"
+                  className="text-sm text-gray-600 hover:text-blue-600"
                 >
                   Forgot password?
-                </Link>
-                <Link
-                  href="/admin/login"
-                  className="text-sm text-gray-500 hover:text-blue-600 block"
-                >
-                  Platform admin? Sign in here
                 </Link>
               </div>
             </form>

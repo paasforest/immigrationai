@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuthFromTokens } = useAuth();
   const token = searchParams.get('token');
   // 'setup' param is present when arriving from a new-client welcome email
   const isFirstTimeSetup = searchParams.get('setup') === '1' || !searchParams.get('setup') && !!token;
@@ -74,7 +76,17 @@ export default function ResetPasswordPage() {
 
       if (response.ok && data.success) {
         setSuccess(true);
-        // Redirect to login after 3 seconds (portal setup redirects to login too, so they log in fresh)
+        const auth = data.data;
+        if (auth?.token && auth?.refreshToken && auth?.user) {
+          setAuthFromTokens({
+            token: auth.token,
+            refreshToken: auth.refreshToken,
+            user: auth.user,
+          });
+          // Applicants go straight to portal — no login step
+          router.push(isFirstTimeSetup ? '/portal' : '/dashboard');
+          return;
+        }
         setTimeout(() => {
           router.push('/auth/login');
         }, 3000);
@@ -137,13 +149,24 @@ export default function ResetPasswordPage() {
             {success ? (
               <div className="text-center py-8">
                 <p className="text-gray-600 mb-6">
-                  Redirecting to login page in 3 seconds...
+                  {isFirstTimeSetup
+                    ? 'Taking you to your portal...'
+                    : 'Redirecting to login page in 3 seconds...'}
                 </p>
-                <Link href="/auth/login">
-                  <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    Go to Login Now
+                {isFirstTimeSetup ? (
+                  <Button
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    onClick={() => router.push('/portal')}
+                  >
+                    Go to Portal Now
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/auth/login">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      Go to Login Now
+                    </Button>
+                  </Link>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
