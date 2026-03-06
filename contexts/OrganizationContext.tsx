@@ -36,8 +36,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       
       if (response.success && response.data) {
         setOrganization(response.data);
-      } else if (response.error && response.error.includes('404')) {
-        // User has no organization yet - this is OK, set to null
+      } else if (
+        response.code === 'NOT_FOUND' ||
+        (response.error && (response.error.includes('404') || response.error.toLowerCase().includes('not found')))
+      ) {
+        // Route missing on server or user has no organization — treat as no org, don't break UI
         setOrganization(null);
       } else {
         setError(response.error || 'Failed to load organization');
