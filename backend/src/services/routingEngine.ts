@@ -325,6 +325,7 @@ export async function assignIntake(intakeId: string): Promise<any | null> {
 
 /**
  * Reassign an intake to next professional
+ * Called when professional declines or assignment expires.
  */
 export async function reassignIntake(intakeId: string): Promise<any | null> {
   try {
@@ -352,6 +353,12 @@ export async function reassignIntake(intakeId: string): Promise<any | null> {
       logger.warn('All 5 professionals declined intake', { intakeId });
       return null;
     }
+
+    // Reset intake to pending_assignment so assignIntake can process it
+    await prisma.caseIntake.update({
+      where: { id: intakeId },
+      data: { status: 'pending_assignment' },
+    });
 
     return await assignIntake(intakeId);
   } catch (error: any) {

@@ -62,7 +62,7 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
       },
     });
 
-    // Create notification if message is from applicant to professional
+    // Create notification and send email if message is from applicant to professional
     if (organizationRole === 'applicant' && caseData.assignedProfessionalId) {
       try {
         const { createNotification } = await import('./notificationController');
@@ -75,8 +75,31 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
           resourceType: 'message',
           resourceId: message.id,
         });
+        // Email professional so they don't miss client messages
+        const professional = await prisma.user.findUnique({
+          where: { id: caseData.assignedProfessionalId },
+          select: { email: true, fullName: true },
+        });
+        const applicant = caseData.applicantId
+          ? await prisma.user.findUnique({
+              where: { id: caseData.applicantId },
+              select: { fullName: true },
+            })
+          : null;
+        if (professional?.email) {
+          const { sendNewMessageFromClientEmail } = await import('../services/emailService');
+          const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+          await sendNewMessageFromClientEmail({
+            toEmail: professional.email,
+            professionalName: professional.fullName || professional.email.split('@')[0],
+            clientName: applicant?.fullName || user.fullName || 'Your client',
+            caseReference: caseData.referenceNumber || caseId,
+            messagePreview: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+            caseUrl: `${FRONTEND_URL}/dashboard/immigration/cases/${caseId}?tab=messages`,
+          });
+        }
       } catch (error) {
-        console.error('Failed to create notification:', error);
+        console.error('Failed to create notification or send email:', error);
       }
     }
 

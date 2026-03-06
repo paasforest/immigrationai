@@ -48,7 +48,7 @@ export default function ConfirmationPage() {
           <CardContent className="p-8">
             <h1 className="text-2xl font-bold text-center mb-2">Request Submitted!</h1>
             <p className="text-gray-600 text-center mb-6">
-              We&apos;re finding your specialist
+              A specialist will review your request within 24–48 hours. You&apos;ll receive an email when one is assigned.
             </p>
 
             {/* Reference Box */}
@@ -67,7 +67,7 @@ export default function ConfirmationPage() {
                 </button>
               </div>
               <p className="text-xs text-gray-600 text-center">
-                Save this to track your request
+                Save this number to track your request and check status anytime
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export default function ConfirmationPage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">Matching you with a specialist</p>
-                  <p className="text-sm text-gray-600">Usually within a few hours</p>
+                  <p className="text-sm text-gray-600">We&apos;re finding the right expert for your case</p>
                 </div>
               </div>
 
@@ -139,9 +139,10 @@ export default function ConfirmationPage() {
             {/* Email Note */}
             <div className="mt-6 p-4 bg-amber-50 rounded-lg flex items-start gap-2">
               <Mail className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">
-                A confirmation has been sent to your email
-              </p>
+              <div className="text-sm text-amber-800">
+                <p className="font-medium">Check your inbox</p>
+                <p className="mt-0.5">A confirmation email with your reference number and status link has been sent. You&apos;ll get another email when a specialist is assigned.</p>
+              </div>
             </div>
 
             {/* Buttons */}

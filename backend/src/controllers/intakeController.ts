@@ -1748,7 +1748,7 @@ export async function submitVerificationDoc(req: Request, res: Response): Promis
           select: { fullName: true, email: true },
         });
         await resend.emails.send({
-          from: `ImmigrationAI <${process.env.FROM_EMAIL || 'noreply@immigrationai.co.za'}>`,
+          from: `ImmigrationAI <${process.env.FROM_EMAIL || 'noreply@mail.immigrationai.co.za'}>`,
           to: [process.env.ADMIN_EMAIL || 'admin@immigrationai.co.za'],
           subject: `🔍 New Professional Verification Request — ${userRecord?.fullName || user.email}`,
           html: `

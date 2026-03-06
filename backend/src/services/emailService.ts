@@ -5,7 +5,7 @@ if (!process.env.RESEND_API_KEY) {
   logger.warn('RESEND_API_KEY not set - email service will not work');
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@immigrationai.co.za';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@mail.immigrationai.co.za';
 
 function getResend(): Resend {
   if (!process.env.RESEND_API_KEY) {
@@ -24,7 +24,8 @@ const emailStrings: Record<string, Record<EmailLang, string>> = {
   // sendApplicantConfirmationEmail
   'confirm.header':   { en: 'Request Received', fr: 'Demande reçue', pt: 'Pedido recebido', ar: 'تم استلام الطلب', es: 'Solicitud recibida', zh: '申请已收到' },
   'confirm.greeting': { en: 'Thank you, {name}!', fr: 'Merci, {name} !', pt: 'Obrigado, {name}!', ar: 'شكراً، {name}!', es: '¡Gracias, {name}!', zh: '谢谢，{name}！' },
-  'confirm.body1':    { en: "We've received your request for <strong>{service}</strong>. A specialist will contact you within 24–48 hours.", fr: 'Nous avons reçu votre demande pour <strong>{service}</strong>. Un spécialiste vous contactera dans les 24 à 48 heures.', pt: 'Recebemos seu pedido de <strong>{service}</strong>. Um especialista entrará em contato em 24 a 48 horas.', ar: 'لقد استلمنا طلبك بخصوص <strong>{service}</strong>. سيتواصل معك متخصص خلال 24 إلى 48 ساعة.', es: 'Hemos recibido su solicitud de <strong>{service}</strong>. Un especialista se comunicará con usted en 24 a 48 horas.', zh: '我们已收到您关于<strong>{service}</strong>的申请。专家将在24至48小时内与您联系。' },
+  'confirm.body1':    { en: "We've received your request for <strong>{service}</strong>. A specialist will review your request and contact you within 24–48 hours.", fr: 'Nous avons reçu votre demande pour <strong>{service}</strong>. Un spécialiste examinera votre demande et vous contactera dans les 24 à 48 heures.', pt: 'Recebemos seu pedido de <strong>{service}</strong>. Um especialista analisará seu pedido e entrará em contato em 24 a 48 horas.', ar: 'لقد استلمنا طلبك بخصوص <strong>{service}</strong>. سيراجع متخصص طلبك ويتواصل معك خلال 24 إلى 48 ساعة.', es: 'Hemos recibido su solicitud de <strong>{service}</strong>. Un especialista revisará su solicitud y se comunicará con usted en 24 a 48 horas.', zh: '我们已收到您关于<strong>{service}</strong>的申请。专家将审查您的申请并在24至48小时内与您联系。' },
+  'confirm.body2':    { en: "You'll receive another email when a specialist is assigned to your case.", fr: "Vous recevrez un autre e-mail lorsqu'un spécialiste sera assigné à votre dossier.", pt: 'Você receberá outro e-mail quando um especialista for atribuído ao seu caso.', ar: 'ستتلقى بريداً إلكترونياً آخراً عند تعيين متخصص لقضيتك.', es: 'Recibirá otro correo cuando se asigne un especialista a su caso.', zh: '当专家被分配给您时，您将收到另一封电子邮件。' },
   'confirm.refLabel': { en: 'Your Reference Number', fr: 'Votre numéro de référence', pt: 'Seu número de referência', ar: 'رقم مرجعك', es: 'Su número de referencia', zh: '您的参考号码' },
   'confirm.save':     { en: 'Save this number to track your request', fr: 'Enregistrez ce numéro pour suivre votre demande', pt: 'Salve este número para acompanhar seu pedido', ar: 'احفظ هذا الرقم لمتابعة طلبك', es: 'Guarde este número para hacer seguimiento a su solicitud', zh: '保存此号码以跟踪您的申请' },
   'confirm.nextTitle':{ en: 'What happens next:', fr: 'Que se passe-t-il ensuite :', pt: 'O que acontece a seguir:', ar: 'ماذا يحدث بعد ذلك:', es: '¿Qué pasa después?', zh: '接下来会发生什么：' },
@@ -635,6 +636,132 @@ export async function sendLeadNotificationEmail({
 }
 
 /**
+ * Send email to professional when client sends a new message
+ */
+export async function sendNewMessageFromClientEmail({
+  toEmail,
+  professionalName,
+  clientName,
+  caseReference,
+  messagePreview,
+  caseUrl,
+}: {
+  toEmail: string;
+  professionalName: string;
+  clientName: string;
+  caseReference: string;
+  messagePreview: string;
+  caseUrl: string;
+}): Promise<void> {
+  try {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;">
+        <tr><td style="background-color:#0F2557;padding:24px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:22px;">New Message from Client</h1>
+        </td></tr>
+        <tr><td style="padding:32px 30px;">
+          <p style="color:#333;font-size:16px;margin:0 0 16px;">Hi ${professionalName},</p>
+          <p style="color:#666;font-size:15px;line-height:1.6;margin:0 0 20px;">
+            <strong>${clientName}</strong> sent you a new message for case <strong>${caseReference}</strong>.
+          </p>
+          <div style="background:#f9f9f9;padding:16px;border-radius:6px;margin:20px 0;border-left:4px solid #0F2557;">
+            <p style="color:#666;font-size:14px;margin:0;line-height:1.5;">${messagePreview}</p>
+          </div>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+            <tr><td align="center">
+              <a href="${caseUrl}" style="display:inline-block;padding:12px 28px;background-color:#F59E0B;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:15px;">View Message</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;padding:16px 30px;text-align:center;border-top:1px solid #eee;">
+          <p style="color:#999;font-size:12px;margin:0;">Immigration AI</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: toEmail,
+      subject: `New message from ${clientName} — ${caseReference}`,
+      html,
+    });
+    logger.info('New message from client email sent', { toEmail, caseReference });
+  } catch (error: any) {
+    logger.error('Failed to send new message email', { error: error.message, toEmail });
+  }
+}
+
+/**
+ * Send email to professional when client uploads a document
+ */
+export async function sendNewDocumentFromClientEmail({
+  toEmail,
+  professionalName,
+  clientName,
+  caseReference,
+  documentName,
+  caseUrl,
+}: {
+  toEmail: string;
+  professionalName: string;
+  clientName: string;
+  caseReference: string;
+  documentName: string;
+  caseUrl: string;
+}): Promise<void> {
+  try {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;">
+        <tr><td style="background-color:#0F2557;padding:24px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:22px;">New Document Uploaded</h1>
+        </td></tr>
+        <tr><td style="padding:32px 30px;">
+          <p style="color:#333;font-size:16px;margin:0 0 16px;">Hi ${professionalName},</p>
+          <p style="color:#666;font-size:15px;line-height:1.6;margin:0 0 20px;">
+            <strong>${clientName}</strong> uploaded a new document for case <strong>${caseReference}</strong>.
+          </p>
+          <p style="color:#333;font-size:14px;margin:0 0 24px;"><strong>Document:</strong> ${documentName}</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+            <tr><td align="center">
+              <a href="${caseUrl}" style="display:inline-block;padding:12px 28px;background-color:#F59E0B;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:15px;">View in Dashboard</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;padding:16px 30px;text-align:center;border-top:1px solid #eee;">
+          <p style="color:#999;font-size:12px;margin:0;">Immigration AI</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: toEmail,
+      subject: `New document from ${clientName} — ${caseReference}`,
+      html,
+    });
+    logger.info('New document from client email sent', { toEmail, caseReference });
+  } catch (error: any) {
+    logger.error('Failed to send new document email', { error: error.message, toEmail });
+  }
+}
+
+/**
  * Send applicant confirmation email
  */
 export async function sendApplicantConfirmationEmail({
@@ -678,6 +805,9 @@ export async function sendApplicantConfirmationEmail({
               <h2 style="color: #333333; margin-top: 0;">${et('confirm.greeting', lang, { name: applicantName })}</h2>
               <p style="color: #666666; font-size: 16px; line-height: 1.6;">
                 ${et('confirm.body1', lang, { service: serviceName })}
+              </p>
+              <p style="color: #666666; font-size: 14px; line-height: 1.6; margin-top: 12px;">
+                ${et('confirm.body2', lang)}
               </p>
               
               <div style="background-color: #f0f4ff; padding: 20px; border-radius: 6px; margin: 30px 0; text-align: center;">

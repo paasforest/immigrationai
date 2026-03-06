@@ -418,6 +418,60 @@ async function checkTrialExpirations(): Promise<void> {
   }
 }
 
+/**
+ * Check for expired lead assignments and reassign to next professional
+ * Runs every 2 hours. Assignments expire after 48 hours if professional doesn't respond.
+ */
+async function checkExpiredLeadAssignments(): Promise<void> {
+  try {
+    const now = new Date();
+
+    const expiredAssignments = await prisma.intakeAssignment.findMany({
+      where: {
+        status: 'pending',
+        expiresAt: { lt: now },
+      },
+      include: {
+        intake: {
+          select: { id: true, status: true },
+        },
+      },
+    });
+
+    if (expiredAssignments.length === 0) return;
+
+    const intakeIdsToReassign = new Set<string>();
+    for (const assignment of expiredAssignments) {
+      if (assignment.intake?.status !== 'assigned') continue;
+      intakeIdsToReassign.add(assignment.intakeId);
+    }
+
+    for (const intakeId of intakeIdsToReassign) {
+      try {
+        await prisma.intakeAssignment.updateMany({
+          where: {
+            intakeId,
+            status: 'pending',
+            expiresAt: { lt: now },
+          },
+          data: { status: 'expired' },
+        });
+
+        const { reassignIntake } = await import('./services/routingEngine');
+        const result = await reassignIntake(intakeId);
+        if (result) {
+          const { logger } = await import('./utils/logger');
+          logger.info('Expired lead reassigned', { intakeId });
+        }
+      } catch (err: any) {
+        console.error('Failed to reassign expired lead', { intakeId, error: err.message });
+      }
+    }
+  } catch (error) {
+    console.error('Error checking expired lead assignments:', error);
+  }
+}
+
 async function startServer(): Promise<void> {
   try {
     // Test database connection
@@ -442,7 +496,7 @@ async function startServer(): Promise<void> {
     // First check happens 7 days after deployment.
     // To run manually: POST /api/admin/visa-rules/run-monitor (admin only)
 
-    console.log('✅ Scheduled tasks started (including weekly visa rules monitor)');
+    console.log('✅ Scheduled tasks started (task deadlines, trial expiry, expired leads, visa rules monitor)');
 
     // Start listening
     server = app.listen(PORT, () => {

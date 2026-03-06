@@ -138,7 +138,7 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
       },
     });
 
-    // Create notification for assigned professional if document uploaded by applicant
+    // Create notification and send email for assigned professional if document uploaded by applicant
     if (caseData.assignedProfessionalId && organizationRole === 'applicant') {
       try {
         const { createNotification } = await import('./notificationController');
@@ -151,8 +151,31 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
           resourceType: 'document',
           resourceId: document.id,
         });
+        // Email professional so they know to review the document
+        const professional = await prisma.user.findUnique({
+          where: { id: caseData.assignedProfessionalId },
+          select: { email: true, fullName: true },
+        });
+        const applicant = caseData.applicantId
+          ? await prisma.user.findUnique({
+              where: { id: caseData.applicantId },
+              select: { fullName: true },
+            })
+          : null;
+        if (professional?.email) {
+          const { sendNewDocumentFromClientEmail } = await import('../services/emailService');
+          const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+          await sendNewDocumentFromClientEmail({
+            toEmail: professional.email,
+            professionalName: professional.fullName || professional.email.split('@')[0],
+            clientName: applicant?.fullName || document.uploadedBy?.fullName || 'Your client',
+            caseReference: caseData.referenceNumber || caseId,
+            documentName: document.name,
+            caseUrl: `${FRONTEND_URL}/dashboard/immigration/cases/${caseId}?tab=documents`,
+          });
+        }
       } catch (error) {
-        console.error('Failed to create notification:', error);
+        console.error('Failed to create notification or send email:', error);
       }
     }
 

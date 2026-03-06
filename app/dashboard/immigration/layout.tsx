@@ -74,7 +74,7 @@ const navigation = [
       { href: '/dashboard/immigration/tools/financial-assistant', label: 'Financial Assistant', icon: Landmark },
       { href: '/dashboard/immigration/tools/vac-tracker', label: 'VAC Tracker', icon: MapPin },
       { href: '/dashboard/immigration/tools/credentials', label: 'Credentials', icon: Award },
-      { href: '/documents/ai-assistant', label: 'AI Assistant', icon: Bot },
+      { href: '/documents/ai-chat', label: 'AI Assistant', icon: Bot },
     ],
   },
   {

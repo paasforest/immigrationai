@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { immigrationApi } from '@/lib/api/immigration';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,22 +19,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Users, Loader2, MessageSquare, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Client {
+interface ClientWithCases {
   id: string;
   fullName: string | null;
   email: string;
-  role: string;
-}
-
-interface ClientWithCases extends Client {
   activeCaseCount: number;
   lastActivity: string | null;
 }
 
 export default function ClientsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [clients, setClients] = useState<ClientWithCases[]>([]);
-  const [allCases, setAllCases] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
@@ -45,6 +42,8 @@ export default function ClientsPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isOrgAdmin = user?.role === 'org_admin';
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -52,49 +51,9 @@ export default function ClientsPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [usersResponse, casesResponse] = await Promise.all([
-        immigrationApi.getOrgUsers(),
-        immigrationApi.getCases(),
-      ]);
-
-      if (usersResponse.success && usersResponse.data) {
-        const applicants = usersResponse.data.filter((u: any) => u.organizationRole === 'applicant' || u.role === 'applicant');
-        
-        if (casesResponse.success && casesResponse.data?.data) {
-          const casesData = casesResponse.data.data;
-          setAllCases(casesData);
-          
-          // Calculate case counts and last activity
-          const clientsWithStats = applicants.map((client: any) => {
-            const clientCases = casesData.filter(
-              (c: any) => c.applicantId === client.id && c.status !== 'closed'
-            );
-            const lastCase = clientCases.sort(
-              (a: any, b: any) => 
-                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-            )[0];
-            
-            return {
-              id: client.id,
-              fullName: client.fullName,
-              email: client.email,
-              role: client.organizationRole || client.role || 'applicant',
-              activeCaseCount: clientCases.length,
-              lastActivity: lastCase?.updatedAt || null,
-            } as ClientWithCases;
-          });
-          
-          setClients(clientsWithStats);
-        } else {
-          setClients(applicants.map((c: any) => ({ 
-            id: c.id,
-            fullName: c.fullName,
-            email: c.email,
-            role: c.organizationRole || c.role || 'applicant',
-            activeCaseCount: 0, 
-            lastActivity: null 
-          } as ClientWithCases)));
-        }
+      const response = await immigrationApi.getClients();
+      if (response.success && response.data) {
+        setClients(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch clients:', error);
@@ -114,8 +73,9 @@ export default function ClientsPage() {
       setIsSubmitting(true);
       const response = await immigrationApi.inviteUser({
         email: inviteData.email,
-        fullName: `${inviteData.firstName} ${inviteData.lastName}`.trim() || undefined,
-        role: 'applicant', // Force applicant role
+        firstName: inviteData.firstName,
+        lastName: inviteData.lastName,
+        role: 'applicant',
       });
 
       if (response.success) {
@@ -170,9 +130,11 @@ export default function ClientsPage() {
           <Badge variant="outline" className="text-sm">
             {clients.length} clients
           </Badge>
-          <Button onClick={() => setIsInviteDialogOpen(true)} className="bg-[#0F2557]">
-            Invite Client
-          </Button>
+          {isOrgAdmin && (
+            <Button onClick={() => setIsInviteDialogOpen(true)} className="bg-[#0F2557]">
+              Invite Client
+            </Button>
+          )}
         </div>
       </div>
 
@@ -199,9 +161,11 @@ export default function ClientsPage() {
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-lg font-semibold text-gray-900 mb-2">No clients yet</p>
             <p className="text-gray-600 mb-4">
-              Clients will appear here when you link them to a case
+              Clients will appear here when they have cases assigned to you
             </p>
-            <Button onClick={() => setIsInviteDialogOpen(true)}>Invite Your First Client</Button>
+            {isOrgAdmin && (
+              <Button onClick={() => setIsInviteDialogOpen(true)}>Invite Your First Client</Button>
+            )}
           </CardContent>
         </Card>
       ) : (

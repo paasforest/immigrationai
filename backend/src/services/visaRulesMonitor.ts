@@ -141,7 +141,7 @@ async function sendAlertEmail(alerts: { route: string; url: string; summary: str
     `;
 
     await resend.emails.send({
-      from: `ImmigrationAI Monitor <${process.env.FROM_EMAIL || 'noreply@immigrationai.co.za'}>`,
+      from: `ImmigrationAI Monitor <${process.env.FROM_EMAIL || 'noreply@mail.immigrationai.co.za'}>`,
       to: [ADMIN_EMAIL],
       subject: `⚠ ${alerts.length} visa source page${alerts.length > 1 ? 's' : ''} changed — review required`,
       html,

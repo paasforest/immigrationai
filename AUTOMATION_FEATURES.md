@@ -22,7 +22,17 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Marks emails as sent to prevent duplicates
 - **Triggers:** Email notifications to org admins
 
-### 3. Visa Rules Monitor
+### 3. Expired Lead Assignment Reassignment
+- **Frequency:** Every 2 hours
+- **Location:** `backend/src/app.ts` → `checkExpiredLeadAssignments()`
+- **What it does:**
+  - Finds assignments with `status: 'pending'` and `expiresAt < now` (48h passed without response)
+  - Marks those assignments as `expired`
+  - Calls `reassignIntake()` to route to next matching professional
+  - Sends email notification to new professional
+- **Triggers:** Automatic reassignment so leads don't get stuck
+
+### 4. Visa Rules Monitor
 - **Frequency:** Every 7 days (168 hours)
 - **Location:** `backend/src/services/visaRulesMonitor.ts` → `runVisaRulesMonitor()`
 - **What it does:**
@@ -38,7 +48,7 @@ This document lists all automated processes, scheduled tasks, and background wor
 
 ## 🚀 Event-Driven Automation
 
-### 4. Lead Intake → Professional Routing
+### 5. Lead Intake → Professional Routing
 - **Trigger:** When a new intake is submitted (`POST /api/intake`)
 - **Location:** `backend/src/services/routingEngine.ts` → `assignIntake()`
 - **What it does:**
@@ -56,7 +66,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Professional: 20 leads/month
   - Agency: Unlimited
 
-### 5. Lead Acceptance → Case Creation
+### 6. Lead Acceptance → Case Creation
 - **Trigger:** When professional accepts a lead (`POST /api/intake/:id/respond`)
 - **Location:** `backend/src/services/routingEngine.ts` → `convertIntakeToCase()`
 - **What it does:**
@@ -67,7 +77,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Updates intake status to `converted`
   - **Auto-generates smart checklist** (see #6)
 
-### 6. Smart Checklist Auto-Generation
+### 7. Smart Checklist Auto-Generation
 - **Trigger:** When case is created from accepted lead
 - **Location:** `backend/src/services/routingEngine.ts` → `convertIntakeToCase()` (lines 574-684)
 - **What it does:**
@@ -81,7 +91,7 @@ This document lists all automated processes, scheduled tasks, and background wor
     - Includes tool-specific recommendations (home ties, credential evaluation, etc.)
   - Creates `DocumentChecklist` and `ChecklistItem` records
 
-### 7. Client Account Auto-Creation
+### 8. Client Account Auto-Creation
 - **Trigger:** When professional accepts a lead
 - **Location:** `backend/src/services/routingEngine.ts` → `convertIntakeToCase()` (lines 489-543)
 - **What it does:**
@@ -92,7 +102,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Sends welcome email with password setup link
   - If existing: Updates to `applicant` role if needed
 
-### 8. Lead Re-Routing
+### 9. Lead Re-Routing
 - **Trigger:** When professional declines a lead or assignment expires
 - **Location:** `backend/src/services/routingEngine.ts` → `reassignIntake()`
 - **What it does:**
@@ -101,7 +111,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Maximum 5 attempts before marking as `declined_all`
   - Sends email notification to new professional
 
-### 9. Eligibility Scoring (Silent)
+### 10. Eligibility Scoring (Silent)
 - **Trigger:** When intake is submitted
 - **Location:** Background processing (likely in intake controller)
 - **What it does:**
@@ -110,7 +120,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Stores results in `intake.additionalData.riskProfile`
   - Used later for smart checklist generation
 
-### 10. Email Notifications (Various Triggers)
+### 11. Email Notifications (Various Triggers)
 - **Document Upload:** When client uploads document → notifies assigned professional
 - **Case Update:** When case status changes → notifies client
 - **Embassy Package Ready:** When professional sends embassy package → notifies client
@@ -119,7 +129,7 @@ This document lists all automated processes, scheduled tasks, and background wor
 - **Message Sent:** When message is sent in case → notifies recipient
 - **Location:** Various controllers call `emailService` functions
 
-### 11. Professional Specialization Auto-Creation
+### 12. Professional Specialization Auto-Creation
 - **Trigger:** When professional completes onboarding
 - **Location:** `backend/src/controllers/organizationController.ts` → `completeOnboarding()`
 - **What it does:**
@@ -128,7 +138,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Sets `isAcceptingLeads: true` by default
   - Makes professional immediately visible to routing engine
 
-### 12. Trial Expiry Enforcement
+### 13. Trial Expiry Enforcement
 - **Trigger:** On every API request (middleware check)
 - **Location:** `backend/src/middleware/organizationContext.ts`
 - **What it does:**
@@ -137,7 +147,7 @@ This document lists all automated processes, scheduled tasks, and background wor
   - Blocks access to dashboard (returns `402 TRIAL_EXPIRED`)
   - Allows access to billing routes (via `organizationContextAllowExpired`)
 
-### 13. Lead Usage Tracking
+### 14. Lead Usage Tracking
 - **Trigger:** When lead is assigned to professional
 - **Location:** `backend/src/services/routingEngine.ts` → `assignIntake()`
 - **What it does:**
@@ -149,8 +159,8 @@ This document lists all automated processes, scheduled tasks, and background wor
 
 ## 📊 Summary
 
-**Scheduled Tasks:** 3 (hourly, 6-hourly, weekly)
+**Scheduled Tasks:** 4 (hourly, 6-hourly, 2-hourly, weekly)
 **Event-Driven Automation:** 10+ processes
-**Total Automation Points:** 13+ automated workflows
+**Total Automation Points:** 14+ automated workflows
 
 All automation is logged and most failures are non-blocking (won't break the main flow).

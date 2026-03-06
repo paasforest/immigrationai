@@ -231,6 +231,79 @@ export async function updateMyOrganization(req: Request, res: Response): Promise
 }
 
 /**
+ * Get clients (applicants) from cases
+ * org_admin sees all clients; professional sees only their assigned clients
+ */
+export async function getClients(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const organizationId = req.organizationId!;
+    const organizationRole = req.organizationRole!;
+
+    const where: any = { organizationId };
+
+    // Professional sees only cases assigned to them
+    if (organizationRole === 'professional') {
+      where.assignedProfessionalId = user.userId;
+    }
+
+    // Get cases with applicants (exclude cases without applicant)
+    where.applicantId = { not: null };
+
+    const cases = await prisma.case.findMany({
+      where,
+      select: {
+        applicantId: true,
+        status: true,
+        updatedAt: true,
+        applicant: {
+          select: { id: true, fullName: true, email: true },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Build unique clients with stats
+    const clientMap = new Map<string, { id: string; fullName: string | null; email: string; activeCaseCount: number; lastActivity: string | null }>();
+
+    for (const c of cases) {
+      if (!c.applicantId || !c.applicant) continue;
+      const applicant = c.applicant;
+      const existing = clientMap.get(applicant.id);
+      const isActive = c.status !== 'closed';
+
+      if (existing) {
+        existing.activeCaseCount += isActive ? 1 : 0;
+        const existingDate = existing.lastActivity ? new Date(existing.lastActivity).getTime() : 0;
+        const caseDate = new Date(c.updatedAt).getTime();
+        if (caseDate > existingDate) existing.lastActivity = c.updatedAt.toISOString();
+      } else {
+        clientMap.set(applicant.id, {
+          id: applicant.id,
+          fullName: applicant.fullName,
+          email: applicant.email,
+          activeCaseCount: isActive ? 1 : 0,
+          lastActivity: c.updatedAt.toISOString(),
+        });
+      }
+    }
+
+    const clients = Array.from(clientMap.values());
+
+    res.json({
+      success: true,
+      data: clients,
+      message: 'Clients retrieved successfully',
+    });
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError(error.message || 'Failed to retrieve clients', 500);
+  }
+}
+
+/**
  * Get all users in the organization
  * Only org_admin can access
  */

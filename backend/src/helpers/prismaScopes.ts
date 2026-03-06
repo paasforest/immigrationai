@@ -234,7 +234,7 @@ export async function getMessagesByCase(orgId: string, caseId: string) {
 // ============================================
 
 export async function getUsersByOrg(orgId: string) {
-  return prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where: {
       organizationId: orgId,
       isActive: true,
@@ -246,9 +246,15 @@ export async function getUsersByOrg(orgId: string) {
       phone: true,
       avatarUrl: true,
       role: true,
+      organizationId: true,
       isActive: true,
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
   });
+  // Map role to organizationRole for frontend OrgUser type
+  return users.map((u) => ({
+    ...u,
+    organizationRole: (u.role as 'org_admin' | 'professional' | 'applicant') || 'professional',
+  }));
 }

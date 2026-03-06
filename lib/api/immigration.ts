@@ -199,7 +199,11 @@ export const immigrationApi = {
     return apiClient.get<OrgUser[]>('/api/organizations/me/users');
   },
 
-  async inviteUser(data: { email: string; role: 'org_admin' | 'professional' | 'applicant'; fullName?: string }): Promise<ApiResponse<{ message: string }>> {
+  async getClients(): Promise<ApiResponse<{ id: string; fullName: string | null; email: string; activeCaseCount: number; lastActivity: string | null }[]>> {
+    return apiClient.get<{ id: string; fullName: string | null; email: string; activeCaseCount: number; lastActivity: string | null }[]>('/api/organizations/me/clients');
+  },
+
+  async inviteUser(data: { email: string; role: 'org_admin' | 'professional' | 'applicant'; fullName?: string; firstName?: string; lastName?: string }): Promise<ApiResponse<{ message: string }>> {
     return apiClient.post<{ message: string }>('/api/organizations/me/invite', data);
   },
 

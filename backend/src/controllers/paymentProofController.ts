@@ -47,7 +47,7 @@ async function notifyAdmin(proof: {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: `ImmigrationAI Payments <${process.env.FROM_EMAIL || 'noreply@immigrationai.co.za'}>`,
+      from: `ImmigrationAI Payments <${process.env.FROM_EMAIL || 'noreply@mail.immigrationai.co.za'}>`,
       to: [process.env.ADMIN_EMAIL || 'payments@immigrationai.co.za'],
       subject: `💳 New EFT Proof Uploaded — ${proof.accountNumber}`,
       html: `

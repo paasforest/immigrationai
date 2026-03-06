@@ -7,6 +7,7 @@ import {
   getMyOrganization,
   updateMyOrganization,
   getOrganizationUsers,
+  getClients,
   inviteUser,
   updateOrganizationUser,
   checkOnboardingStatus,
@@ -24,8 +25,11 @@ router.get('/me', auth, asyncHandler(getMyOrganization));
 // Update my organization (requires auth + org context)
 router.put('/me', auth, organizationContext, asyncHandler(updateMyOrganization));
 
-// Get organization users (requires auth + org context)
+// Get organization users (requires auth + org context, org_admin only)
 router.get('/me/users', auth, organizationContext, asyncHandler(getOrganizationUsers));
+
+// Get clients from cases (org_admin sees all, professional sees assigned only)
+router.get('/me/clients', auth, organizationContext, asyncHandler(getClients));
 
 // Invite user (requires auth + org context)
 router.post('/me/invite', auth, organizationContext, asyncHandler(inviteUser));
