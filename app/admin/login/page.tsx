@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -26,38 +28,27 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const result = await login(formData);
 
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        // Store tokens
-        localStorage.setItem('auth_token', data.data.token);
-        localStorage.setItem('refresh_token', data.data.refreshToken);
-        
-        // Verify admin access
+      if (result.success && result.user) {
+        // Verify admin access (platform admin only)
         const adminCheck = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
           headers: {
-            'Authorization': `Bearer ${data.data.token}`,
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           },
         });
 
         if (adminCheck.ok) {
-          // Redirect to admin dashboard
           router.push('/admin');
         } else {
-          setError('Access Denied: Admin privileges required');
+          setError('Access Denied: Admin privileges required. Use the main login for agency access.');
+          // Log out so they can use agency login
           localStorage.removeItem('auth_token');
           localStorage.removeItem('refresh_token');
+          window.location.reload();
         }
       } else {
-        setError(data.error || 'Login failed');
+        setError(result.error || 'Login failed');
       }
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -131,6 +122,13 @@ export default function AdminLoginPage() {
                 </>
               )}
             </Button>
+
+            <p className="text-center text-sm text-gray-500 mt-4">
+              Agency or client?{' '}
+              <a href="/auth/login" className="text-blue-600 hover:underline">
+                Sign in here
+              </a>
+            </p>
           </form>
         </CardContent>
       </Card>

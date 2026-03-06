@@ -72,11 +72,35 @@ export default function AdminLayout({
 
   useEffect(() => {
     checkAdminAccess();
-  }, [user]);
+  }, [user, pathname]);
 
   const checkAdminAccess = async () => {
+    // /admin/login: dedicated admin entry — render login if not authenticated
+    if (pathname === '/admin/login') {
+      if (!user) {
+        setIsAdmin(null); // Renders login page
+        return;
+      }
+      // User is logged in — verify admin and redirect
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          router.replace('/admin');
+        } else {
+          router.replace('/dashboard');
+        }
+      } catch {
+        router.replace('/dashboard');
+      }
+      return;
+    }
+
+    // Other /admin/* routes: require auth
     if (!user) {
-      router.push('/auth/login');
+      router.replace('/admin/login');
       return;
     }
     try {
@@ -86,18 +110,21 @@ export default function AdminLayout({
       });
       if (response.ok) {
         setIsAdmin(true);
-      } else if (response.status === 403) {
-        setIsAdmin(false);
-        router.push('/dashboard');
       } else {
+        // Non-admin (agency/user) — redirect to their dashboard
         setIsAdmin(false);
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
     } catch {
       setIsAdmin(false);
-      router.push('/dashboard');
+      router.replace('/dashboard');
     }
   };
+
+  // /admin/login without user: render login page (no sidebar)
+  if (pathname === '/admin/login' && !user) {
+    return <>{children}</>;
+  }
 
   if (isAdmin === null) {
     return (
@@ -176,14 +203,14 @@ export default function AdminLayout({
         </nav>
 
         <div className="p-4 border-t border-slate-800">
-          <Link href="/dashboard">
+          <Link href="/">
             <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {!sidebarCollapsed && 'Back to App'}
+              {!sidebarCollapsed && 'Back to Home'}
             </Button>
           </Link>
         </div>

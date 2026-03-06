@@ -38,8 +38,9 @@ Creates admin with email `admin@immigrationai.co.za` and a random password (prin
 
 ## After creation
 
-1. Log in at https://immigrationai.co.za/auth/login with your admin credentials
+1. Log in at **https://immigrationai.co.za/admin/login** (admin-only entry)
 2. You'll be redirected to `/admin` (the admin dashboard)
+3. Agencies and users use https://immigrationai.co.za/auth/login — they cannot access the admin dashboard
 3. Use the sidebar to navigate: Dashboard, Organizations, Marketplace, Payments, Verifications, Users, Analytics, and more
 
 ## Upgrading an existing user

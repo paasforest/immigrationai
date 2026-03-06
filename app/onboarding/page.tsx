@@ -21,9 +21,9 @@ export default function OnboardingPage() {
         return;
       }
 
-      // Admin/super_admin should never be on onboarding - redirect to admin
+      // Platform admin — redirect to admin (dedicated entry at /admin)
       if (user.role === 'admin' || user.role === 'super_admin') {
-        router.push('/admin');
+        router.push('/admin/login');
         return;
       }
 

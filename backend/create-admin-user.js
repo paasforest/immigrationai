@@ -75,8 +75,8 @@ async function createAdminUser(email, password) {
     console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
     console.log('║                         ADMIN ACCESS URLS                            ║');
     console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
-    console.log('🌐 Login Page:');
-    console.log('   https://www.immigrationai.co.za/auth/login');
+    console.log('🌐 Admin Login (platform admins only):');
+    console.log('   https://www.immigrationai.co.za/admin/login');
     console.log('');
     console.log('📊 Admin Dashboard:');
     console.log('   https://www.immigrationai.co.za/admin');

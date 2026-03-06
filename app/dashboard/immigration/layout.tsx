@@ -115,7 +115,13 @@ export default function ImmigrationLayout({
   const [pendingLeadsCount, setPendingLeadsCount] = useState(0);
   const [trialExpired, setTrialExpired] = useState(false);
 
-  // Don't render agency dashboard for platform admins — redirect to admin panel
+  // Platform admin — redirect to /admin (agencies must not access admin dashboard)
+  useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+      router.replace('/admin/login');
+    }
+  }, [user, router]);
+
   if (user && (user.role === 'admin' || user.role === 'super_admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">

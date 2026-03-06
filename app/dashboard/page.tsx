@@ -17,7 +17,7 @@ export default function DashboardPage() {
     if (!loading && !user) {
       router.push('/auth/login');
     } else if (user && (user.role === 'admin' || user.role === 'super_admin')) {
-      router.push('/admin');
+      router.push('/admin/login');
     } else if (user && user.role === 'applicant') {
       router.push('/portal');
     } else if (user) {

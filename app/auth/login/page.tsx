@@ -30,9 +30,9 @@ export default function LoginPage() {
     const result = await login(formData);
 
     if (result.success) {
-      // Admin/super_admin always go to admin dashboard (skip onboarding)
+      // Platform admin — must use /admin (dedicated admin entry only)
       if (result.user?.role === 'admin' || result.user?.role === 'super_admin') {
-        router.push('/admin');
+        router.push('/admin/login');
         return;
       }
 
@@ -141,12 +141,18 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-gray-600 hover:text-blue-600"
+                  className="text-sm text-gray-600 hover:text-blue-600 block"
                 >
                   Forgot password?
+                </Link>
+                <Link
+                  href="/admin/login"
+                  className="text-sm text-gray-500 hover:text-blue-600 block"
+                >
+                  Platform admin? Sign in here
                 </Link>
               </div>
             </form>
