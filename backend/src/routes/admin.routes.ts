@@ -21,6 +21,9 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireAdmin);
 
+// Lightweight admin check (no payments table) — used by admin login to verify access
+router.get('/check', adminController.checkAdmin);
+
 // Payment management
 router.get('/payments/pending', adminController.getPendingPayments);
 router.get('/payments/stats', adminController.getPaymentStats);

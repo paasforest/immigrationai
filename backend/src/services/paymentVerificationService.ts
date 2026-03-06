@@ -101,19 +101,31 @@ export class PaymentVerificationService {
     }
   }
 
-  // Get payment statistics
+  // Get payment statistics (returns zeros if payments table is missing, e.g. not yet migrated)
   async getPaymentStats(): Promise<any> {
-    const result = await query(
-      `SELECT 
-        COUNT(*) as total_payments,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
-        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_payments,
-        SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_revenue
-       FROM payments`
-    );
-
-    return result.rows[0];
+    try {
+      const result = await query(
+        `SELECT 
+          COUNT(*) as total_payments,
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
+          COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_payments,
+          SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_revenue
+         FROM payments`
+      );
+      return result.rows[0];
+    } catch (err: any) {
+      if (err?.code === '42P01') {
+        return {
+          total_payments: 0,
+          pending_payments: 0,
+          completed_payments: 0,
+          rejected_payments: 0,
+          total_revenue: 0,
+        };
+      }
+      throw err;
+    }
   }
 
   // Update user subscription after successful payment

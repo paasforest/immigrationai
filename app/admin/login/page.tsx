@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
       console.debug('[AdminLogin] login result:', { success: result.success, hasUser: !!result.user, error: result.error });
 
       if (result.success && result.user) {
-        const adminCheckUrl = `${API_BASE_URL}/api/admin/payments/stats`;
+        const adminCheckUrl = `${API_BASE_URL}/api/admin/check`;
         console.debug('[AdminLogin] checking admin access:', adminCheckUrl);
 
         let adminCheck: Response;

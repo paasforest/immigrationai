@@ -74,7 +74,7 @@ export default function AdminLayout({
   }, [user, pathname]);
 
   const checkAdminAccess = async () => {
-    const url = `${API_BASE_URL}/api/admin/payments/stats`;
+    const url = `${API_BASE_URL}/api/admin/check`;
     console.debug('[AdminLayout] checkAdminAccess', { pathname, hasUser: !!user, url });
 
     // /admin/login: dedicated admin entry — render login if not authenticated

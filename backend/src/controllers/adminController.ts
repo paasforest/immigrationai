@@ -9,6 +9,11 @@ import { asyncHandler } from '../middleware/errorHandler';
 import prisma from '../config/prisma';
 
 export class AdminController {
+  // GET /api/admin/check — lightweight admin check (no payments table). Used for admin login gate.
+  checkAdmin = asyncHandler(async (req: AuthRequest, res: Response) => {
+    return sendSuccess(res, { ok: true }, 'Admin access confirmed');
+  });
+
   // GET /api/admin/payments/pending
   getPendingPayments = asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.user) {
