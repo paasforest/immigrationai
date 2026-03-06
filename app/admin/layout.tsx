@@ -74,6 +74,9 @@ export default function AdminLayout({
   }, [user, pathname]);
 
   const checkAdminAccess = async () => {
+    const url = `${API_BASE_URL}/api/admin/payments/stats`;
+    console.debug('[AdminLayout] checkAdminAccess', { pathname, hasUser: !!user, url });
+
     // /admin/login: dedicated admin entry — render login if not authenticated
     if (pathname === '/admin/login') {
       if (!user) {
@@ -83,16 +86,21 @@ export default function AdminLayout({
       // User is logged in — verify admin and redirect
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
+        const response = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        const status = response.status;
+        const body = await response.text().catch(() => '');
+        console.debug('[AdminLayout] /admin/login check:', { status, body: body.slice(0, 200) });
         if (response.ok) {
           router.replace('/admin');
         } else {
+          console.warn('[AdminLayout] admin check failed, logging out');
           await logout();
           setIsAdmin(null);
         }
-      } catch {
+      } catch (err: any) {
+        console.error('[AdminLayout] admin check error:', err?.message ?? err);
         await logout();
         setIsAdmin(null);
       }
@@ -106,17 +114,21 @@ export default function AdminLayout({
     }
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const status = response.status;
+      const body = await response.text().catch(() => '');
+      console.debug('[AdminLayout] /admin/* check:', { status, body: body.slice(0, 200) });
       if (response.ok) {
         setIsAdmin(true);
       } else {
-        // Not platform admin — redirect to their dashboard
+        console.warn('[AdminLayout] not admin, redirecting to dashboard');
         setIsAdmin(false);
         router.replace('/dashboard');
       }
-    } catch {
+    } catch (err: any) {
+      console.error('[AdminLayout] admin check error:', err?.message ?? err);
       setIsAdmin(false);
       router.replace('/dashboard');
     }

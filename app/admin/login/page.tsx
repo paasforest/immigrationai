@@ -13,7 +13,7 @@ import { API_BASE_URL } from '@/lib/api/client';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -26,36 +26,53 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
 
+    // Debug: show API base URL in console
+    console.debug('[AdminLogin] API_BASE_URL:', API_BASE_URL);
+
     try {
       const result = await login(formData);
+      console.debug('[AdminLogin] login result:', { success: result.success, hasUser: !!result.user, error: result.error });
 
       if (result.success && result.user) {
-        // Verify admin access (platform admin only)
+        const adminCheckUrl = `${API_BASE_URL}/api/admin/payments/stats`;
+        console.debug('[AdminLogin] checking admin access:', adminCheckUrl);
+
         let adminCheck: Response;
         try {
-          adminCheck = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
+          adminCheck = await fetch(adminCheckUrl, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
             },
           });
         } catch (netErr: any) {
+          console.error('[AdminLogin] network error calling admin check:', netErr?.message ?? netErr);
           setError('Cannot reach the server. Check your connection and try again.');
           setLoading(false);
           return;
         }
 
+        const status = adminCheck.status;
+        const statusText = adminCheck.statusText;
+        let bodyText = '';
+        try {
+          bodyText = await adminCheck.text();
+        } catch (_) {}
+        console.debug('[AdminLogin] admin check response:', { status, statusText, body: bodyText || '(empty)' });
+
         if (adminCheck.ok) {
           router.push('/admin');
         } else {
+          console.warn('[AdminLogin] admin check failed:', status, bodyText);
           setError('Platform admin access only. Consultants and clients sign in at the main login.');
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('refresh_token');
-          window.location.reload();
+          await logout();
+          // No reload — console stays so you can read the logs
         }
       } else {
+        console.warn('[AdminLogin] login failed:', result.error);
         setError(result.error || 'Login failed');
       }
     } catch (err: any) {
+      console.error('[AdminLogin] unexpected error:', err?.message ?? err);
       setError(err?.message || 'Login failed');
     } finally {
       setLoading(false);
