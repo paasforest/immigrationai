@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Loader2 } from 'lucide-react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '@/lib/api/client';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -32,11 +31,18 @@ export default function AdminLoginPage() {
 
       if (result.success && result.user) {
         // Verify admin access (platform admin only)
-        const adminCheck = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-        });
+        let adminCheck: Response;
+        try {
+          adminCheck = await fetch(`${API_BASE_URL}/api/admin/payments/stats`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            },
+          });
+        } catch (netErr: any) {
+          setError('Cannot reach the server. Check your connection and try again.');
+          setLoading(false);
+          return;
+        }
 
         if (adminCheck.ok) {
           router.push('/admin');
@@ -50,7 +56,7 @@ export default function AdminLoginPage() {
         setError(result.error || 'Login failed');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err?.message || 'Login failed');
     } finally {
       setLoading(false);
     }

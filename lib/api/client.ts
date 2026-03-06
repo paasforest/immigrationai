@@ -1,10 +1,12 @@
 // API Client for Immigration AI Backend
 
-const API_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === 'production'
     ? 'https://api.immigrationai.co.za'
     : 'http://localhost:4000');
+
+const API_URL = API_BASE_URL;
 
 export interface ApiResponse<T = any> {
   success: boolean;
