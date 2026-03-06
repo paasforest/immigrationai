@@ -16,10 +16,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login');
+    } else if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+      router.push('/admin');
     } else if (user && user.role === 'applicant') {
       router.push('/portal');
     } else if (user) {
-      // All authenticated non-applicant users go to the new agency dashboard
       router.push('/dashboard/immigration');
     }
   }, [user, loading, router]);

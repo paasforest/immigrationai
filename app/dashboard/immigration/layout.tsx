@@ -104,8 +104,27 @@ export default function ImmigrationLayout({
   const { user, logout } = useAuth();
   const { organization } = useOrganization();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Platform admin (admin/super_admin) should use admin panel, not agency dashboard
+  useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+      router.replace('/admin');
+    }
+  }, [user, router]);
+
   const [pendingLeadsCount, setPendingLeadsCount] = useState(0);
   const [trialExpired, setTrialExpired] = useState(false);
+
+  // Don't render agency dashboard for platform admins — redirect to admin panel
+  if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting to admin...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Listen for TRIAL_EXPIRED events from the API client
   useEffect(() => {
