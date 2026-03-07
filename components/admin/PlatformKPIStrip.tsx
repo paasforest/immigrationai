@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, Users, FileInput, DollarSign, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { apiClient } from '@/lib/api/client';
 
 interface KPIData {
   organizations: { total: number; active: number; trial: number };
@@ -21,14 +20,8 @@ export default function PlatformKPIStrip() {
   const fetchKPIs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('auth_token');
-      const res = await fetch(`${API_BASE_URL}/api/admin/analytics/platform-kpis`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) setData(json.data);
-      }
+      const res = await apiClient.get<KPIData>('/api/admin/analytics/platform-kpis');
+      if (res.success && res.data) setData(res.data);
     } catch (err) {
       console.error('Failed to fetch platform KPIs', err);
     } finally {

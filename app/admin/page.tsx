@@ -3,29 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard,
-  Users,
-  DollarSign,
-  TrendingUp,
-  FileText,
-  Settings,
-  BarChart3,
-  Shield,
-  ShieldCheck,
-  ArrowLeft,
-  Activity,
-  Target,
-  Compass,
-  Globe,
-  Store,
-  Building2
-} from 'lucide-react';
+import { BarChart3, DollarSign, Compass, Target } from 'lucide-react';
 import Link from 'next/link';
 import PlatformKPIStrip from '@/components/admin/PlatformKPIStrip';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { apiClient } from '@/lib/api/client';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -39,17 +20,8 @@ export default function AdminDashboardPage() {
   const fetchEligibilityInsights = async () => {
     try {
       setInsightsLoading(true);
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/analytics/eligibility`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const payload = await response.json();
-        setEligibilityInsights(payload.data);
-      }
+      const res = await apiClient.get<any>('/api/admin/analytics/eligibility');
+      if (res.success && res.data) setEligibilityInsights(res.data);
     } catch (error) {
       console.error('Failed to load eligibility analytics', error);
     } finally {
@@ -57,157 +29,18 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const adminFeatures = [
-    {
-      icon: <DollarSign className="w-8 h-8" />,
-      title: "Payment Verification",
-      description: "Review and verify customer EFT payments",
-      href: "/admin/payments",
-      color: "from-green-500 to-emerald-600",
-      stats: "Pending verification"
-    },
-    {
-      icon: <ShieldCheck className="w-8 h-8" />,
-      title: "Professional Verifications",
-      description: "Approve agencies, lawyers & immigration professionals",
-      href: "/admin/verifications",
-      color: "from-indigo-500 to-blue-600",
-      stats: "Credential review"
-    },
-    {
-      icon: <Target className="w-8 h-8" />,
-      title: "UTM Analytics",
-      description: "Track marketing campaigns and traffic sources",
-      href: "/admin/utm-analytics",
-      color: "from-purple-500 to-violet-600",
-      stats: "ProConnectSA tracking"
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "User Management",
-      description: "Manage users, subscriptions, and access",
-      href: "/admin/users",
-      color: "from-blue-500 to-cyan-600",
-      stats: "Active users"
-    },
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "Document Analytics",
-      description: "View document generation statistics",
-      href: "/admin/documents",
-      color: "from-orange-500 to-red-600",
-      stats: "Document stats"
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Revenue Analytics",
-      description: "Track revenue, MRR, and growth metrics",
-      href: "/admin/revenue",
-      color: "from-pink-500 to-rose-600",
-      stats: "Revenue tracking"
-    },
-    {
-      icon: <Store className="w-8 h-8" />,
-      title: "Marketplace",
-      description: "Platform-wide intake and routing statistics",
-      href: "/admin/marketplace",
-      color: "from-amber-500 to-orange-600",
-      stats: "Lead funnel"
-    },
-    {
-      icon: <Activity className="w-8 h-8" />,
-      title: "System Health",
-      description: "Monitor system performance and uptime",
-      href: "/admin/system",
-      color: "from-teal-500 to-green-600",
-      stats: "System status"
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Platform overview and administrative tools</p>
+          <p className="text-gray-600 mt-1">Platform overview and analytics</p>
+          {user?.email && (
+            <p className="text-sm text-gray-500 mt-1">Signed in as {user.email}</p>
+          )}
         </div>
 
-        {/* Platform KPIs - fetch and display */}
         <PlatformKPIStrip />
-
-        {/* Welcome Card */}
-        <Card className="mb-8 border-l-4 border-l-blue-600">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <LayoutDashboard className="w-6 h-6 mr-2 text-blue-600" />
-              Quick access
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              Access administrative tools and analytics. Use the sidebar to navigate.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Admin Role</p>
-                  <p className="text-2xl font-bold text-gray-900">Active</p>
-                </div>
-                <Shield className="w-12 h-12 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Admin Email</p>
-                  <p className="text-lg font-semibold text-gray-900 truncate">{user?.email}</p>
-                </div>
-                <Users className="w-12 h-12 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Platform Status</p>
-                  <p className="text-2xl font-bold text-green-600">Online</p>
-                </div>
-                <Activity className="w-12 h-12 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Eligibility Checks</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {eligibilityInsights?.totals?.totalChecks ?? (insightsLoading ? '—' : 0)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {eligibilityInsights?.totals?.last24h
-                      ? `${eligibilityInsights.totals.last24h} in last 24h`
-                      : 'Awaiting first checks'}
-                  </p>
-                </div>
-                <Globe className="w-12 h-12 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Eligibility Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -284,57 +117,23 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Admin Features Grid */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Administrative Tools</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminFeatures.map((feature, index) => (
-              <Link key={index} href={feature.href}>
-                <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6">
-                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {feature.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{feature.stats}</span>
-                      <span className="text-blue-600 text-sm font-medium group-hover:underline">
-                        Open →
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="w-5 h-5 mr-2" />
-              Quick Actions
-            </CardTitle>
+            <CardTitle className="text-lg">Quick actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-wrap gap-3">
               <Link href="/admin/payments">
-                <Button className="w-full" variant="outline">
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground">
                   <DollarSign className="w-4 h-4 mr-2" />
-                  Review Pending Payments
-                </Button>
+                  Pending payments
+                </span>
               </Link>
               <Link href="/admin/utm-analytics">
-                <Button className="w-full" variant="outline">
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  View UTM Analytics
-                </Button>
+                  UTM analytics
+                </span>
               </Link>
             </div>
           </CardContent>

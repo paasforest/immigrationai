@@ -20,7 +20,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '@/lib/api/client';
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
