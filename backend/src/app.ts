@@ -1,7 +1,13 @@
+import path from 'path';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+
+// Load .env from backend directory so it works regardless of process.cwd() (e.g. PM2 from repo root)
+// When running from dist/app.js, __dirname is backend/dist so this resolves to backend/.env
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
 import prisma from './config/prisma';
 import { generalLimiter, aiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
@@ -35,9 +41,6 @@ import vacRoutes from './routes/vac.routes';
 import immigrationAnalyticsRoutes from './routes/immigration-analytics.routes';
 import intakeRoutes from './routes/intake.routes';
 import toolsRoutes from './routes/tools.routes';
-
-// Load environment variables
-dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 4000;
@@ -509,6 +512,11 @@ async function startServer(): Promise<void> {
 ║  Health Check: http://localhost:${PORT}/health      ║
 ╚═══════════════════════════════════════════════════════╝
       `);
+      if (process.env.RESEND_API_KEY) {
+        console.log('📧 Email (Resend): configured');
+      } else {
+        console.warn('⚠️  Email (Resend): RESEND_API_KEY not set - transactional emails (e.g. lead confirmation) will not be sent');
+      }
     });
 
     // Handle server errors
