@@ -25,8 +25,9 @@ export const requireAdmin = async (
     }
 
     const userRole = result.rows[0].role || 'user';
+    const isPlatformAdmin = userRole === 'admin' || userRole === 'super_admin';
 
-    if (userRole !== 'admin') {
+    if (!isPlatformAdmin) {
       return sendError(
         res,
         'FORBIDDEN',

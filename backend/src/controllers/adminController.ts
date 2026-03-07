@@ -252,7 +252,6 @@ export class AdminController {
           _count: {
             select: {
               documents: true,
-              subscriptions: true,
             },
           },
         } as any,
@@ -393,22 +392,26 @@ export class AdminController {
     const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate as string) : new Date();
 
-    // Get payments using query helper
-    const { query } = await import('../config/database');
-    const paymentsResult = await query(
-      `SELECT 
-        plan,
-        billing_cycle,
-        SUM(amount_paid) as total_revenue,
-        COUNT(*) as payment_count
-      FROM payments
-      WHERE status = 'completed' 
-        AND created_at >= $1 
-        AND created_at <= $2
-      GROUP BY plan, billing_cycle`,
-      [start, end]
-    );
-    const payments = paymentsResult.rows;
+    let payments: any[] = [];
+    try {
+      const { query } = await import('../config/database');
+      const paymentsResult = await query(
+        `SELECT 
+          plan,
+          billing_cycle,
+          SUM(amount) as total_revenue,
+          COUNT(*) as payment_count
+        FROM payments
+        WHERE status = 'completed' 
+          AND created_at >= $1 
+          AND created_at <= $2
+        GROUP BY plan, billing_cycle`,
+        [start, end]
+      );
+      payments = paymentsResult.rows;
+    } catch (err: any) {
+      if (err?.code !== '42P01') throw err;
+    }
 
     // Get subscription stats
     const [activeSubscriptions, byPlan, byStatus] = await Promise.all([

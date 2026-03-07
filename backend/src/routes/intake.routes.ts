@@ -42,10 +42,15 @@ router.patch('/:id/eligibility-score', patchEligibilityScore); // PATCH /api/int
 router.post('/messages', sendIntakeMessage);          // POST /api/intake/messages
 router.get('/messages/:ref', getIntakeMessages);      // GET  /api/intake/messages/:ref
 
-// Protected routes (auth + organizationContext)
+// Platform admin routes (auth + requireAdmin only — no organizationContext; platform admins may have no org)
 router.use(auth);
-router.use(organizationContext);
+router.get('/admin/verifications', requireAdmin, getPendingVerifications); // GET /api/intake/admin/verifications
+router.post('/admin/verify', requireAdmin, verifyProfessional); // POST /api/intake/admin/verify
+router.get('/admin/all-intakes', requireAdmin, getAllIntakes); // GET /api/intake/admin/all-intakes
+router.get('/admin/routing-stats', requireAdmin, getRoutingStats); // GET /api/intake/admin/routing-stats
 
+// Org-scoped routes (auth + organizationContext)
+router.use(organizationContext);
 router.get('/my-leads', getMyLeads); // GET /api/intake/my-leads
 router.post('/respond', respondToLead); // POST /api/intake/respond
 router.get('/specializations', getMySpecializations); // GET /api/intake/specializations
@@ -56,11 +61,5 @@ router.get('/profile', getMyProfile); // GET /api/intake/profile
 router.get('/my-stats', getMyLeadStats);    // GET /api/intake/my-stats
 router.get('/lead-usage', getLeadUsage);    // GET /api/intake/lead-usage
 router.post('/profile/upload-verification', verificationUpload, submitVerificationDoc); // POST /api/intake/profile/upload-verification
-
-// Admin routes (require admin role)
-router.get('/admin/verifications', requireAdmin, getPendingVerifications); // GET /api/intake/admin/verifications
-router.post('/admin/verify', requireAdmin, verifyProfessional); // POST /api/intake/admin/verify
-router.get('/admin/all-intakes', requireAdmin, getAllIntakes); // GET /api/intake/admin/all-intakes
-router.get('/admin/routing-stats', requireAdmin, getRoutingStats); // GET /api/intake/admin/routing-stats
 
 export default router;

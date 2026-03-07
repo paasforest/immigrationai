@@ -2,9 +2,10 @@ import { query } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 
 export class PaymentVerificationService {
-  // Get pending payments for manual verification
+  // Get pending payments for manual verification. Returns [] if payments table is missing.
   async getPendingPayments(): Promise<any[]> {
-    const result = await query(
+    try {
+      const result = await query(
       `SELECT 
         p.id,
         p.user_id,
@@ -25,9 +26,12 @@ export class PaymentVerificationService {
        LEFT JOIN payment_proofs pp ON pp.user_id = u.id AND pp.status = 'pending'
        WHERE p.status IN ('pending', 'verifying')
        ORDER BY p.created_at DESC`
-    );
-
-    return result.rows;
+      );
+      return result.rows;
+    } catch (err: any) {
+      if (err?.code === '42P01') return [];
+      throw err;
+    }
   }
 
   // Verify payment manually
