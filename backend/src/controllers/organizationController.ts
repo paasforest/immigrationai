@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { sendSuccess } from '../utils/helpers';
 import { generateCaseReference } from '../utils/referenceNumber';
 import { getUsersByOrg } from '../helpers/prismaScopes';
 import crypto from 'crypto';
@@ -100,7 +101,8 @@ export async function createOrganization(req: Request, res: Response): Promise<v
 }
 
 /**
- * Get current user's organization details
+ * Get current user's organization details.
+ * Returns 200 with data: null when user has no organization (e.g. platform admin) so clients get a proper response instead of 404.
  */
 export async function getMyOrganization(req: Request, res: Response): Promise<void> {
   try {
@@ -108,7 +110,8 @@ export async function getMyOrganization(req: Request, res: Response): Promise<vo
     const dbUser = await prisma.user.findUnique({ where: { id: jwtUser.userId } });
 
     if (!dbUser || !dbUser.organizationId) {
-      throw new AppError('User is not associated with an organization', 404);
+      sendSuccess(res, null, 'No organization');
+      return;
     }
 
     const organization = await prisma.organization.findUnique({
@@ -122,7 +125,8 @@ export async function getMyOrganization(req: Request, res: Response): Promise<vo
     });
 
     if (!organization) {
-      throw new AppError('Organization not found', 404);
+      sendSuccess(res, null, 'No organization');
+      return;
     }
 
     // Calculate trial days remaining
@@ -135,14 +139,10 @@ export async function getMyOrganization(req: Request, res: Response): Promise<vo
       trialDaysRemaining = diffDays > 0 ? diffDays : 0;
     }
 
-    res.json({
-      success: true,
-      data: {
-        ...organization,
-        trialDaysRemaining,
-      },
-      message: 'Organization retrieved successfully',
-    });
+    sendSuccess(res, {
+      ...organization,
+      trialDaysRemaining,
+    }, 'Organization retrieved successfully');
   } catch (error: any) {
     if (error instanceof AppError) {
       throw error;

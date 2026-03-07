@@ -487,12 +487,13 @@ export async function toggleEmbassyPackage(req: Request, res: Response): Promise
     const document = await prisma.caseDocument.findFirst({ where: { id, organizationId } });
     if (!document) throw new AppError('Document not found', 404);
 
+    const currentFlag = (document as { isEmbassyPackage?: boolean }).isEmbassyPackage ?? false;
     const updated = await (prisma.caseDocument as any).update({
       where: { id },
-      data: { isEmbassyPackage: !document.isEmbassyPackage },
+      data: { isEmbassyPackage: !currentFlag },
     });
 
-    res.json({ success: true, data: updated, message: updated.isEmbassyPackage ? 'Added to embassy package' : 'Removed from embassy package' });
+    res.json({ success: true, data: updated, message: (updated as { isEmbassyPackage?: boolean }).isEmbassyPackage ? 'Added to embassy package' : 'Removed from embassy package' });
   } catch (error: any) {
     if (error instanceof AppError) throw error;
     throw new AppError(error.message || 'Failed to update embassy package', 500);

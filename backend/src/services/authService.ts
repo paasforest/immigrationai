@@ -298,9 +298,12 @@ export class AuthService {
     });
     if (!user) return;
 
-    const accessToken = generateToken({ userId: user.id, email: user.email });
-    const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
-    await this.storeRefreshToken(user.id, refreshToken);
+    const u = user as unknown as { id: string; email: string };
+    const userId = u.id;
+    const userEmail = u.email;
+    const accessToken = generateToken({ userId, email: userEmail });
+    const refreshToken = generateRefreshToken({ userId, email: userEmail });
+    await this.storeRefreshToken(userId, refreshToken);
 
     return {
       token: accessToken,

@@ -15,6 +15,11 @@ ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH} && git pull origin main"
 echo "Pulled latest code."
 echo ""
 
+echo "Building backend (so dist/ has current routes, e.g. /api/organizations/me)..."
+ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npm run build"
+echo "Build done."
+echo ""
+
 echo "Restarting backend..."
 ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && pm2 restart immigration-backend || pm2 restart all || true"
 echo ""
