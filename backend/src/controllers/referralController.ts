@@ -200,8 +200,8 @@ export const getMyReferrals = asyncHandler(async (req: AuthRequest, res: Respons
     orderBy: { createdAt: 'desc' },
   });
 
-  const sent = referrals.filter((r) => r.referrerId === userId);
-  const received = referrals.filter((r) => r.recipientId === userId);
+  const sent = referrals.filter((r: { referrerId: string }) => r.referrerId === userId);
+  const received = referrals.filter((r: { recipientId: string }) => r.recipientId === userId);
 
   return sendSuccess(
     res,
@@ -333,9 +333,9 @@ export const acceptReferral = asyncHandler(async (req: AuthRequest, res: Respons
           toEmail: clientEmail!,
           applicantName: clientName!,
           professionalName: prof?.fullName || prof?.email?.split('@')[0] || 'Your specialist',
-          professionalTitle: profile?.title,
+          professionalTitle: profile?.title ?? undefined,
           professionalEmail: prof?.email || '',
-          professionalPhone: prof?.phone || undefined,
+          professionalPhone: prof?.phone ?? undefined,
           serviceName,
           caseReference: newCase!.referenceNumber,
           preferredLanguage: null,

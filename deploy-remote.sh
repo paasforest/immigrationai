@@ -20,6 +20,10 @@ ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npx prisma migrate
 echo "Migrations done."
 echo ""
 
+echo "Generating Prisma client..."
+ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npx prisma generate"
+echo ""
+
 echo "Building backend (so dist/ has current routes, e.g. /api/organizations/me)..."
 ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npm run build"
 echo "Build done."
