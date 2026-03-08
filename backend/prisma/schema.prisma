@@ -66,6 +66,10 @@ model User {
   professionalProfile       ProfessionalProfile?
   Notification              Notification[]
 
+  // Professional Network / Referrals
+  referralsSent    CaseReferral[] @relation("ReferralsSent")
+  referralsReceived CaseReferral[] @relation("ReferralsReceived")
+
   @@index([organizationId])
   @@map("users")
 }
@@ -567,6 +571,7 @@ model Case {
   tasks         Task[]
   messages      Message[]
   checklists    DocumentChecklist[]
+  caseReferrals CaseReferral[]
 
   @@index([organizationId])
   @@index([assignedProfessionalId])
@@ -827,8 +832,9 @@ model CaseIntake {
   createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  assignments IntakeAssignment[]
-  messages    IntakeMessage[]
+  assignments    IntakeAssignment[]
+  messages       IntakeMessage[]
+  caseReferrals  CaseReferral[]
 
   @@index([referenceNumber])
   @@index([serviceId])
@@ -951,32 +957,63 @@ model RequirementUpdateAlert {
 }
 
 model ProfessionalProfile {
-  id                String        @id @default(cuid())
-  userId            String        @unique @map("user_id") @db.Uuid
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId    String?       @map("organization_id") @db.Uuid
-  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  displayName       String        @map("display_name") @db.VarChar(255)
-  title             String?       @db.VarChar(255)
-  bio               String?       @db.Text
-  avatarUrl         String?       @map("avatar_url") @db.VarChar(500)
-  languages         String[]
-  isPublic          Boolean       @default(false) @map("is_public")
-  isVerified        Boolean       @default(false) @map("is_verified")
-  verificationDoc   String?       @map("verification_doc") @db.VarChar(500)
-  rating            Float?        @db.DoublePrecision
-  totalReviews      Int           @default(0) @map("total_reviews")
-  totalCasesHandled Int           @default(0) @map("total_cases_handled")
-  responseTimeHours Int?          @map("response_time_hours")
-  locationCity      String?       @map("location_city") @db.VarChar(100)
-  locationCountry   String?       @map("location_country") @db.VarChar(100)
-  linkedinUrl       String?       @map("linkedin_url") @db.VarChar(500)
-  websiteUrl        String?       @map("website_url") @db.VarChar(500)
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+  id                     String        @id @default(cuid())
+  userId                 String        @unique @map("user_id") @db.Uuid
+  user                   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId         String?       @map("organization_id") @db.Uuid
+  organization           Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  displayName             String        @map("display_name") @db.VarChar(255)
+  title                   String?       @db.VarChar(255)
+  bio                     String?       @db.Text
+  avatarUrl               String?       @map("avatar_url") @db.VarChar(500)
+  languages               String[]
+  isPublic                Boolean       @default(false) @map("is_public")
+  isVerified              Boolean       @default(false) @map("is_verified")
+  verificationDoc         String?       @map("verification_doc") @db.VarChar(500)
+  rating                  Float?        @db.DoublePrecision
+  totalReviews            Int           @default(0) @map("total_reviews")
+  totalCasesHandled       Int           @default(0) @map("total_cases_handled")
+  responseTimeHours       Int?          @map("response_time_hours")
+  locationCity            String?       @map("location_city") @db.VarChar(100)
+  locationCountry         String?       @map("location_country") @db.VarChar(100)
+  linkedinUrl             String?       @map("linkedin_url") @db.VarChar(500)
+  websiteUrl              String?       @map("website_url") @db.VarChar(500)
+  professionalType       String?       @map("professional_type") @db.VarChar(50) // consultant | lawyer | paralegal | notary
+  availableForReferrals  Boolean       @default(false) @map("available_for_referrals")
+  availableForCoCounsel   Boolean       @default(false) @map("available_for_co_counsel")
+  createdAt               DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt               DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
 
   @@index([userId])
   @@index([isPublic])
   @@index([isVerified])
+  @@index([professionalType])
+  @@index([availableForReferrals])
+  @@index([availableForCoCounsel])
   @@map("professional_profiles")
+}
+
+model CaseReferral {
+  id             String    @id @default(cuid())
+  referrerId     String    @map("referrer_id") @db.Uuid
+  referrer       User      @relation("ReferralsSent", fields: [referrerId], references: [id], onDelete: Cascade)
+  recipientId    String    @map("recipient_id") @db.Uuid
+  recipient      User      @relation("ReferralsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  intakeId       String?   @map("intake_id") @db.VarChar(30)
+  intake         CaseIntake? @relation(fields: [intakeId], references: [id], onDelete: SetNull)
+  caseId         String?   @map("case_id") @db.Uuid
+  case           Case?     @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  note           String?   @db.Text
+  status         String    @default("pending") @db.VarChar(50) // pending | accepted | declined
+  clientNotified Boolean   @default(false) @map("client_notified")
+  respondedAt    DateTime? @map("responded_at") @db.Timestamp(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([referrerId])
+  @@index([recipientId])
+  @@index([status])
+  @@index([intakeId])
+  @@index([caseId])
+  @@map("case_referrals")
 }

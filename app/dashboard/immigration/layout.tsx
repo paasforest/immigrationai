@@ -28,6 +28,8 @@ import {
   LogOut,
   Home,
   GraduationCap,
+  Network,
+  Share2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -49,6 +51,13 @@ const navigation = [
       { href: '/dashboard/immigration', label: 'Overview', icon: LayoutDashboard },
       { href: '/dashboard/immigration/cases', label: 'All Cases', icon: FolderOpen },
       { href: '/dashboard/immigration/cases/new', label: 'New Case', icon: Plus },
+    ],
+  },
+  {
+    title: 'NETWORK',
+    items: [
+      { href: '/dashboard/immigration/network', label: 'Network', icon: Network },
+      { href: '/dashboard/immigration/referrals', label: 'Referrals', icon: Share2 },
     ],
   },
   {

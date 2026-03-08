@@ -15,6 +15,11 @@ ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH} && git pull origin main"
 echo "Pulled latest code."
 echo ""
 
+echo "Running database migrations..."
+ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npx prisma migrate deploy"
+echo "Migrations done."
+echo ""
+
 echo "Building backend (so dist/ has current routes, e.g. /api/organizations/me)..."
 ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && npm run build"
 echo "Build done."

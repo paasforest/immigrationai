@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ImmigrationCase } from '@/types/immigration';
 import { immigrationApi } from '@/lib/api/immigration';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Share2 } from 'lucide-react';
+import ReferLeadOrCaseModal from '@/components/immigration/referrals/ReferLeadOrCaseModal';
 import ReadinessWidget from './ReadinessWidget';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +77,7 @@ interface CaseHeaderProps {
 
 export default function CaseHeader({ caseData, onUpdate }: CaseHeaderProps) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [referModalOpen, setReferModalOpen] = useState(false);
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -202,6 +204,14 @@ export default function CaseHeader({ caseData, onUpdate }: CaseHeaderProps) {
               {/* Submission Readiness Score */}
               <ReadinessWidget caseId={caseData.id} />
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReferModalOpen(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Refer this case
+              </Button>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -220,6 +230,14 @@ export default function CaseHeader({ caseData, onUpdate }: CaseHeaderProps) {
                   </div>
                 </SheetContent>
               </Sheet>
+
+              <ReferLeadOrCaseModal
+                open={referModalOpen}
+                onClose={() => setReferModalOpen(false)}
+                caseId={caseData.id}
+                caseSummary={`${caseData.referenceNumber} — ${caseData.title}`}
+                onSuccess={() => setReferModalOpen(false)}
+              />
             </div>
           </div>
         </CardContent>

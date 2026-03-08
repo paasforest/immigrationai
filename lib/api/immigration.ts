@@ -922,4 +922,104 @@ export const immigrationApi = {
   }>> {
     return apiClient.post('/api/ai/pre-doc-requirements', data);
   },
+
+  // ============================================
+  // NETWORK (professional directory)
+  // ============================================
+
+  async getNetworkDirectory(params?: {
+    search?: string;
+    professionalType?: string;
+    destinationCountry?: string;
+    availableForReferrals?: boolean;
+    availableForCoCounsel?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<{
+    profiles: Array<{
+      id: string;
+      userId: string;
+      displayName: string;
+      title?: string;
+      bio?: string;
+      avatarUrl?: string;
+      languages: string[];
+      isVerified: boolean;
+      professionalType?: string;
+      availableForReferrals: boolean;
+      availableForCoCounsel: boolean;
+      locationCity?: string;
+      locationCountry?: string;
+      websiteUrl?: string;
+      organization?: { name?: string; country?: string };
+      destinationCountries: string[];
+      visaTypes: string[];
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  }>> {
+    const q = new URLSearchParams();
+    if (params?.search) q.set('search', params.search);
+    if (params?.professionalType) q.set('professionalType', params.professionalType);
+    if (params?.destinationCountry) q.set('destinationCountry', params.destinationCountry);
+    if (params?.availableForReferrals) q.set('availableForReferrals', 'true');
+    if (params?.availableForCoCounsel) q.set('availableForCoCounsel', 'true');
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.limit) q.set('limit', String(params.limit));
+    return apiClient.get(`/api/network?${q.toString()}`);
+  },
+
+  async getNetworkProfile(userId: string): Promise<ApiResponse<{
+    id: string;
+    userId: string;
+    displayName: string;
+    title?: string;
+    bio?: string;
+    avatarUrl?: string;
+    languages: string[];
+    isVerified: boolean;
+    professionalType?: string;
+    availableForReferrals: boolean;
+    availableForCoCounsel: boolean;
+    locationCity?: string;
+    locationCountry?: string;
+    websiteUrl?: string;
+    organization?: { name?: string; country?: string };
+    user?: { fullName?: string; createdAt?: string };
+    destinationCountries: string[];
+    visaTypes: string[];
+  }>> {
+    return apiClient.get(`/api/network/${userId}`);
+  },
+
+  // ============================================
+  // REFERRALS
+  // ============================================
+
+  async getMyReferrals(): Promise<ApiResponse<{
+    sent: any[];
+    received: any[];
+    all: any[];
+  }>> {
+    return apiClient.get('/api/referrals');
+  },
+
+  async createReferral(data: {
+    recipientId: string;
+    intakeId?: string;
+    caseId?: string;
+    note?: string;
+    notifyClient?: boolean;
+  }): Promise<ApiResponse<{ referral: any }>> {
+    return apiClient.post('/api/referrals', data);
+  },
+
+  async acceptReferral(id: string): Promise<ApiResponse<{ referral: any; newCase?: { id: string; referenceNumber: string } }>> {
+    return apiClient.post(`/api/referrals/${id}/accept`, {});
+  },
+
+  async declineReferral(id: string): Promise<ApiResponse<{ referral: any }>> {
+    return apiClient.post(`/api/referrals/${id}/decline`, {});
+  },
 };

@@ -11,10 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, X, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, CheckCircle2, X, MessageSquare, Share2 } from 'lucide-react';
 import RespondToLeadDialog from '@/components/immigration/leads/RespondToLeadDialog';
 import LeadRiskPanel from '@/components/immigration/leads/LeadRiskPanel';
 import PreCaseChat from '@/components/intake/PreCaseChat';
+import ReferLeadOrCaseModal from '@/components/immigration/referrals/ReferLeadOrCaseModal';
 import { useAuth } from '@/contexts/AuthContext';
 
 function getUrgencyBadge(urgencyLevel: string) {
@@ -68,6 +69,7 @@ export default function LeadDetailPage() {
     action: 'accept' | 'decline';
   } | null>(null);
   const [countdown, setCountdown] = useState<string>('');
+  const [referModalOpen, setReferModalOpen] = useState(false);
 
   useEffect(() => {
     fetchLead();
@@ -165,9 +167,19 @@ export default function LeadDetailPage() {
           {/* Lead Details */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{assignment.intake.service.name}</CardTitle>
-                {getUrgencyBadge(assignment.intake.urgencyLevel)}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <CardTitle>{assignment.intake.service.name}</CardTitle>
+                  {getUrgencyBadge(assignment.intake.urgencyLevel)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReferModalOpen(true)}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Refer this lead
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -411,6 +423,14 @@ export default function LeadDetailPage() {
           setRespondingTo(null);
           fetchLead();
         }}
+      />
+
+      <ReferLeadOrCaseModal
+        open={referModalOpen}
+        onClose={() => setReferModalOpen(false)}
+        intakeId={(assignment?.intake as any)?.id}
+        intakeSummary={assignment ? `${assignment.intake.service.name} — ${assignment.intake.destinationCountry}` : undefined}
+        onSuccess={() => setReferModalOpen(false)}
       />
     </div>
   );
