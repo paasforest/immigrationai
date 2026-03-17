@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { organizationContext } from '../middleware/organizationContext';
+import { organizationContext, organizationContextAllowExpired } from '../middleware/organizationContext';
 import {
   getNotifications,
   markNotificationRead,
@@ -8,10 +8,10 @@ import {
 
 const router = Router();
 
-// Get notifications (requires auth + org context)
-router.get('/', auth, organizationContext, getNotifications);
+// Get notifications — allow expired trial so dashboard doesn't 402
+router.get('/', auth, organizationContextAllowExpired, getNotifications);
 
-// Mark notification as read (requires auth + org context)
+// Mark notification as read
 router.put('/read', auth, organizationContext, markNotificationRead);
 
 export default router;

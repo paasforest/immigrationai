@@ -288,10 +288,14 @@ export default function ImmigrationLayout({
     </div>
   );
 
+  // Don't block billing page when trial expired — user must be able to pay
+  const isBillingPage = pathname?.startsWith('/dashboard/immigration/billing');
+  const showTrialExpiredWall = trialExpired && !isBillingPage;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Trial expired wall — full-screen block until payment is done */}
-      {trialExpired && <TrialExpiredWall />}
+      {/* Trial expired wall — full-screen block until payment is done (hidden on Billing so they can pay) */}
+      {showTrialExpiredWall && <TrialExpiredWall />}
       <TrialBanner />
       
       {/* Mobile menu button */}

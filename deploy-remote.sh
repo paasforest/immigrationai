@@ -1,6 +1,7 @@
 #!/bin/bash
-# Deploy to Hetzner: pull latest and restart frontend + backend
-# Run from your local machine (requires SSH access to server)
+# Deploy backend to Hetzner (pull, migrate, prisma generate, build, pm2 restart).
+# Frontend is on Vercel and auto-deploys when you push to git; this script does not touch it.
+# Run from your local machine (requires SSH access to server).
 
 set -e
 
@@ -33,11 +34,7 @@ echo "Restarting backend..."
 ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH}/backend && pm2 restart immigration-backend || pm2 restart all || true"
 echo ""
 
-echo "Restarting frontend (if managed by pm2)..."
-ssh ${HETZNER_USER}@${HETZNER_IP} "cd ${REPO_PATH} && (pm2 restart immigration-frontend 2>/dev/null || pm2 restart next 2>/dev/null || pm2 restart all 2>/dev/null || echo 'Restart frontend manually if needed')"
-echo ""
-
-echo "Done."
+echo "Done. (Frontend on Vercel updates automatically when you push to git.)"
 echo "Verify: ssh ${HETZNER_USER}@${HETZNER_IP} 'pm2 status'"
 echo ""
 echo "If your server path or host differ, run:"

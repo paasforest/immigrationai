@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { organizationContext } from '../middleware/organizationContext';
+import { organizationContext, organizationContextAllowExpired } from '../middleware/organizationContext';
 import {
   createTask,
   getTasksByCase,
@@ -12,16 +12,16 @@ import {
 
 const router = Router();
 
-// All task routes require authentication and organization context
 router.use(auth);
-router.use(organizationContext);
 
-// Task routes
-router.get('/', getAllTasksByOrg); // GET /api/tasks (all org tasks)
-router.post('/', createTask); // POST /api/tasks
-router.get('/case/:caseId', getTasksByCase); // GET /api/tasks/case/:caseId
-router.get('/upcoming', getUpcomingDeadlines); // GET /api/tasks/upcoming
-router.put('/:id', updateTask); // PUT /api/tasks/:id
-router.delete('/:id', deleteTask); // DELETE /api/tasks/:id
+// Read-only — allow expired trial so dashboard (upcoming deadlines) doesn't 402
+router.get('/', organizationContextAllowExpired, getAllTasksByOrg);
+router.get('/case/:caseId', organizationContextAllowExpired, getTasksByCase);
+router.get('/upcoming', organizationContextAllowExpired, getUpcomingDeadlines);
+
+// Write — require active trial
+router.post('/', organizationContext, createTask);
+router.put('/:id', organizationContext, updateTask);
+router.delete('/:id', organizationContext, deleteTask);
 
 export default router;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { organizationContext } from '../middleware/organizationContext';
+import { organizationContext, organizationContextAllowExpired } from '../middleware/organizationContext';
 import {
   createCaseHandler,
   getCases,
@@ -17,21 +17,19 @@ import {
 
 const router = Router();
 
-// All case routes require authentication and organization context
 router.use(auth);
-router.use(organizationContext);
 
-// Case routes
-router.get('/', getCases); // GET /api/cases
-router.post('/', createCaseHandler); // POST /api/cases
-router.get('/stats', getCaseStats); // GET /api/cases/stats
-router.get('/applicant-dashboard', getApplicantDashboard); // GET /api/cases/applicant-dashboard
-router.get('/:id', getCaseByIdHandler); // GET /api/cases/:id
-router.put('/:id', updateCaseHandler); // PUT /api/cases/:id
-router.delete('/:id', deleteCaseHandler); // DELETE /api/cases/:id
+// Read-only routes — allow expired trial so dashboard/overview don't 402
+router.get('/', organizationContextAllowExpired, getCases);
+router.get('/stats', organizationContextAllowExpired, getCaseStats);
+router.get('/applicant-dashboard', organizationContextAllowExpired, getApplicantDashboard);
+router.get('/:id', organizationContextAllowExpired, getCaseByIdHandler);
+router.get('/:caseId/readiness-score', organizationContextAllowExpired, readinessScoreController);
 
-// Case Intelligence
-router.get('/:caseId/readiness-score', readinessScoreController); // GET /api/cases/:caseId/readiness-score
-router.post('/:caseId/cross-validate', crossValidateController); // POST /api/cases/:caseId/cross-validate
+// Write routes — require active trial
+router.post('/', organizationContext, createCaseHandler);
+router.put('/:id', organizationContext, updateCaseHandler);
+router.delete('/:id', organizationContext, deleteCaseHandler);
+router.post('/:caseId/cross-validate', organizationContext, crossValidateController);
 
 export default router;

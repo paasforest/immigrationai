@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Plus, Upload, CheckSquare, MessageSquare } from 'lucide-react';
+import { Plus, Upload, CheckSquare, MessageSquare, Network, Share2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const actions = [
@@ -26,11 +26,21 @@ const actions = [
     label: 'Messages',
     icon: MessageSquare,
   },
+  {
+    href: '/dashboard/immigration/network',
+    label: 'Network',
+    icon: Network,
+  },
+  {
+    href: '/dashboard/immigration/referrals',
+    label: 'Referrals',
+    icon: Share2,
+  },
 ];
 
 export default function QuickActions() {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {actions.map((action) => {
         const Icon = action.icon;
         

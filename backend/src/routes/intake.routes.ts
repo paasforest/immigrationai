@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { organizationContext } from '../middleware/organizationContext';
+import { organizationContext, organizationContextAllowExpired } from '../middleware/organizationContext';
 import { requireAdmin } from '../middleware/requireAdmin';
 import {
   submitIntake,
@@ -49,9 +49,11 @@ router.post('/admin/verify', requireAdmin, verifyProfessional); // POST /api/int
 router.get('/admin/all-intakes', requireAdmin, getAllIntakes); // GET /api/intake/admin/all-intakes
 router.get('/admin/routing-stats', requireAdmin, getRoutingStats); // GET /api/intake/admin/routing-stats
 
-// Org-scoped routes (auth + organizationContext)
+// Org-scoped: allow expired for read-only so dashboard (pending leads badge) doesn't 402
+router.get('/my-leads', organizationContextAllowExpired, getMyLeads);
+
+// Org-scoped routes (strict — require active trial)
 router.use(organizationContext);
-router.get('/my-leads', getMyLeads); // GET /api/intake/my-leads
 router.post('/respond', respondToLead); // POST /api/intake/respond
 router.get('/specializations', getMySpecializations); // GET /api/intake/specializations
 router.post('/specializations', upsertSpecialization); // POST /api/intake/specializations

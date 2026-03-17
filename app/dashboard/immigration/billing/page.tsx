@@ -68,15 +68,25 @@ export default function BillingPage() {
     }
   };
 
-  // Check if user is org_admin
-  useEffect(() => {
-    if (user && user.role !== 'org_admin' && !organization) {
-      router.push('/dashboard/immigration');
-    }
-  }, [user, organization, router]);
-
+  // Only org_admin can manage billing; others see a clear message (no redirect so trial-expired users aren't stuck)
   if (user && user.role !== 'org_admin') {
-    return null;
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+          <p className="text-gray-700">
+            Only the account owner can complete payment and manage billing.
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            Contact your account administrator or{' '}
+            <a href="mailto:support@immigrationai.co.za" className="text-[#0F2557] underline">
+              support@immigrationai.co.za
+            </a>{' '}
+            if you need help.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -111,8 +121,8 @@ export default function BillingPage() {
         onCancel={handleCancelSubscription}
       />
 
-      {/* Pricing Plans */}
-      {(subscription?.status === 'trial' || subscription?.plan === 'starter') && (
+      {/* Pricing Plans — show when trial, expired, or on starter so they can pay / upgrade */}
+      {(subscription?.status === 'trial' || subscription?.status === 'expired' || subscription?.plan === 'starter') && (
         <div className="space-y-4">
           <div>
             <h2 className="text-2xl font-semibold mb-2">Upgrade Your Plan</h2>

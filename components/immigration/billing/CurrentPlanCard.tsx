@@ -24,6 +24,7 @@ const planColors: Record<string, { bg: string; text: string }> = {
 const statusColors: Record<string, { bg: string; text: string }> = {
   trial: { bg: 'bg-amber-100', text: 'text-amber-800' },
   active: { bg: 'bg-green-100', text: 'text-green-800' },
+  expired: { bg: 'bg-red-100', text: 'text-red-800' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-800' },
 };
 
@@ -31,6 +32,7 @@ export default function CurrentPlanCard({ subscription, onUpgrade, onCancel }: C
   const planColor = planColors[subscription?.plan || 'starter'] || planColors.starter;
   const statusColor = statusColors[subscription?.status || 'trial'] || statusColors.trial;
   const isTrial = subscription?.status === 'trial';
+  const isExpired = subscription?.status === 'expired';
   const isCancelled = subscription?.status === 'cancelled';
   const daysRemaining = subscription?.daysRemaining || 0;
   const isUrgent = daysRemaining <= 3 && daysRemaining > 0;
@@ -59,6 +61,13 @@ export default function CurrentPlanCard({ subscription, onUpgrade, onCancel }: C
             </Badge>
           </div>
         </div>
+
+        {/* Expired message */}
+        {isExpired && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+            Your trial has ended. Choose a plan below and pay to reactivate your account.
+          </div>
+        )}
 
         {/* Trial Progress */}
         {isTrial && (
