@@ -404,7 +404,7 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-lg text-blue-100 mb-4 leading-relaxed max-w-xl">
-                  Manage immigration cases to <strong className="text-white">any country</strong> from one workspace. AI tools that prevent rejections, a full case management suite, client portals, and live regulation monitoring — built for agencies and consultants who handle real-world immigration every day.
+                  Manage immigration cases to <strong className="text-white">any country</strong> from one workspace. ImmigrationAI is an <strong className="text-white">AI immigration consultancy operating system</strong> with AI tools that prevent rejections, a full case management suite, client portals, and live regulation monitoring — built for agencies and consultants who handle real-world immigration every day.
                 </p>
 
                 <p className="text-sm text-blue-300 mb-8 max-w-xl">

@@ -5,12 +5,13 @@ import ClientLayout from '@/components/ClientLayout';
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.immigrationai.co.za'),
   title: {
-    default: 'ImmigrationAI — AI-Powered Immigration Case Management for Professionals',
+    default: 'ImmigrationAI — AI Immigration Consultancy & Case Management for Professionals',
     template: '%s | ImmigrationAI',
   },
   description:
-    'The AI-powered immigration case management platform for agencies, consultants, and lawyers worldwide. UK work visa from South Africa, Portugal golden visa for South Africans, and cases to UK, Canada, USA, Australia, Germany, UAE and any country. Prevent visa rejections with AI, client portals, and live regulation monitoring.',
+    'ImmigrationAI is an AI immigration consultancy operating system and case management platform for agencies, consultants, and lawyers worldwide. Manage cases to any country, prevent rejections with AI, client portals, and live regulation monitoring.',
   keywords: [
+    'ai immigration consultancy',
     // For practitioners
     'immigration case management software',
     'immigration agency software',
